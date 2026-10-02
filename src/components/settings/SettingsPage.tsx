@@ -2421,7 +2421,7 @@ export function UpdateSection() {
           <span>
             <span className="block text-[0.65rem] text-gray-300">Download updates automatically</span>
             <span className="block text-[0.55rem] text-gray-600 leading-relaxed">
-              Fetches the update in the background so installing is one click. Never restarts on its own.
+              After a manual check, fetches the update in the background. Startup checks always ask first.
             </span>
           </span>
           <input

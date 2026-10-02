@@ -144,9 +144,10 @@ interface UpdateState {
    */
   lastCheckFailed: boolean
   dismissed: string | null
-  /** Fetch the update in the background as soon as it is found, so the badge
-   *  offers a one-click Restart instead of a download the user has to sit
-   *  through. Never auto-INSTALLS: nothing restarts without a click. */
+  /** A fresh startup check found this version and is waiting for the user's choice. */
+  launchPromptVersion: string | null
+  /** Whether a manual update check may fetch the package in the background.
+   *  Startup checks always wait for the user's explicit choice. */
   autoDownload: boolean
 
   downloadStatus: DownloadStatus
@@ -169,10 +170,11 @@ interface UpdateState {
 
   /** `force` skips the 6h cooldown — for a user-triggered check, and for
    *  the download path when the Update handle is missing. */
-  checkForUpdate: (force?: boolean) => Promise<void>
+  checkForUpdate: (force?: boolean, promptOnFound?: boolean) => Promise<void>
   downloadUpdate: () => Promise<void>
   installAndRestart: () => Promise<void>
   dismissUpdate: () => void
+  dismissLaunchPrompt: () => void
   clearDismiss: () => void
   setAutoDownload: (on: boolean) => void
   openReleasePage: () => void
@@ -185,18 +187,6 @@ interface UpdateState {
 const GITHUB_REPO = import.meta.env.VITE_GITHUB_REPO?.trim() ?? ''
 const CHECK_INTERVAL = 6 * 60 * 60 * 1000 // 6 hours
 const INITIAL_DELAY = 5_000
-/** Eigener, kurzer Deckel fuer die Pruefung beim Programmstart. Der
- *  6-Stunden-Deckel oben gilt fuer das Intervall in einem laufenden Prozess;
- *  auf den Start angewandt verschluckt er die Pruefung ganz, weil
- *  `lastChecked` den Neustart ueberlebt und `onRehydrateStorage` ihn nur dann
- *  nullt, wenn eine gespeicherte `latestVersion` oder `updateAvailable`
- *  danebensteht. T13b hat am 12.09.2026 auf der Box gemessen, was das kostet:
- *  drei Starts, null Pruefungen, `lastChecked` beim dritten Start 47 Sekunden
- *  alt. Wer die App oefter als alle sechs Stunden neu startet, bekommt sonst
- *  nie eine automatische Pruefung. Eine Viertelstunde laesst jeden echten
- *  Start pruefen und faengt nur den Nutzer ab, der dreimal hintereinander
- *  neu startet. */
-const STARTUP_STALE = 15 * 60 * 1000 // 15 minutes
 
 // ── Non-serializable update object (module-level) ─────────────
 
@@ -258,6 +248,7 @@ export const useUpdateStore = create<UpdateState>()(
       lastChecked: null,
       lastCheckFailed: false,
       dismissed: null,
+      launchPromptVersion: null,
       autoDownload: true,
 
       downloadStatus: 'idle',
@@ -278,7 +269,7 @@ export const useUpdateStore = create<UpdateState>()(
         return method
       },
 
-      checkForUpdate: async (force = false) => {
+      checkForUpdate: async (force = false, promptOnFound = false) => {
         const state = get()
         if (state.isChecking) return
         if (!force && state.lastChecked && Date.now() - state.lastChecked < CHECK_INTERVAL) return
@@ -303,6 +294,7 @@ export const useUpdateStore = create<UpdateState>()(
                 updateAvailable: true,
                 latestVersion: update.version,
                 releaseNotes: update.body ? truncateNotes(update.body) : null,
+                launchPromptVersion: promptOnFound ? update.version : null,
                 isChecking: false,
                 lastChecked: Date.now(),
                 lastCheckFailed: false,
@@ -325,7 +317,7 @@ export const useUpdateStore = create<UpdateState>()(
               // must not block on a 100 MB download. Only from 'idle', so a
               // finished, running or failed download is never restarted behind
               // the user's back.
-              if (get().autoDownload && get().downloadStatus === 'idle') {
+              if (!promptOnFound && get().autoDownload && get().downloadStatus === 'idle') {
                 void get().downloadUpdate()
               }
             } else {
@@ -343,6 +335,7 @@ export const useUpdateStore = create<UpdateState>()(
                 updateAvailable: false,
                 latestVersion: null,
                 releaseNotes: null,
+                launchPromptVersion: null,
               })
             }
           } else {
@@ -536,14 +529,15 @@ export const useUpdateStore = create<UpdateState>()(
         set({ dismissed: latestVersion })
       },
 
+      dismissLaunchPrompt: () => set({ launchPromptVersion: null }),
+
       clearDismiss: () => {
         set({ dismissed: null })
       },
 
       setAutoDownload: (on: boolean) => {
         set({ autoDownload: on })
-        // Turning it on with an update already waiting should act immediately,
-        // not at the next 6h tick.
+        // Turning it on with an update already waiting should act immediately.
         if (on && get().updateAvailable && get().downloadStatus === 'idle') {
           void get().downloadUpdate()
         }
@@ -675,15 +669,9 @@ export function initUpdateChecker() {
   if (_initDone) return
   _initDone = true
 
+  // Check once per launch. When the desktop updater finds a release, wait for
+  // the user to choose Update now or Later before downloading anything.
   setTimeout(() => {
-    const { lastChecked, checkForUpdate } = useUpdateStore.getState()
-    // Erzwingen, sobald die letzte Pruefung aelter als die Viertelstunde ist:
-    // sonst faengt der 6-Stunden-Deckel diesen Aufruf ab, und ein Nutzer, der
-    // die App oft neu startet, sieht nie eine Pruefung.
-    void checkForUpdate(!lastChecked || Date.now() - lastChecked > STARTUP_STALE)
+    void useUpdateStore.getState().checkForUpdate(true, true)
   }, INITIAL_DELAY)
-
-  setInterval(() => {
-    useUpdateStore.getState().checkForUpdate()
-  }, CHECK_INTERVAL)
 }

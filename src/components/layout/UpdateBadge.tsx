@@ -10,6 +10,7 @@ export function UpdateBadge() {
   const {
     currentVersion,
     latestVersion,
+    launchPromptVersion,
     updateAvailable,
     releaseNotes,
     dismissed,
@@ -22,6 +23,7 @@ export function UpdateBadge() {
     downloadUpdate,
     installAndRestart,
     dismissUpdate,
+    dismissLaunchPrompt,
     openReleasePage,
   } = useUpdateStore()
 
@@ -39,7 +41,7 @@ export function UpdateBadge() {
   }, [])
 
   const showBadge = updateAvailable && latestVersion && dismissed !== latestVersion
-  if (!showBadge) return null
+  if (!showBadge && !launchPromptVersion) return null
 
   const isDownloading = downloadStatus === 'downloading'
   const isDownloaded = downloadStatus === 'downloaded'
@@ -65,7 +67,7 @@ export function UpdateBadge() {
   return (
     <div ref={ref} className="relative">
       {/* Badge button */}
-      <button
+      {showBadge && <button
         onClick={() => setOpen(!open)}
         className={`relative flex items-center gap-1.5 rounded-md px-1.5 py-1 text-[0.7rem] font-medium transition-colors ${
           isDownloaded
@@ -103,7 +105,7 @@ export function UpdateBadge() {
           </span>
         </span>
         <span className="hidden md:inline whitespace-nowrap pr-0.5">{label}</span>
-      </button>
+      </button>}
 
       {/* Dropdown.
           Hellmodus-Luecke aus Welle 2, in f336b91e gemeldet statt geaendert:
@@ -117,7 +119,7 @@ export function UpdateBadge() {
           Die Statuspunkte und der Fortschrittsbalken sind Nicht-Text und
           zaehlen gegen 1.4.11 (3:1): emerald-400 stand auf Weiss bei
           1,92:1, emerald-600 steht bei 3,77:1. */}
-      <AnimatePresence>
+      {showBadge && <AnimatePresence>
         {open && (
           <motion.div
             className="absolute right-0 top-full mt-1.5 w-72 rounded-lg overflow-hidden z-50 bg-white dark:bg-lu-overlay border border-gray-200 dark:border-white/[0.08] shadow-2xl shadow-black/10 dark:shadow-black/50"
@@ -297,7 +299,56 @@ export function UpdateBadge() {
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>}
+
+      {launchPromptVersion && (
+        <div className="fixed inset-0 z-[1000] grid place-items-center bg-black/55 p-4" role="presentation">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="startup-update-title"
+            className="w-full max-w-md rounded-lg border border-gray-300 bg-white p-5 text-gray-900 shadow-2xl dark:border-white/15 dark:bg-[#211c2a] dark:text-gray-100"
+          >
+            <div className="flex items-start gap-3">
+              <ArrowUpCircle size={22} className="mt-0.5 shrink-0 text-blue-600 dark:text-blue-400" />
+              <div>
+                <h2 id="startup-update-title" className="text-base font-semibold">Lazarus update available</h2>
+                <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+                  Version {launchPromptVersion} is ready. Would you like to download and install it now? Lazarus will restart when the update is installed.
+                </p>
+                {releaseNotes && (
+                  <p className="mt-2 max-h-24 overflow-y-auto whitespace-pre-line text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+                    {releaseNotes}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={dismissLaunchPrompt}
+                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:border-white/15 dark:text-gray-200 dark:hover:bg-white/10"
+              >
+                Later
+              </button>
+              <button
+                onClick={() => {
+                  dismissLaunchPrompt()
+                  setOpen(true)
+                  void (async () => {
+                    await downloadUpdate()
+                    if (useUpdateStore.getState().downloadStatus === 'downloaded') {
+                      await installAndRestart()
+                    }
+                  })()
+                }}
+                className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+              >
+                Update now
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   )
 }
