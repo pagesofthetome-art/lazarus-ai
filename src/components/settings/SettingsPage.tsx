@@ -2015,11 +2015,11 @@ export function SettingsPage() {
             </div>
           </Section>
 
-          <UpdateSection />
-
           <Section title="Troubleshoot">
             <TroubleshootSection />
           </Section>
+
+          <UpdateSection />
         </>)}
 
         {/* ── AI Backends tab ──────────────────────────── */}
@@ -2436,7 +2436,7 @@ export function UpdateSection() {
         <button
           onClick={() => { void checkForUpdate(true) }}
           disabled={isChecking}
-          className="text-[0.6rem] text-gray-500 hover:text-gray-300 transition-colors disabled:opacity-40"
+          className="px-2.5 py-1 rounded-md text-[0.6rem] font-medium bg-white dark:bg-white/10 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-white/15 border border-gray-200 dark:border-white/15 transition-colors disabled:opacity-40"
         >
           {isChecking ? 'Checking...' : 'Check for updates'}
         </button>

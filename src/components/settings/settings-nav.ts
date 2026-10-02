@@ -75,8 +75,8 @@ export function sectionsFor(tab: SettingsTab, flags: SettingsSectionFlags): stri
         ...(flags.mediaTimeouts ? ['Image / Video Generation Timeouts'] : []),
         'Privacy',
         'Onboarding',
-        'Updates',
         'Troubleshoot',
+        'Updates',
       ]
     case 'backends':
       return [
