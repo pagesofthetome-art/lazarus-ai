@@ -1,6 +1,6 @@
 [package]
 name = "lazarus"
-version = "3.0.3"
+version = "3.0.4"
 description = "Private, local AI chat & image/video generation"
 edition = "2021"
 license = "AGPL-3.0-only"

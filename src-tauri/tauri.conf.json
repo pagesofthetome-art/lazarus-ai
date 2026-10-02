@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-cli/schema.json",
   "productName": "Lazarus",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "identifier": "app.lazarus.desktop",
   "build": {
     "beforeBuildCommand": "node node_modules/vite/bin/vite.js build",
@@ -30,8 +30,10 @@
   },
   "plugins": {
     "updater": {
-      "endpoints": [],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDZDNkRFNzJFRjhFNkIxNDcKUldSSHNlYjRMdWR0YklwQlJhTUR4TXBTTE1xKzFUcWVVTEpTL0hZMi9ldmlOcW5BWFZWeUdzRGMK"
+      "endpoints": [
+        "https://github.com/pagesofthetome-art/lazarus-ai/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDFBQTQ5MDIyMDM4NDY1MEEKUldRS1pZUURJcENrR2o3Wk9LdXZZek1CM2tZRE42cHNnWGlybDBTUTRrRkVwRWlFaEVVdTVhSkwK"
     }
   },
   "bundle": {
