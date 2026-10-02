@@ -397,77 +397,9 @@ export const Sidebar = memo(function Sidebar() {
   // Models or Settings.
   const showSidebar = !isComparing && (currentView === 'chat' || currentView === 'developer')
 
-  /** One rail button, active or not. Same shape as the web rail.
-   *
-   *  D-T11: der Zustandswechsel dieser Schiene ist reine Farbe, Flaeche und
-   *  Text. `transition-colors` laeuft in derselben Voreinstellung (150 ms) wie
-   *  die pauschale Variante, die hier stand, benennt aber nur die
-   *  Eigenschaften, die sich wirklich bewegen. Dasselbe gilt fuer die beiden
-   *  Einzelknoepfe darunter (Aufklappen, New Chat) und den Zuklapp-Knopf in
-   *  der Reiterzeile. */
-  const railBtn = (active: boolean) =>
-    `flex items-center justify-center w-9 h-9 rounded-md transition-colors ${
-      active
-        ? 'bg-gray-200 dark:bg-white/10 text-gray-900 dark:text-white'
-        : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5'
-    }`
-
   return (
     <>
     <AnimatePresence mode="wait" initial={false}>
-      {/* Collapsed: the slim icon rail. Chat/Code/Remote stay visible and
-          clickable, the top button expands to the full conversation list.
-          56 px and w-9 buttons are the web numbers, unchanged. */}
-      {false && showSidebar && !sidebarOpen && (
-        <motion.aside
-          key="rail"
-          data-testid="sidebar-rail"
-          className="lazarus-sidebar-surface h-full rounded-xl bg-gray-50 dark:bg-[#1e1e1e] ring-1 ring-black/[0.04] dark:ring-white/[0.05] flex flex-col items-center z-20 overflow-hidden shrink-0 py-2 gap-1"
-          initial={{ width: 0, opacity: 0 }}
-          animate={{ width: 56, opacity: 1 }}
-          exit={{ width: 0, opacity: 0 }}
-          transition={{ duration: 0.15 }}
-          style={{ width: 56 }}
-        >
-          <button
-            onClick={() => { setChatMode('lu'); setActiveConversation(null); setView('chat'); setDispatchPicker(false) }}
-            title="Chat"
-            aria-label="Chat"
-            className={railBtn(!isCodingMode && !isRemoteMode)}
-          >
-            <MessageSquare size={15} />
-          </button>
-          <button
-            onClick={() => { setChatMode('codex'); setActiveConversation(null); setView('chat'); setDispatchPicker(false) }}
-            title="Code"
-            aria-label="Code"
-            className={railBtn(isCodingMode)}
-          >
-            <Code size={15} />
-          </button>
-          <button
-            onClick={() => { setChatMode('remote'); setActiveConversation(dispatchedConversationId); setView('chat') }}
-            title="Remote"
-            aria-label="Remote"
-            className={railBtn(isRemoteMode)}
-          >
-            <Radio size={15} />
-          </button>
-          <div className="flex-1" />
-          <button
-            onClick={handleNewChat}
-            title={currentView === 'developer' ? 'New Developer session' : activeModel ? 'New Chat' : 'Pick or install a model first'}
-            aria-label={currentView === 'developer' ? 'New Developer session' : 'New Chat'}
-            className="flex items-center justify-center w-9 h-9 rounded-md text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
-          >
-            {/* 16 statt 17: die 17 war die einzige im ganzen Baum und haette
-                eine sechzehnte Symbolgroesse aufgemacht (icon-leiter.test.ts).
-                16 ist ICON_MD, liegt bei 1x und 2x auf ganzen Geraetepixeln
-                und steht einen Knopf weiter oben schon am Aufklapp-Pfeil. */}
-            <Plus size={16} />
-          </button>
-        </motion.aside>
-      )}
       {/* Expanded: the full conversation list. Die feste Breite von 200 px bei
           zoom 1.25 ist weg, die Spalte haengt jetzt am Ziehgriff weiter unten
           (sidebarWidth). `relative` traegt diesen Griff. */}

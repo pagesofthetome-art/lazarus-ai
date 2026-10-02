@@ -22,6 +22,7 @@ export class RetiredHostedProvider implements ProviderClient {
   readonly id = 'lu-cloud' as const
 
   async *chatStream(): AsyncGenerator<ChatStreamChunk> {
+    yield* [] as ChatStreamChunk[]
     throw removed()
   }
 
