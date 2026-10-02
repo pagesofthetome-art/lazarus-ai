@@ -37,6 +37,8 @@ export interface WorkspacePrecedenceInput {
   codexWorkspace: AgentWorkspace | null
   /** `codexStore.workingDirectory` — die globale Auswahl des Code-Reiters. */
   storeWorkingDirectory: string | null | undefined
+  /** Active isolated Developer sandbox, when the Developer session is ready. */
+  developerWorkspaceRoot?: string | null
 }
 
 export interface WorkspacePrecedence {
@@ -59,12 +61,14 @@ export function resolveCodexWorkspace({
   threadWorkingDirectory,
   codexWorkspace,
   storeWorkingDirectory,
+  developerWorkspaceRoot,
 }: WorkspacePrecedenceInput): WorkspacePrecedence {
   const workspacePath =
     codexWorkspace && codexWorkspace.kind === 'folder' && codexWorkspace.path
       ? codexWorkspace.path
       : null
   const workDir =
+    developerWorkspaceRoot ||
     (threadWorkingDirectory && threadWorkingDirectory !== '.' ? threadWorkingDirectory : null) ||
     workspacePath ||
     storeWorkingDirectory ||

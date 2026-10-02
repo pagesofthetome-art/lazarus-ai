@@ -8,6 +8,7 @@ import { applyStoredCompaction } from '../lib/compact-summary'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useProviderStore } from '../stores/providerStore'
 import { useUIStore } from '../stores/uiStore'
+import { useDeveloperSandboxStore } from '../stores/developerSandboxStore'
 import { useChatStore, flushChatPersist } from '../stores/chatStore'
 import { buildSamplingRequest } from '../lib/sampling'
 import { endTurnDurably } from '../stores/durability'
@@ -526,6 +527,9 @@ export function useCodex() {
       threadWorkingDirectory: thread.workingDirectory,
       codexWorkspace,
       storeWorkingDirectory: liveWorkingDir,
+      developerWorkspaceRoot: useUIStore.getState().currentView === 'developer'
+        ? useDeveloperSandboxStore.getState().session?.workspaceRoot
+        : null,
     })
 
     // `/goal` is bookkeeping, not a prompt. Handle it here and show the result;

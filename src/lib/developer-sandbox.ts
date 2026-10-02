@@ -2,14 +2,20 @@ export type DeveloperSessionStatus = 'starting' | 'ready' | 'applying' | 'discar
 
 export interface DeveloperSession {
   readonly id: string
+  readonly sourceWorkspaceRoot: string
   readonly workspaceRoot: string
   readonly backupName: string
   readonly status: DeveloperSessionStatus
   readonly modelsLoaded: readonly string[]
 }
 
-export function createDeveloperSession(workspaceRoot: string, backupName: string, id = crypto.randomUUID()): DeveloperSession {
-  return { id, workspaceRoot, backupName, status: 'starting', modelsLoaded: [] }
+export function createDeveloperSession(
+  workspaceRoot: string,
+  backupName: string,
+  sourceWorkspaceRoot = '',
+  id = crypto.randomUUID(),
+): DeveloperSession {
+  return { id, sourceWorkspaceRoot, workspaceRoot, backupName, status: 'starting', modelsLoaded: [] }
 }
 
 export function transitionDeveloperSession(session: DeveloperSession, status: DeveloperSessionStatus): DeveloperSession {

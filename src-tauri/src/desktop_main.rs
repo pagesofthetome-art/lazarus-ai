@@ -686,6 +686,7 @@ fn main() {
             commands::developer_sandbox::developer_sandbox_apply,
             commands::developer_sandbox::developer_sandbox_discard,
             commands::developer_sandbox::developer_sandbox_restore,
+            commands::developer_sandbox::developer_sandbox_publish,
             commands::developer_preview::developer_preview_start,
             commands::developer_preview::developer_preview_stop,
             // Window management

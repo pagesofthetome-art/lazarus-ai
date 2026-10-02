@@ -36,7 +36,7 @@ import { StagedChangesPanel } from './StagedChangesPanel'
 import { SlashStepsBlock } from './SlashStepsBlock'
 import { CompactBlock } from './CompactBlock'
 import { compactionAnchors } from '../../lib/compact-summary'
-import { User, Code, Eye, GitBranch, Download, RefreshCw, RotateCcw, Check, AlertTriangle, PackageCheck, LoaderCircle, Shield, ShieldCheck } from 'lucide-react'
+import { User, Code, Eye, GitBranch, Download, RefreshCw, Check, AlertTriangle, PackageCheck, LoaderCircle, Shield, ShieldCheck } from 'lucide-react'
 import { Fragment, useEffect, useState } from 'react'
 import { backendCall, checkGitInstalled, openExternal, type GitStatus } from '../../api/backend'
 import { CodexConfirmDialog } from './CodexConfirmDialog'
@@ -45,7 +45,7 @@ import { HINWEIS_TEXT } from '../../lib/hinweis'
 import { stripModelNoise } from '../../lib/strip-model-noise'
 import { useIsQueuedForLocalLane, useLocalLaneQueuePosition } from '../../lib/run-idle'
 import { Modal } from '../ui/Modal'
-import { invoke } from '@tauri-apps/api/core'
+import { invoke, isTauri } from '@tauri-apps/api/core'
 import { useDeveloperVmAccessStore } from '../../stores/developerVmAccessStore'
 
 // Code always drives a tool loop, so the aggressive tier applies here.
@@ -148,14 +148,28 @@ export function CodexView() {
   const developerModelUnavailable = developerMode && (!activeModel || !isLocalModelByName(activeModel))
   const codexWorkingDir = useCodexStore((s) => s.workingDirectory)
   const setSandboxSession = useDeveloperSandboxStore((s) => s.setSession)
-  useEffect(() => {
-    if (!developerMode) return
-    void backendCall('stop_bundled_engine').catch(() => {})
-  }, [developerMode])
+  const [developerEntryOpen, setDeveloperEntryOpen] = useState(false)
+  const [developerActionError, setDeveloperActionError] = useState('')
+  const [developerPublishFailed, setDeveloperPublishFailed] = useState(false)
+  const chooseDeveloperWorkspace = async () => {
+    if (!isTauri()) return
+    try {
+      const picked = await invoke<string | null>('pick_folder', { defaultPath: codexWorkingDir || null, asWorkspace: true })
+      if (picked) useCodexStore.getState().setWorkingDirectory(picked)
+    } catch (error) { setDeveloperActionError(String(error)) }
+  }
   const startSandboxPreview = async () => {
+    if (!isTauri()) {
+      setDeveloperActionError('Starting Developer Mode requires the Lazarus desktop app. This web preview cannot create a native sandbox.')
+      setDeveloperEntryOpen(false)
+      return
+    }
     if (!codexWorkingDir || (sandboxSession && sandboxStatus !== 'failed')) return
+    setDeveloperActionError('')
+    setDeveloperPublishFailed(false)
+    setDeveloperEntryOpen(false)
     if (sandboxSession) resetSandbox()
-    setSandboxSession(createDeveloperSession(`${codexWorkingDir}\\.lazarus-sandbox`, 'starting'))
+    setSandboxSession(createDeveloperSession(`${codexWorkingDir}\\.lazarus-sandbox`, 'starting', codexWorkingDir))
     try {
       const backupRoot = `${codexWorkingDir}\\.lazarus-backups`
       await invoke('developer_sandbox_backup', { workspaceRoot: codexWorkingDir, backupRoot })
@@ -164,37 +178,33 @@ export function CodexView() {
         backupZip: latest,
         sandboxRoot: `${codexWorkingDir}\\.lazarus-sandbox`,
       })
+      await backendCall('stop_bundled_engine')
       const previewUrl = await invoke<string>('developer_preview_start', { workspaceRoot: sandboxRoot })
       setSandboxPreviewUrl(previewUrl)
-      setSandboxSession({ ...createDeveloperSession(sandboxRoot, latest), status: 'ready' })
-    } catch {
+      setSandboxSession({ ...createDeveloperSession(sandboxRoot, latest, codexWorkingDir), status: 'ready' })
+      useCodexStore.getState().setWorkingDirectory(sandboxRoot)
+    } catch (error) {
+      setDeveloperActionError(String(error))
       setSandboxStatus('failed')
     }
   }
   const applySandbox = async () => {
-    if (!sandboxSession || !codexWorkingDir) return
+    if (!sandboxSession) return
     setSandboxStatus('applying')
     try {
       await invoke('developer_preview_stop')
-      await invoke('developer_sandbox_apply', { sandboxRoot: sandboxSession.workspaceRoot, workspaceRoot: codexWorkingDir })
-      resetSandbox()
-    } catch { setSandboxStatus('failed') }
+      await invoke('developer_sandbox_publish', { sandboxRoot: sandboxSession.workspaceRoot, workspaceRoot: sandboxSession.sourceWorkspaceRoot })
+    } catch (error) { setDeveloperActionError(String(error)); setDeveloperPublishFailed(true); setSandboxStatus('failed') }
   }
   const discardSandbox = async () => {
     if (!sandboxSession) return
     setSandboxStatus('discarding')
-    try { await invoke('developer_preview_stop'); await invoke('developer_sandbox_discard', { sandboxRoot: sandboxSession.workspaceRoot }) } finally { resetSandbox() }
-  }
-  const restoreLatestBackup = async () => {
-    if (!codexWorkingDir) return
-    const backupRoot = `${codexWorkingDir}\\.lazarus-backups`
-    setSandboxStatus('applying')
     try {
-      const latest = await invoke<string>('developer_sandbox_latest_backup', { backupRoot })
       await invoke('developer_preview_stop')
-      await invoke('developer_sandbox_restore', { backupZip: latest, workspaceRoot: codexWorkingDir })
-      resetSandbox()
-    } catch { setSandboxStatus('failed') }
+      await invoke('developer_sandbox_discard', { sandboxRoot: sandboxSession.workspaceRoot })
+      if (sandboxSession.sourceWorkspaceRoot) useCodexStore.getState().setWorkingDirectory(sandboxSession.sourceWorkspaceRoot)
+      useUIStore.getState().setView('chat')
+    } catch (error) { setDeveloperActionError(String(error)) } finally { resetSandbox() }
   }
   // A8 (2.6.8): the same Remove sits in the explorer column, but that column
   // can be collapsed, and two users looked for a way out of their folder and
@@ -398,6 +408,21 @@ export function CodexView() {
           <SmallModelModeToggle />
         </div>
 
+        {developerMode && (
+          <div className="flex items-center gap-2 border-b border-violet-400/20 bg-violet-500/[0.04] px-3 py-2" data-testid="developer-mode-actions">
+            <button
+              onClick={() => sandboxSession?.status === 'ready' || (sandboxSession && developerPublishFailed) ? void applySandbox() : sandboxSession ? void startSandboxPreview() : setDeveloperEntryOpen(true)}
+              disabled={!!sandboxSession && sandboxStatus !== 'ready' && sandboxStatus !== 'failed'}
+              className="flex items-center h-[var(--control-h-md)] px-2 rounded-md text-[0.68rem] font-medium transition-colors bg-white dark:bg-white/[0.08] text-gray-900 dark:text-white disabled:opacity-50"
+            >{sandboxSession?.status === 'ready' || (sandboxSession && developerPublishFailed) ? 'Apply changes' : sandboxSession ? sandboxStatus === 'failed' ? 'Retry Developer Mode' : sandboxStatus === 'applying' ? 'Building and relaunching…' : 'Starting Developer Mode…' : 'Start Developer Mode'}</button>
+            <button
+              onClick={() => void discardSandbox()}
+              disabled={!sandboxSession || (sandboxStatus !== 'ready' && sandboxStatus !== 'failed')}
+              className="ml-auto rounded-md border border-red-400/40 px-4 py-2 text-xs font-medium text-red-300 hover:bg-red-500/10 disabled:opacity-40"
+            >End Developer Mode</button>
+          </div>
+        )}
+
         {/* R2-21: der Sperrgrund hing bisher nur als `title` am Entfernen-Knopf,
             und ein `disabled` Knopf nimmt keine Mauszeiger-Ereignisse an, also
             ist der Hinweis nie erschienen (derselbe Fehler wie im ExplorerPanel,
@@ -416,6 +441,9 @@ export function CodexView() {
           <p className="px-3 py-1 text-[0.58rem] text-red-700 dark:text-red-300 border-b border-red-500/20" role="alert">
             {vmAccessError}
           </p>
+        )}
+        {developerMode && developerActionError && (
+          <p role="status" className="px-3 py-1 text-[0.58rem] text-amber-700 dark:text-amber-200 border-b border-amber-500/20">{developerActionError}</p>
         )}
 
         {/* Git-missing banner (v2.5.0). Codex shells out to git for
@@ -455,7 +483,7 @@ export function CodexView() {
         <StagedChangesPanel chatId={activeConversationId} />
 
         {/* Messages */}
-        <div ref={scrollRef} className="flex-1 min-h-[10rem] overflow-y-auto scrollbar-thin" data-testid="codex-transcript">
+        <div ref={scrollRef} className="relative flex-1 min-h-[10rem] overflow-y-auto scrollbar-thin" data-testid="codex-transcript">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <Code size={28} className="text-gray-300 dark:text-gray-700 mb-2" />
@@ -776,6 +804,12 @@ export function CodexView() {
               />
             </div>
           )}
+          {developerMode && sandboxPreviewUrl && sandboxSession?.status === 'ready' && (
+            <div className="absolute inset-0 z-10 flex flex-col bg-black" data-testid="developer-sandbox-preview">
+              <div className="flex h-7 shrink-0 items-center border-b border-violet-400/30 bg-[#120b1d] px-3 text-[0.65rem] text-violet-200">Live sandbox preview</div>
+              <iframe title="Developer sandbox preview" src={sandboxPreviewUrl} className="min-h-0 flex-1 border-0 bg-black" />
+            </div>
+          )}
         </div>
 
         {/* Die stehenden Sitzungsbaender und die Zeilen, die frueher IM
@@ -817,16 +851,7 @@ export function CodexView() {
                 <button onClick={handleBuildApkClick} disabled={androidBuildRunning} title="Build the Android APK from the current project" className="px-1.5 py-1 rounded text-[0.55rem] text-purple-300 shadow-[0_0_14px_rgba(168,85,247,0.3)] disabled:opacity-40">Build APK</button>
                 <button onClick={() => sendInstruction('Run the project checks and tests, then summarize any failures.')} title="Run project tests" className="px-1.5 py-1 rounded text-[0.55rem] text-purple-300 shadow-[0_0_14px_rgba(168,85,247,0.3)]">Test</button>
               </>}
-              {developerMode && <button onClick={handleBuildApkClick} disabled={androidBuildRunning} title="Build APK from the VM project or current APK source" className="px-1.5 py-1 rounded text-[0.55rem] text-purple-300 shadow-[0_0_14px_rgba(168,85,247,0.3)] disabled:opacity-40">Build APK</button>}
               <PluginsDropdown iconOnly />
-              {developerMode && (
-                <button
-                  onClick={() => sandboxSession && sandboxStatus === 'ready' ? void applySandbox() : void startSandboxPreview()}
-                  disabled={!!sandboxSession && sandboxStatus !== 'ready' && sandboxStatus !== 'failed' || !codexWorkingDir}
-                  title={sandboxSession ? sandboxStatus === 'ready' ? 'Apply the reviewed changes to the project' : sandboxStatus === 'failed' ? 'Retry starting the sandbox preview' : `Preview ${sandboxStatus}` : codexWorkingDir ? 'Start a sandbox preview of the project' : 'Choose a project folder first'}
-                  className="px-1.5 py-1 rounded text-[0.55rem] text-emerald-300 hover:bg-emerald-500/10 disabled:opacity-40"
-                >{sandboxSession && sandboxStatus === 'ready' ? 'Apply changes' : sandboxSession && sandboxStatus !== 'failed' ? 'Starting preview…' : sandboxSession ? 'Retry preview' : 'Start preview'}</button>
-              )}
               <CodexModeDropdown openUpward />
             </div>
           )}
@@ -834,26 +859,18 @@ export function CodexView() {
       </div>
 
     </div>
-    {developerMode && sandboxPreviewUrl && sandboxSession && (
-      <div className="fixed inset-0 z-[60] flex flex-col bg-black" data-testid="developer-sandbox-preview">
-        <div className="flex h-8 shrink-0 items-center justify-between border-b border-violet-400/30 bg-[#120b1d] px-3 text-xs text-violet-200">
-          <span>Developer sandbox preview</span>
-          <div className="flex items-center gap-2">
-            <button onClick={() => void applySandbox()} className="rounded bg-emerald-600/80 px-2 py-1 text-[0.65rem] text-white">Apply changes</button>
-            <button
-              onClick={() => void restoreLatestBackup()}
-              title="Restore the newest backup"
-              aria-label="Restore the newest backup"
-              className="rounded-full border border-violet-400/40 p-1 text-blue-300 shadow-[0_0_12px_rgba(168,85,247,0.8)] hover:bg-violet-500/20"
-            >
-              <RotateCcw size={12} />
-            </button>
-            <button onClick={() => void discardSandbox()} className="rounded bg-red-600/70 px-2 py-1 text-[0.65rem] text-white">Discard</button>
-          </div>
+    <Modal open={developerEntryOpen} onClose={() => setDeveloperEntryOpen(false)} title="Enter Developer Mode?">
+      <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
+        <p>Lazarus will save a snapshot of the current source project, create an isolated working copy, and show its preview inside this window. Your published files stay unchanged until you apply.</p>
+        {!isTauri() && <p className="rounded border border-amber-500/30 p-2 text-xs text-amber-700 dark:text-amber-200">Starting the native sandbox requires the Lazarus desktop app.</p>}
+        {developerActionError && <p role="alert" className="break-words text-xs text-red-600 dark:text-red-300">{developerActionError}</p>}
+        <div className="flex justify-end gap-2">
+          <button onClick={() => setDeveloperEntryOpen(false)} className="rounded px-3 py-2 text-xs text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10">Cancel</button>
+          {!codexWorkingDir && isTauri() && <button onClick={() => void chooseDeveloperWorkspace()} className="rounded border border-violet-400/40 px-3 py-2 text-xs text-violet-200">Choose Lazarus source folder</button>}
+          <button onClick={() => void startSandboxPreview()} disabled={!isTauri() || !codexWorkingDir} className="rounded bg-violet-600 px-3 py-2 text-xs font-medium text-white disabled:opacity-50">Start Developer Mode</button>
         </div>
-        <iframe title="Developer sandbox preview" src={sandboxPreviewUrl} className="min-h-0 flex-1 border-0 bg-black" />
       </div>
-    )}
+    </Modal>
     <Modal
       open={vmAccessConfirmOpen}
       onClose={() => { if (!vmAccessBusy) setVmAccessConfirmOpen(false) }}
