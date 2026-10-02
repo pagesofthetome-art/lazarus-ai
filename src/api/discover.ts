@@ -952,9 +952,31 @@ function sortByRelease(models: DiscoverModel[]): DiscoverModel[] {
   return models.sort((a, b) => (b.released ?? '').localeCompare(a.released ?? ''))
 }
 
+/**
+ * Preserve the source's wording without treating missing documentation as a
+ * claim that a model is either filtered or unfiltered. “Heretic” is grouped
+ * with abliteration because its published method is refusal-direction
+ * ablation; the chip is still phrased as a label, not a performance guarantee.
+ */
+function addCensorshipAuditLabel(models: DiscoverModel[], lane: 'mainstream' | 'unfiltered' | 'discovered'): DiscoverModel[] {
+  return models.map(model => {
+    const evidence = `${model.name} ${model.tags.join(' ')} ${model.url ?? ''} ${model.downloadUrl ?? ''}`.toLowerCase()
+    const censorshipLabel = /abliterat|heretic/.test(evidence)
+      ? 'Abliteration-labeled'
+      : /uncensor/.test(evidence)
+        ? 'Uncensored-labeled'
+        : /unfiltered/.test(evidence)
+          ? 'Unfiltered-labeled'
+          : lane === 'unfiltered'
+            ? 'Unfiltered listing · claim unclear'
+            : lane === 'discovered' ? 'Source not classified' : 'No uncensor claim'
+    return { ...model, censorshipLabel }
+  })
+}
+
 /** Unfiltered / abliterated GGUF models · the core of Lazarus. One entry per size variant. */
 export function getUncensoredTextModels(): DiscoverModel[] {
-  return sortByRelease([
+  return addCensorshipAuditLabel(sortByRelease([
     // ── 2026 SOTA sub-4GB UNCENSORED tool caller (deep-researched 2026-06-06,
     //    Ultra-Lightweight weight class). Abliterated Qwen3-4B keeps the native
     //    Hermes tool template. A/B its tool reliability (abliteration can dent
@@ -1146,12 +1168,12 @@ export function getUncensoredTextModels(): DiscoverModel[] {
     { name: 'DeepSeek V4 Flash Abliterated IQ1', group: 'DeepSeek V4 Flash Abliterated', description: 'huihui abliterated DeepSeek V4-Flash · 284B MoE (13B active), the most-downloaded uncensored model of 2026 so far. Smallest quant, single 87 GB file, runs on 96 GB RAM rigs. MIT.', pulls: '115K+', tags: ['284B MoE', 'UD-IQ1_M', '87 GB'], updated: 'Hot', agent: true, released: '2026-05', downloadUrl: HF('huihui-ai/Huihui-DeepSeek-V4-Flash-abliterated-GGUF', 'DeepSeek-V4-Flash-UD-IQ1_M.gguf'), filename: 'DeepSeek-V4-Flash-UD-IQ1_M.gguf', sizeGB: 86.8 },
     { name: 'DeepSeek V4 Flash Abliterated Q3', group: 'DeepSeek V4 Flash Abliterated', description: 'huihui abliterated DeepSeek V4-Flash · Q3_K_S, higher fidelity. Single 122 GB file for big-RAM setups. MIT.', pulls: '115K+', tags: ['284B MoE', 'Q3_K_S', '122 GB'], updated: 'Hot', agent: true, released: '2026-05', downloadUrl: HF('huihui-ai/Huihui-DeepSeek-V4-Flash-abliterated-GGUF', 'ggml-model-Q3_K_S.gguf'), filename: 'ggml-model-Q3_K_S.gguf', sizeGB: 122 },
     { name: 'GLM 5.2 Abliterated', description: 'huihui abliterated GLM 5.2 · 744B MoE (40B active) uncensored frontier coder. Multi-part download, ~356 GB. MIT.', pulls: '13K+', tags: ['744B MoE', 'UD-Q3_K_M', '356 GB', 'Multi-part'], updated: 'New', agent: true, released: '2026-06', downloadUrl: HF('huihui-ai/Huihui-GLM-5.2-abliterated-GGUF', 'UD-Q3_K_M/GLM-5.2-UD-Q3_K_M-00001-of-00009.gguf'), filename: 'GLM-5.2-UD-Q3_K_M-00001-of-00009.gguf', sizeGB: 356 },
-  ])
+  ]), 'unfiltered')
 }
 
 /** Mainstream GGUF models · not unfiltered but excellent for specific tasks. All URLs verified. */
 export function getMainstreamTextModels(): DiscoverModel[] {
-  return sortByRelease([
+  return addCensorshipAuditLabel(sortByRelease([
     // ── 2026 SOTA sub-4GB TOOL CALLERS (deep-researched + adversarially
     //    verified 2026-06-06). All run in UNDER 4GB VRAM/RAM (Ultra-Lightweight
     //    weight class), commercially licensed (Apache-2.0 / MIT), native tool
@@ -1350,7 +1372,7 @@ export function getMainstreamTextModels(): DiscoverModel[] {
     { name: 'GLM 5.3 744B Q2', group: 'GLM 5.3 744B', description: 'ZhipuAI GLM 5.3 · Unsloth Dynamic Q2_K_XL, the quality/size sweet spot for this MoE. 744B MoE (40B active), 1M context, GLM-5.3 licence. Multi-part.', pulls: '74K+', tags: ['744B MoE', 'UD-Q2_K_XL', '254 GB', 'Multi-part'], updated: 'Hot', agent: true, released: '2026-08', downloadUrl: HF('unsloth/GLM-5.3-GGUF', 'UD-Q2_K_XL/GLM-5.3-UD-Q2_K_XL-00001-of-00007.gguf'), filename: 'GLM-5.3-UD-Q2_K_XL-00001-of-00007.gguf', sizeGB: 253.9 },
     { name: 'GLM 5.2 744B MoE', description: 'ZhipuAI GLM 5.2 · 744B MoE (40B active), 1M context, MIT. The agentic-coding successor to GLM 5.1. Multi-part, ~304 GB.', pulls: '50K+', tags: ['744B MoE', 'UD-Q2_K_XL', '304 GB', 'Multi-part'], updated: 'Hot', agent: true, released: '2026-06', downloadUrl: HF('unsloth/GLM-5.2-GGUF', 'UD-Q2_K_XL/GLM-5.2-UD-Q2_K_XL-00001-of-00007.gguf'), filename: 'GLM-5.2-UD-Q2_K_XL-00001-of-00007.gguf', sizeGB: 304 },
     { name: 'Kimi K2.7 Code 1T', description: 'Moonshot Kimi K2.7-Code · 1T MoE (32B active) coding flagship. Even the 2-bit quant is ~370 GB · multi-GPU / Mac-cluster territory.', pulls: '392K+', tags: ['1T MoE', 'UD-Q2_K_XL', '371 GB', 'Multi-part'], updated: 'Hot', agent: true, released: '2026-06', downloadUrl: HF('unsloth/Kimi-K2.7-Code-GGUF', 'UD-Q2_K_XL/Kimi-K2.7-Code-UD-Q2_K_XL-00001-of-00008.gguf'), filename: 'Kimi-K2.7-Code-UD-Q2_K_XL-00001-of-00008.gguf', sizeGB: 371 },
-  ])
+  ]), 'mainstream')
 }
 
 // ─── Multi-Provider Discovery ───
@@ -1435,7 +1457,13 @@ export async function searchHuggingFaceModels(query: string): Promise<DiscoverMo
     // abliterated, roleplay, coding, and vision variants. Downloads still go
     // through resolveHfGgufFiles(), which verifies the actual repository tree
     // before writing anything to disk.
-    const url = `https://huggingface.co/api/models?search=${encodeURIComponent(searchQuery)}&filter=gguf&sort=downloads&direction=-1&limit=100`
+    const params = new URLSearchParams({ search: searchQuery, filter: 'gguf', sort: 'downloads', direction: '-1', limit: '100' })
+    // Card metadata can state task, datasets, and language. It is optional:
+    // many GGUF mirrors do not copy the original model card's structured data.
+    params.append('expand[]', 'cardData')
+    params.append('expand[]', 'pipeline_tag')
+    params.append('expand[]', 'tags')
+    const url = `https://huggingface.co/api/models?${params}`
 
     let json: string
     const { isTauri, fetchExternal } = await import('./backend')
@@ -1446,7 +1474,7 @@ export async function searchHuggingFaceModels(query: string): Promise<DiscoverMo
       json = await res.text()
     }
 
-    const repos: Array<{ id: string; downloads?: number; modelId?: string }> = JSON.parse(json)
+    const repos: Array<{ id: string; downloads?: number; modelId?: string; tags?: unknown[]; pipeline_tag?: string; cardData?: unknown }> = JSON.parse(json)
 
     const models: DiscoverModel[] = []
     for (const repo of repos) {
@@ -1465,18 +1493,36 @@ export async function searchHuggingFaceModels(query: string): Promise<DiscoverMo
       const pullsStr = downloads > 1000000 ? `${(downloads / 1000000).toFixed(1)}M` :
         downloads > 1000 ? `${Math.round(downloads / 1000)}K` : `${downloads}`
 
+      const cardData = isRecord(repo.cardData) ? repo.cardData : undefined
+      const datasetValue = cardData ? prop(cardData, 'datasets') : undefined
+      const trainedOn = Array.isArray(datasetValue)
+        ? datasetValue.flatMap(value => typeof value === 'string' ? [value] : isRecord(value) ? [asString(prop(value, 'name')) ?? asString(prop(value, 'id'))].filter((v): v is string => !!v) : [])
+        : typeof datasetValue === 'string' ? [datasetValue] : []
+      const languageValue = cardData ? prop(cardData, 'language') : undefined
+      const sourceLanguages = Array.isArray(languageValue) ? languageValue.filter((value): value is string => typeof value === 'string') : typeof languageValue === 'string' ? [languageValue] : []
+      const sourceTask = repo.pipeline_tag || (cardData ? asString(prop(cardData, 'pipeline_tag')) : undefined)
+      const sourceTags = Array.isArray(repo.tags) ? repo.tags.filter((tag): tag is string => typeof tag === 'string') : []
+      const agentic = sourceTags.some(tag => /^(agentic|tools?|tool[-_ ]?calling|function[-_ ]?calling)$/i.test(tag))
       models.push({
         name: displayName,
         description: repo.id,
+        trainedOn,
+        sourceTask,
+        sourceLanguages,
         pulls: pullsStr,
-        tags: ['Q4_K_M', 'GGUF'],
+        tags: [
+          'Q4_K_M', 'GGUF',
+          ...sourceTags,
+          ...(repo.pipeline_tag ? [repo.pipeline_tag] : []),
+        ],
+        agent: agentic,
         updated: '',
         downloadUrl,
         filename: q4File,
         url: `https://huggingface.co/${repo.id}`,
       })
     }
-    return models
+    return addCensorshipAuditLabel(models, 'discovered')
   } catch (err) {
     log.warn('[discover] HF search failed', { err })
     return []
@@ -1818,6 +1864,10 @@ export interface CivitAIModelResult {
   provider?: 'civitai' | 'huggingface'
   /** Searchable tags exposed by the provider. */
   tags?: string[]
+  /** CivitAI's NSFW content flag; it describes the asset, not LLM refusal behavior. */
+  nsfw?: boolean
+  /** CivitAI model-version trigger words, when the creator provides them. */
+  trainedWords?: string[]
   /** Human-readable install guidance for providers with multiple files. */
   downloadPrompt?: string
 }
@@ -1907,6 +1957,8 @@ export async function searchCivitaiModels(
       const stats = prop(item, 'stats')
       const downloadCount = asNumber(prop(stats, 'downloadCount'))
       const creator = asString(propPath(item, 'creator', 'username'))
+      const sourceTags = prop(item, 'tags')
+      const trainedWords = prop(version, 'trainedWords')
 
       // Determine subfolder based on model type
       let subfolder = 'checkpoints'
@@ -1950,7 +2002,9 @@ export async function searchCivitaiModels(
         creator,
         sourceUrl: `https://${host}/models/${itemId}`,
         provider: 'civitai' as const,
-        tags: [],
+        tags: Array.isArray(sourceTags) ? sourceTags.filter((tag): tag is string => typeof tag === 'string') : [],
+        nsfw: prop(item, 'nsfw') === true,
+        trainedWords: Array.isArray(trainedWords) ? trainedWords.filter((word): word is string => typeof word === 'string') : [],
         downloadPrompt: 'Download this LoRA into the local ComfyUI loras folder.',
       }
     })

@@ -31,16 +31,17 @@ interface Props {
   children?: React.ReactNode
   tone?: 'neutral' | 'accent'
   showIcon?: boolean
+  compact?: boolean
 }
 
-export function EmptyState({ icon: Icon, logoSrc, logoClassName = '', title, description, action, secondaryAction, children, tone = 'neutral', showIcon = true }: Props) {
+export function EmptyState({ icon: Icon, logoSrc, logoClassName = '', title, description, action, secondaryAction, children, tone = 'neutral', showIcon = true, compact = false }: Props) {
   return (
-    <div className="h-full flex flex-col items-center justify-center text-center px-6">
+    <div className={`h-full min-h-0 overflow-hidden flex flex-col items-center justify-center text-center ${compact ? 'px-4 py-1' : 'px-6'}`}>
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="max-w-sm space-y-4"
+        className={`my-auto w-full max-w-sm min-w-0 ${compact ? 'space-y-2' : 'space-y-4'}`}
       >
         {!showIcon ? null : logoSrc ? (
           <img src={logoSrc} alt="" className={`mx-auto h-14 w-14 object-contain opacity-90 select-none ${logoClassName}`} draggable={false} />
@@ -48,7 +49,7 @@ export function EmptyState({ icon: Icon, logoSrc, logoClassName = '', title, des
           // David 2026-07-13: no gray bubble behind the icon — the SVG stands on
           // its own, lifted only by a soft purple accent glow (a gentle, slow
           // breathe so it reads as intentional, not a hard animation).
-          <div className="relative mx-auto w-16 h-16 flex items-center justify-center">
+          <div className={`relative mx-auto flex items-center justify-center ${compact ? 'w-12 h-12' : 'w-16 h-16'}`}>
             <motion.span
               aria-hidden
               className="absolute rounded-full bg-lazarus-accent blur-2xl"
@@ -57,10 +58,10 @@ export function EmptyState({ icon: Icon, logoSrc, logoClassName = '', title, des
               animate={{ opacity: [0.28, tone === 'accent' ? 0.6 : 0.42, 0.28], scale: [0.9, 1.06, 0.9] }}
               transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
             />
-            <Icon size={36} strokeWidth={ICON_STROKE_MARK} className="relative text-lazarus-accent drop-shadow-[0_0_8px_var(--color-lazarus-accent-ring)]" />
+            <Icon size={compact ? 30 : 36} strokeWidth={ICON_STROKE_MARK} className="relative text-lazarus-accent drop-shadow-[0_0_8px_var(--color-lazarus-accent-ring)]" />
           </div>
         )}
-        <div className="space-y-1.5">
+        <div className={compact ? 'space-y-1' : 'space-y-1.5'}>
           <div className="t-title text-gray-200 break-words">{title}</div>
           {description && <div className="t-body text-gray-500">{description}</div>}
         </div>

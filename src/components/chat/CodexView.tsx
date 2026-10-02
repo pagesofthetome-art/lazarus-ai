@@ -851,7 +851,7 @@ export function CodexView() {
                 <button onClick={handleBuildApkClick} disabled={androidBuildRunning} title="Build the Android APK from the current project" className="px-1.5 py-1 rounded text-[0.55rem] text-purple-300 shadow-[0_0_14px_rgba(168,85,247,0.3)] disabled:opacity-40">Build APK</button>
                 <button onClick={() => sendInstruction('Run the project checks and tests, then summarize any failures.')} title="Run project tests" className="px-1.5 py-1 rounded text-[0.55rem] text-purple-300 shadow-[0_0_14px_rgba(168,85,247,0.3)]">Test</button>
               </>}
-              <PluginsDropdown iconOnly />
+              <PluginsDropdown iconOnly openUpward />
               <CodexModeDropdown openUpward />
             </div>
           )}

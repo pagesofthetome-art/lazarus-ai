@@ -87,7 +87,7 @@ export function IntentBar() {
   }, [open])
 
   return (
-    <div ref={rootRef} className="relative z-30 flex justify-start px-4 pt-1 pb-1">
+    <div ref={rootRef} className="absolute left-0 top-0 z-30 flex justify-start px-4 pt-1">
       <button
         type="button"
         aria-haspopup="listbox"
@@ -109,7 +109,7 @@ export function IntentBar() {
         <div
           role="listbox"
           aria-label="Create mode"
-          className="absolute top-full mt-1.5 grid min-w-[260px] grid-cols-2 gap-1 rounded-xl border border-transparent bg-transparent p-2 shadow-none"
+          className="pointer-events-auto absolute top-full z-40 mt-1.5 grid min-w-[260px] grid-cols-2 gap-1 rounded-xl border border-gray-200 bg-white p-2 shadow-xl dark:border-white/10 dark:bg-[#171421]"
         >
           {intents.map((meta) => {
             const selected = intent === meta.id

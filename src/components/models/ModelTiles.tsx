@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import { isBelowChatMinimum, SMALL_CHAT_MODEL_WARNING } from '../../lib/chat-model-minimum'
 import {
   Download, ExternalLink, Info, Check, ChevronDown, Loader2, RefreshCw,
-  X, Flame, Wrench, Eye, Feather, HardDrive,
+  X, Flame, Wrench, Eye, Feather, HardDrive, Bot,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { DiscoverModel, DownloadProgress, ModelBundle } from '../../api/discover'
@@ -18,7 +18,7 @@ import { ICON_SM } from '../ui/icon-size'
 
 // ─── Hardware fit ───────────────────────────────────────────────────
 
-export type Fit = 'fits' | 'tight' | 'big' | 'unknown'
+export type Fit = 'fits' | 'tight' | 'big' | 'cpu' | 'memoryLimited' | 'memoryUnknown' | 'unknown'
 
 // GGUF weights ≈ VRAM need; leave headroom for KV-cache/context. Never used
 // to BLOCK a download — purely an honest hint.
@@ -27,6 +27,18 @@ export function computeFit(sizeGB: number | undefined, vramGb: number | null): F
   if (sizeGB <= vramGb * 0.85) return 'fits'
   if (sizeGB <= vramGb * 1.15) return 'tight'
   return 'big'
+}
+
+/** Add a RAM-aware estimate without ever treating system RAM as GPU memory. */
+export function computeHardwareFit(sizeGB: number | undefined, vramGb: number | null, ramGb: number | null): Fit {
+  if (!sizeGB) return 'unknown'
+  if (vramGb) {
+    const gpuFit = computeFit(sizeGB, vramGb)
+    if (gpuFit !== 'big') return gpuFit
+    return ramGb && sizeGB * 1.25 <= ramGb ? 'big' : ramGb ? 'memoryLimited' : 'memoryUnknown'
+  }
+  if (!ramGb) return 'unknown'
+  return sizeGB * 1.35 <= ramGb ? 'cpu' : 'memoryLimited'
 }
 
 // Color lives ONLY in the tiny status dot — labels stay neutral gray so the
@@ -65,6 +77,9 @@ const FIT_META: Record<Fit, { dot: string; label: string; title: string }> = {
   fits: { dot: 'bg-emerald-500/80', label: 'Runs on your PC', title: 'Fits fully in your GPU memory. Fast.' },
   tight: { dot: 'bg-sky-500/80', label: 'Tight fit', title: 'Barely fits. Parts may spill to RAM and slow it down.' },
   big: { dot: 'bg-orange-500/80', label: 'Runs on CPU, slower', title: 'Bigger than your GPU memory, so most of it runs on CPU and RAM. It works, just slower.' },
+  cpu: { dot: 'bg-sky-500/80', label: 'Runs on CPU, slower', title: 'No dedicated GPU memory was detected. The model is estimated to fit in system RAM, with extra room reserved for runtime memory.' },
+  memoryLimited: { dot: 'bg-orange-500/80', label: 'May exceed available memory', title: 'The model weights plus a runtime-memory allowance exceed the detected memory. It may be very slow or fail to load.' },
+  memoryUnknown: { dot: 'bg-gray-400 dark:bg-gray-600', label: 'GPU offload · RAM unknown', title: 'This model exceeds detected GPU memory, but system RAM could not be read to estimate CPU offload.' },
   unknown: { dot: 'bg-gray-400 dark:bg-gray-600', label: '', title: 'Hardware not detected yet.' },
 }
 
@@ -263,18 +278,28 @@ export function CapLegend({ className = '' }: { className?: string }) {
 
 // ─── Blurb derivation ───────────────────────────────────────────────
 
-// One calm line per card instead of the full catalog description. The full
-// text stays reachable via the ⓘ details modal — nothing is lost.
+// Standardize the card wording while preserving the source-specific claim.
+// The original description remains available in Details. Hardware fit stays
+// in the dedicated status chip beneath the blurb.
 export function shortBlurb(m: DiscoverModel): string {
-  if (m.blurb) return m.blurb
-  const d = m.description || ''
-  // Catalog descriptions are "Name · blurb" (middot separator, dash-free copy
-  // rule 2026-07-18); slice off the name part.
-  const afterSep = d.includes('·') ? d.slice(d.indexOf('·') + 1) : d
-  const dot = afterSep.indexOf('. ')
-  const first = dot > 0 ? afterSep.slice(0, dot) : afterSep
-  const t = first.trim().replace(/\.\s*$/, '')
-  return t.length > 92 ? `${t.slice(0, 89)}…` : t
+  const evidence = `${m.blurb || ''} ${m.description || ''} ${m.tags.join(' ')} ${m.sourceTask || ''}`.toLowerCase()
+  const specialties: string[] = []
+  if (/\b(coder|coding|programming|software engineering|code generation)\b/.test(evidence) || m.tags.some(tag => /^code$/i.test(tag))) specialties.push('coding and software tasks')
+  if (/\b(vision|visual question|image understanding|document understanding|ocr)\b/.test(evidence) || m.tags.some(tag => /^(vision|image-text-to-text)$/i.test(tag))) specialties.push('image and document understanding')
+  if (/\b(roleplay|role-play|creative writing|storytelling|fiction)\b/.test(evidence)) specialties.push('roleplay and creative writing')
+  if (/\b(math|mathematics|reasoning|problem solving)\b/.test(evidence)) specialties.push('reasoning and math')
+  if (m.agent || /\b(tool calling|tool use|function calling|agentic)\b/.test(evidence)) specialties.push('tool-using agent workflows')
+  if (/\b(multilingual|translation|languages)\b/.test(evidence)) specialties.push('multilingual tasks')
+  if (specialties.length === 0) specialties.push('general chat and instruction following')
+  const focus = `Best for: ${specialties.join('; ')}.`
+  return focus.length > 150 ? `${focus.slice(0, 147).trimEnd()}…` : focus
+}
+
+function bundleBlurb(bundle: ModelBundle): string {
+  const sentences = bundle.description.split(/(?<=[.!?])\s+/).map(sentence => sentence.trim()).filter(Boolean)
+  const useful = sentences.filter(sentence => !/\b(?:VRAM|RAM|GPU|CPU|best for\s+\d|\d+(?:\.\d+)?\s*GB)\b/i.test(sentence))
+  const focus = useful.join(' ').replace(/[.!?]+$/, '').trim() || `${bundle.workflow.replace(/[-_]/g, ' ')} model workflow`
+  return `Focus: ${focus}.`
 }
 
 // Human variant label: prefer the quant tag ("Q4_K_M"), else the size.
@@ -324,6 +349,7 @@ export function pickDefaultVariant(
 export interface ModelTileProps {
   variants: DiscoverModel[]
   vramGb: number | null
+  ramGb?: number | null
   isInstalled: (m: DiscoverModel) => boolean
   dlState: (m: DiscoverModel) => DownloadProgress | null
   onDownload: (m: DiscoverModel) => void
@@ -341,7 +367,7 @@ export interface ModelTileProps {
   highlight?: boolean
 }
 
-export function ModelTile({ variants, vramGb, isInstalled, dlState, onDownload, onInfo, onOpenUrl, onUse, canUse, isUsing, highlight }: ModelTileProps) {
+export function ModelTile({ variants, vramGb, ramGb = null, isInstalled, dlState, onDownload, onInfo, onOpenUrl, onUse, canUse, isUsing, highlight }: ModelTileProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [chosen, setChosen] = useState<string | null>(null)
   const pickerRef = useRef<HTMLDivElement>(null)
@@ -353,7 +379,7 @@ export function ModelTile({ variants, vramGb, isInstalled, dlState, onDownload, 
   const downloading = dl?.status === 'downloading' || dl?.status === 'connecting'
   const installed = isInstalled(sel) || dl?.status === 'complete'
   const externalOnly = sel.canPull === false
-  const fit = computeFit(sel.sizeGB, vramGb)
+  const fit = computeHardwareFit(sel.sizeGB, vramGb, ramGb)
   // One rule for what the button does, so no state can end up without one
   // (lib/model-tile-action.ts).
   const action = modelTileAction({
@@ -394,6 +420,23 @@ export function ModelTile({ variants, vramGb, isInstalled, dlState, onDownload, 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 min-w-0">
             <h3 className="text-[0.78rem] font-semibold text-gray-900 dark:text-white truncate">{groupTitle}</h3>
+            {variants.some(variant => variant.agent) && (
+              <span
+                className="shrink-0 inline-flex items-center gap-1 t-micro px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300"
+                title="Supports agent workflows and tool calling"
+                aria-label={`${groupTitle} supports agent workflows`}
+              >
+                <Bot size={ICON_SM} aria-hidden="true" /> Agent
+              </span>
+            )}
+            {sel.censorshipLabel && (
+              <span
+                className="shrink-0 t-micro px-1.5 py-0.5 rounded bg-gray-100 dark:bg-white/[0.06] text-gray-500 dark:text-gray-400"
+                title="Catalog/source wording only. No uncensor claim does not mean the model is proven to be censored."
+              >
+                {sel.censorshipLabel}
+              </span>
+            )}
           </div>
           <p className="t-micro text-gray-500 dark:text-gray-400 leading-snug mt-0.5 line-clamp-2">{shortBlurb(sel)}</p>
         </div>
@@ -423,9 +466,9 @@ export function ModelTile({ variants, vramGb, isInstalled, dlState, onDownload, 
               aria-haspopup="listbox"
               aria-expanded={pickerOpen}
               aria-label={`Size and quality for ${groupTitle}`}
-              title="Choose a size / quality"
+              title={`Choose from ${variants.length} size / quality variants`}
             >
-              {variantLabel(sel)} · {sel.sizeGB} GB
+              {variantLabel(sel)} · {sel.sizeGB} GB <span className="opacity-60">({variants.length})</span>
               <ChevronDown size={ICON_SM} className={`transition-transform ${pickerOpen ? 'rotate-180' : ''}`} />
             </button>
             {pickerOpen && (
@@ -435,7 +478,7 @@ export function ModelTile({ variants, vramGb, isInstalled, dlState, onDownload, 
                 className="absolute z-30 left-0 top-full mt-1 w-56 rounded-lg lu-elevated p-1"
               >
                 {variants.map(v => {
-                  const vFit = computeFit(v.sizeGB, vramGb)
+                  const vFit = computeHardwareFit(v.sizeGB, vramGb, ramGb)
                   const vInst = isInstalled(v) || dlState(v)?.status === 'complete'
                   return (
                     <button
@@ -533,6 +576,7 @@ export function ModelTile({ variants, vramGb, isInstalled, dlState, onDownload, 
 export interface BundleTileProps {
   bundle: ModelBundle
   vramGb: number | null
+  ramGb?: number | null
   complete: boolean
   downloading: boolean
   hasErrors: boolean
@@ -542,7 +586,7 @@ export interface BundleTileProps {
   onOpenUrl: (url: string) => void
 }
 
-export function BundleTile({ bundle, vramGb, complete, downloading, hasErrors, onInstall, onRetry, onClear, onOpenUrl }: BundleTileProps) {
+export function BundleTile({ bundle, vramGb, ramGb = null, complete, downloading, hasErrors, onInstall, onRetry, onClear, onOpenUrl }: BundleTileProps) {
   // No COMING SOON overlay any more (2026-07-24). It was driven by
   // `!bundle.verified && !complete`, a hand-set boolean, and it dimmed the tile
   // behind a full-cover "COMING SOON" pill while that tile's own working
@@ -558,7 +602,7 @@ export function BundleTile({ bundle, vramGb, complete, downloading, hasErrors, o
   // bundleVramNeedGb, not a local parser: the add-on bundles say "any" and the
   // old local one answered 99 GB to that, which painted a 0.17 GB LoRA red.
   const need = bundleVramNeedGb(bundle)
-  const fit: Fit = !vramGb ? 'unknown' : need <= vramGb ? 'fits' : need <= vramGb + 2 ? 'tight' : 'big'
+  const fit = computeHardwareFit(need, vramGb, ramGb)
 
   return (
     <div
@@ -572,7 +616,7 @@ export function BundleTile({ bundle, vramGb, complete, downloading, hasErrors, o
             {bundle.hot && !complete && <HotMark />}
           </div>
           {bundle.description && (
-            <p className="t-micro text-gray-500 dark:text-gray-400 leading-snug mt-0.5 line-clamp-2">{bundle.description}</p>
+            <p className="t-micro text-gray-500 dark:text-gray-400 leading-snug mt-0.5 line-clamp-2">{bundleBlurb(bundle)}</p>
           )}
         </div>
         {bundle.url && (

@@ -172,6 +172,19 @@ export function CivitaiSearchPanel({
                     </p>
                   )}
                   {model.description && <p className="t-micro text-gray-500 line-clamp-1 mt-0.5">{model.description}</p>}
+                  {(model.tags?.length || model.trainedWords?.length || model.nsfw) ? (
+                    <div className="flex items-center gap-1 flex-wrap mt-1">
+                      {model.tags?.slice(0, 4).map(tag => (
+                        <span key={tag} className="t-micro px-1 rounded bg-gray-100 dark:bg-white/[0.06] text-gray-500 dark:text-gray-400">{tag}</span>
+                      ))}
+                      {model.trainedWords?.slice(0, 3).map(word => (
+                        <span key={`trigger-${word}`} title="Creator-provided trigger word from this model version" className="t-micro px-1 rounded bg-purple-100 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300">Trigger: {word}</span>
+                      ))}
+                      {model.nsfw && (
+                        <span title="CivitAI marks this asset as mature content; this is separate from whether a text model refuses prompts." className="t-micro px-1 rounded bg-gray-100 dark:bg-white/[0.06] text-gray-500 dark:text-gray-400">NSFW content</span>
+                      )}
+                    </div>
+                  ) : null}
                   {isDl && dlState && dlState.total > 0 && (
                     <div className="mt-1.5">
                       <ProgressBar progress={(dlState.progress / dlState.total) * 100} />

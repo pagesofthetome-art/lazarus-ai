@@ -63,6 +63,12 @@ export interface DiscoverModel {
   // Optional hand-written one-liner for the card. When absent the card derives
   // a short line from `description` (text after the first "·", first sentence).
   blurb?: string
+  /** Audited source/catalog wording; absence is never treated as proof of censorship. */
+  censorshipLabel?: string
+  /** Structured source-card fields, when the provider publishes them. */
+  trainedOn?: string[]
+  sourceTask?: string
+  sourceLanguages?: string[]
   /**
    * SHA256 of the file at `downloadUrl`, 64 hex characters.
    *

@@ -11,6 +11,7 @@ import { sectionAnchorId } from './settings-nav'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { usePermissionStore } from '../../stores/permissionStore'
 import { useUIStore } from '../../stores/uiStore'
+import { useCompareStore } from '../../stores/compareStore'
 import { SliderControl } from './SliderControl'
 import { InlineToggle } from './InlineToggle'
 import { SpeechSettings } from './SpeechSettings'
@@ -31,6 +32,7 @@ import { FEATURE_FLAGS } from '../../lib/constants'
 import { MemorySettings } from './MemorySettings'
 import { ChatBackupSettings } from './ChatBackupSettings'
 import { ImportScanSkeleton } from '../layout/ViewSkeletons'
+import { PluginCatalogMenu } from '../layout/PluginCatalogMenu'
 import { LocalApiSettings } from './LocalApiSettings'
 import { RemoteAccessSettings } from './RemoteAccessSettings'
 import { RemoteAccessDocs } from './RemoteAccessDocs'
@@ -1701,6 +1703,13 @@ export function SettingsPage() {
   // app-managed built-in engine (same gate as the send-path self-heal).
   const builtinManaged = useProviderStore((s) => !!s.providers.openai?.enabled && s.providers.openai?.managed === true)
   const { setView } = useUIStore()
+  const openPluginCatalog = (detail?: { query?: string; categoryId?: string }) => {
+    useCompareStore.getState().setComparing(false)
+    if (detail) window.sessionStorage.setItem('lazarus:plugin-filter', JSON.stringify(detail))
+    else window.sessionStorage.removeItem('lazarus:plugin-filter')
+    setView('plugins')
+    window.setTimeout(() => window.dispatchEvent(new CustomEvent('lazarus:plugin-filter', { detail })), 250)
+  }
   // Where the navigation that opened this page wanted to land. Read ONCE, at
   // mount, and held for this mount's whole life: `defaultOpen` below is an
   // initial value, so a focus that vanished from the store on the next render
@@ -1785,7 +1794,12 @@ export function SettingsPage() {
             >
               Settings
             </button>
-            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-thin">
+            <PluginCatalogMenu
+              active={false}
+              onOpenCatalog={openPluginCatalog}
+              className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[0.7rem] font-medium border transition-colors bg-white/[0.03] dark:bg-white/[0.03] border-gray-200 dark:border-white/[0.08] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-purple-300/60"
+            />
+            <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto scrollbar-thin">
               {SETTINGS_TABS.filter(t => t.id !== 'general').map(t => (
                 <button
                   key={t.id}

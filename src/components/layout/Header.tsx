@@ -18,7 +18,6 @@ import { closeDialog, isTopDialog, nextFocusIndex, openDialog } from '../ui/dial
 import { MONOGRAM, MONOGRAM_INVERT } from './brand'
 import type { View } from '../../stores/uiStore'
 import { modelListIsStale } from '../../lib/model-list-staleness'
-import { PluginCatalogMenu } from './PluginCatalogMenu'
 
 /**
  * Die Navigation als Daten, nicht als sechs abgeschriebene Knoepfe.
@@ -29,8 +28,8 @@ import { PluginCatalogMenu } from './PluginCatalogMenu'
  * eine Liste; Leiste und Menue rendern beide daraus, und ein siebtes Ziel wird
  * an einer Stelle hinzugefuegt.
  *
- * `localOnly` ist der Grund, warum Benchmark und Models im Cloud-Modus fehlen:
- * beides misst oder verwaltet lokale Hardware und ist gegen gehostete GPUs
+ * `localOnly` ist der Grund, warum Models im Cloud-Modus fehlt:
+ * es verwaltet lokale Hardware und ist gegen gehostete GPUs
  * bedeutungslos (der AppShell-Waechter leitet dort ohnehin um).
  */
 interface NavTarget {
@@ -46,10 +45,8 @@ const NAV_TARGETS: readonly NavTarget[] = [
   { id: 'code', label: 'Code', view: 'chat' },
   { id: 'chat', label: 'Chat', view: 'chat' },
   { id: 'create', label: 'Create', view: 'create' },
-  { id: 'benchmark', label: 'Benchmark', view: 'benchmark', localOnly: true },
   { id: 'models', label: 'Models', view: 'models', localOnly: true },
   { id: 'settings', label: 'Settings', view: 'settings' },
-  { id: 'plugins', label: 'Plugins', view: 'plugins' },
 ]
 
 export function Header() {
@@ -277,16 +274,6 @@ export function Header() {
     setView(t.view)
   }
 
-  const openPluginCatalog = (detail?: { query?: string; categoryId?: string }) => {
-    useCompareStore.getState().setComparing(false)
-    if (detail) window.sessionStorage.setItem('lazarus:plugin-filter', JSON.stringify(detail))
-    else window.sessionStorage.removeItem('lazarus:plugin-filter')
-    setView('plugins')
-    // PluginsPage is lazy-loaded; leave enough time for its filter listener
-    // to mount before delivering the selection from the header menu.
-    window.setTimeout(() => window.dispatchEvent(new CustomEvent('lazarus:plugin-filter', { detail })), 250)
-  }
-
   /* ── Das Klappmenue (D-S21) ───────────────────────────────────────────────
      Befund: „Das Overflow-Menue ist kein Menue: Textzeilen ohne Padding, ohne
      Hover-Flaeche, ohne `role=menu`" — 0 `role=`-Treffer in dieser Datei,
@@ -472,9 +459,7 @@ export function Header() {
             wieder die Reihe aus 2.6.7: sechs feste Eintraege, alle gleich
             hell, jeder immer an seinem Platz. */}
         <div className="flex w-full max-w-3xl items-center justify-evenly gap-1">
-          {navTargets.map((t) => t.id === 'plugins' ? (
-            <PluginCatalogMenu key={t.id} active={isNavActive(t)} onOpenCatalog={openPluginCatalog} className={navClass(isNavActive(t))} />
-          ) : (
+          {navTargets.map((t) => (
             <button key={t.id} onClick={() => goto(t)} aria-current={isNavActive(t) ? 'page' : undefined} className={navClass(isNavActive(t))}>
               {t.label}
             </button>

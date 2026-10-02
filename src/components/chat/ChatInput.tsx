@@ -59,7 +59,7 @@ interface Props {
   /** Rendered directly above the prompt box (the standing-goal bar). */
   composerAbove?: ReactNode
   /**
-   * View-specific action buttons (Docs · Plugins · Tools) shown in the action
+   * View-specific action buttons (Plugins · Tools) shown in the action
    * bar between Think and the model picker. Chat and Code pass different sets.
    */
   composerActions?: ReactNode
@@ -682,7 +682,7 @@ export function ChatInput({ onSend, onStop, isGenerating, waitingForLocalLane, p
             </button>
           )}
 
-          {/* View-specific actions (Docs · Plugins · Tools) */}
+          {/* View-specific actions (Plugins · Tools) */}
           <div className="flex flex-nowrap items-center gap-1 shrink-0">{composerActions}</div>
 
           <div className="flex-1 min-w-0" />

@@ -14,11 +14,11 @@ import {
   type DiscoverModel, type DownloadProgress, type ModelBundle, type HfGgufFile,
 } from '../../api/discover'
 import { getSystemVRAM } from '../../api/comfyui'
-import { getMaxVramGb, bundleVramNeedGb } from '../../lib/hardware'
+import { getMaxVramGb, getTotalRamGb, bundleVramNeedGb } from '../../lib/hardware'
 import { openExternal } from '../../api/backend'
 import { useModels } from '../../hooks/useModels'
 import { useDownloadStore } from '../../stores/downloadStore'
-import { rankModelsForTask } from '../../lib/model-ranking'
+import { rankModelsForTask, rankCatalogGroupsForPurpose, type CatalogPurpose } from '../../lib/model-ranking'
 import { ModelGridSkeleton } from '../layout/ViewSkeletons'
 import { useProviderStore } from '../../stores/providerStore'
 import { useSettingsStore } from '../../stores/settingsStore'
@@ -45,6 +45,7 @@ import {
 import { ICON_SM } from '../ui/icon-size'
 import { CivitaiSearchPanel } from './CivitaiSearchPanel'
 import { openCompare } from '../../stores/compareStore'
+import { useUIStore } from '../../stores/uiStore'
 
 interface Props {
   category: ModelCategory
@@ -52,12 +53,40 @@ interface Props {
   search?: string
   /** Bumped by ModelManager whenever the user submits the search (Enter). */
   searchSubmitToken?: number
+  /** Locally ranked recommendation selected in the Model Manager header. */
+  bestFor?: string
+  /** Independent catalog filters; they combine with the selected task. */
+  uncensoredOnly?: boolean
+  agenticOnly?: boolean
+  /** Clear the header recommendation when a user switches catalog rail. */
+  onBestForReset?: () => void
+  /** Explicit All reset returns to the default Chat/Mainstream catalog. */
+  catalogResetToken?: number
 }
 
 // Size buckets stay EXACTLY the ones from the old VRAM-tier filter (David
 // 2026-06-06) — only the labels turned human. 'fit' is new and additive:
 // it filters on the detected GPU instead of a fixed bucket.
 type SizeTier = 'all' | 'fit' | 'ultra' | 'light' | 'middle' | 'highend'
+
+const CREATE_PURPOSE_TERMS: Record<string, string[]> = {
+  image: ['image', 'diffusion', 'checkpoint', 'flux', 'sdxl'],
+  cutout: ['cutout', 'background removal', 'remove background', 'rembg', 'segmentation'],
+  'animate-image': ['image-to-video', 'image to video', 'i2v', 'animate image'],
+  'talking-character': ['talking character', 'talking photo', 'speech-to-video', 's2v'],
+  'lip-sync': ['lip-sync', 'lip sync', 'lipsync', 'audio-driven'],
+  music: ['music generation', 'text-to-audio', 'audio generation', 'music'],
+  video: ['video generation', 'text-to-video', 't2v', 'video'],
+  'extend-video': ['video extension', 'extend video', 'video continuation', 'extension'],
+  'motion-control': ['motion control', 'vace', 'pose transfer', 'motion'],
+}
+
+function createPurposeScore(bundle: ModelBundle, purpose: string): number {
+  const terms = CREATE_PURPOSE_TERMS[purpose]
+  if (!terms) return 0
+  const evidence = [bundle.name, bundle.description, bundle.workflow, ...bundle.tags].join(' ').toLowerCase()
+  return terms.reduce((score, term) => score + (evidence.includes(term) ? (term.includes(' ') ? 3 : 1) : 0), 0)
+}
 
 // ─── D-S25 · eine Segmented-Sprache statt zwei ──────────────────────
 //
@@ -218,9 +247,11 @@ export function awaitDownloadedFile(
   })
 }
 
-export function DiscoverModels({ category, search = '', searchSubmitToken = 0 }: Props) {
+export function DiscoverModels({ category, search = '', searchSubmitToken = 0, bestFor = '', uncensoredOnly = false, agenticOnly = false, onBestForReset, catalogResetToken = 0 }: Props) {
+  const setView = useUIStore((s) => s.setView)
   const [loading, setLoading] = useState(false)
   const [systemVRAM, setSystemVRAM] = useState<number | null>(null)
+  const [systemRAM, setSystemRAM] = useState<number | null>(null)
   // Mainstream is the default + first tab (David 2026-07-17) — Unfiltered is
   // one click away but new users land on the neutral list.
   const [subTab, setSubTab] = useState<'uncensored' | 'mainstream'>('mainstream')
@@ -228,6 +259,7 @@ export function DiscoverModels({ category, search = '', searchSubmitToken = 0 }:
   // Details modal — the card shows one calm line; the FULL catalog description
   // (incl. per-model tips like "run thinking-OFF") lives here.
   const [infoModel, setInfoModel] = useState<DiscoverModel | null>(null)
+  const previousCatalogResetToken = useRef(catalogResetToken)
   const downloads = useDownloadStore(s => s.downloads)
   const dlStore = useDownloadStore
 
@@ -270,6 +302,9 @@ export function DiscoverModels({ category, search = '', searchSubmitToken = 0 }:
     getSystemVRAM().then(v => {
       if (v) setSystemVRAM(prev => Math.max(prev ?? 0, v))
     })
+    getTotalRamGb().then(v => {
+      if (v > 0) setSystemRAM(v)
+    }).catch(() => {})
   }, [])
 
   // Check which bundles are REALLY installed (file size validated, not just file existence)
@@ -328,7 +363,11 @@ export function DiscoverModels({ category, search = '', searchSubmitToken = 0 }:
     return parseVRAM(a) - parseVRAM(b)
   })
 
-  const tabFilteredBundles = sortedBundles.filter(b => subTab === 'uncensored' ? b.uncensored : !b.uncensored)
+  const tabFilteredBundles = sortedBundles
+    .filter(b => uncensoredOnly ? !!b.uncensored : subTab === 'uncensored' ? b.uncensored : !b.uncensored)
+    // Media bundles do not advertise agent/tool-calling capability. Do not
+    // imply that a generation workflow is an agentic chat model.
+    .filter(() => !agenticOnly)
 
   // VRAM tier filtering for bundles
   const vramFilteredBundles = tabFilteredBundles.filter(b => {
@@ -341,9 +380,17 @@ export function DiscoverModels({ category, search = '', searchSubmitToken = 0 }:
     return vram > 20 // highend (open-ended)
   })
 
-  const filteredBundles = search
+  const searchFilteredBundles = search
     ? vramFilteredBundles.filter((b) => b.name.toLowerCase().includes(search.toLowerCase()) || b.description.toLowerCase().includes(search.toLowerCase()))
     : vramFilteredBundles
+  const createPurpose = bestFor.startsWith('create:') ? bestFor.slice('create:'.length) : ''
+  const filteredBundles = createPurpose
+    ? searchFilteredBundles
+        .map(bundle => ({ bundle, score: createPurposeScore(bundle, createPurpose) }))
+        .filter(result => result.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .map(result => result.bundle)
+    : searchFilteredBundles
 
   // Which model the Use button is currently loading. A GGUF start blocks for
   // seconds to minutes, and without this the button stayed live and a second
@@ -549,6 +596,21 @@ export function DiscoverModels({ category, search = '', searchSubmitToken = 0 }:
     if (searchSubmitToken > 0 && search.trim() && isText) handleSearch()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchSubmitToken])
+
+  useEffect(() => {
+    if (!search.trim()) setHfSearchResults([])
+  }, [search])
+
+  useEffect(() => {
+    if (bestFor === 'uncensored') setSubTab('uncensored')
+  }, [bestFor])
+
+  useEffect(() => {
+    if (previousCatalogResetToken.current !== catalogResetToken) {
+      previousCatalogResetToken.current = catalogResetToken
+      setSubTab('mainstream')
+    }
+  }, [catalogResetToken])
 
   const uncensoredModels = isText ? getUncensoredTextModels() : []
   const mainstreamModels = isText ? getMainstreamTextModels() : []
@@ -806,13 +868,30 @@ export function DiscoverModels({ category, search = '', searchSubmitToken = 0 }:
 
   // ── Derived view data for the tile grid ─────────────────────────────
 
-  const activeTextModels = subTab === 'uncensored' ? filteredUncensored : filteredMainstream
-  const textGroups = isText ? groupModels(activeTextModels) : []
+  const purpose = bestFor === 'developer' || bestFor === 'coding' || bestFor === 'chat' || bestFor === 'vision'
+    ? (bestFor === 'developer' ? 'developer' : bestFor) as CatalogPurpose
+    : null
+  // Purpose recommendations span both catalog rails so a Chat or Coding
+  // choice does not silently hide all of the abliterated/community models.
+  // The explicit Unfiltered rail remains available for browsing that subset.
+  const activeTextModels = bestFor === 'uncensored' || uncensoredOnly
+    ? filteredUncensored
+    : purpose
+      ? [...filteredMainstream, ...filteredUncensored]
+      : subTab === 'uncensored' ? filteredUncensored : filteredMainstream
+  const groupedTextModels = isText ? groupModels(activeTextModels).map(group => agenticOnly ? group.filter(model => model.agent) : group).filter(group => group.length > 0) : []
+  const textGroups = purpose
+    ? rankCatalogGroupsForPurpose(groupedTextModels, purpose)
+    : groupedTextModels
+  const visibleHfSearchResults = hfSearchResults.filter(model =>
+    (!agenticOnly || !!model.agent)
+    && (!uncensoredOnly || /^(Abliteration-labeled|Uncensored-labeled|Unfiltered-labeled)$/.test(model.censorshipLabel ?? '')),
+  )
 
   // "Start here" — up to 3 derived picks for the current tab. Pure derivation
   // from existing flags (hot/agent/lightweight) + the hardware fit; no new
   // catalog data and no picks while searching or filtering.
-  const showPicks = isText && !search && vramTier === 'all' && textGroups.length > 4
+  const showPicks = !bestFor && isText && !search && vramTier === 'all' && textGroups.length > 4
   const scoredGroups = showPicks
     ? chatRecommendationGroups(textGroups)
         .map(g => {
@@ -853,6 +932,7 @@ export function DiscoverModels({ category, search = '', searchSubmitToken = 0 }:
       <ModelTile
         variants={group}
         vramGb={systemVRAM}
+        ramGb={systemRAM}
         isInstalled={isModelFullyInstalled}
         dlState={getModelDownloadState}
         onDownload={handleTextDownload}
@@ -872,17 +952,17 @@ export function DiscoverModels({ category, search = '', searchSubmitToken = 0 }:
       <div className="flex items-center gap-2 flex-wrap">
         <div className="inline-flex items-center gap-2 flex-wrap" role="group" aria-label="Catalogue">
           <button
-            onClick={() => setSubTab('mainstream')}
-            aria-pressed={subTab === 'mainstream'}
+            onClick={() => { setSubTab('mainstream'); onBestForReset?.() }}
+            aria-pressed={!uncensoredOnly && subTab === 'mainstream' && bestFor !== 'uncensored' && !purpose}
             title="Popular models with tool calling + vision"
             className="lazarus-control bg-[#14101b] border-purple-400/35 shadow-[0_0_16px_rgba(168,85,247,0.18)] hover:border-purple-300/60"
           >
             <ShieldCheck size={ICON_SM} /> Mainstream
           </button>
           <button
-            onClick={() => setSubTab('uncensored')}
-            aria-pressed={subTab === 'uncensored'}
-            title="No filters, no limits"
+            onClick={() => { setSubTab('uncensored'); onBestForReset?.() }}
+            aria-pressed={uncensoredOnly || subTab === 'uncensored' || bestFor === 'uncensored'}
+            title="Community models catalogued as unfiltered or abliterated; check each source card for its exact claim"
             className="lazarus-control bg-[#14101b] border-purple-400/35 shadow-[0_0_16px_rgba(168,85,247,0.18)] hover:border-purple-300/60"
           >
             <Unlock size={ICON_SM} /> Unfiltered
@@ -894,6 +974,14 @@ export function DiscoverModels({ category, search = '', searchSubmitToken = 0 }:
             aria-label="Compare models"
           >
             Compare
+          </button>
+          <button
+            onClick={() => setView('benchmark')}
+            className="lazarus-control bg-[#14101b] border-purple-400/35 shadow-[0_0_16px_rgba(168,85,247,0.18)] hover:border-purple-300/60"
+            title="Open benchmark"
+            aria-label="Open benchmark"
+          >
+            Benchmark
           </button>
         </div>
 
@@ -964,6 +1052,7 @@ export function DiscoverModels({ category, search = '', searchSubmitToken = 0 }:
               <BundleTile
                 bundle={bundle}
                 vramGb={systemVRAM}
+                ramGb={systemRAM}
                 complete={isBundleComplete(bundle)}
                 downloading={isBundleDownloading(bundle) || installingBundle === bundle.name}
                 hasErrors={hasBundleErrors(bundle)}
@@ -978,12 +1067,16 @@ export function DiscoverModels({ category, search = '', searchSubmitToken = 0 }:
       )}
 
       {(isImage || isVideo) && sortedBundles.length > 0 && filteredBundles.length === 0 && (
-        <p className="text-center text-gray-500 py-4 text-sm">No models match this size filter. Try a different one.</p>
+        <p className="text-center text-gray-500 py-4 text-sm">{agenticOnly ? 'No media model bundles in this catalog are marked as agentic.' : createPurpose ? `No catalog models are currently classified for ${createPurpose.replaceAll('-', ' ')}.` : 'No models match this size filter. Try a different one.'}</p>
+      )}
+
+      {(isImage || isVideo) && (uncensoredOnly || agenticOnly) && (
+        <p className="text-center text-gray-500 py-2 text-xs">CivitAI results are hidden by these filters because its content rating and tags do not establish uncensored language-model or agentic tool-use behavior.</p>
       )}
 
       {/* CivitAI Search (Image & Video). Checkpoints here; the LoRA rail
           renders the same panel with type LORA. */}
-      {(isImage || isVideo) && (
+      {(isImage || isVideo) && !uncensoredOnly && !agenticOnly && (
         <CivitaiSearchPanel
           modelType="Checkpoint"
           title="Search CivitAI"
@@ -1054,10 +1147,14 @@ export function DiscoverModels({ category, search = '', searchSubmitToken = 0 }:
           )}
 
           <div className="space-y-1.5">
-            {topPicks.length >= 2 && (
+            {(topPicks.length >= 2 || !!bestFor || uncensoredOnly || agenticOnly) && (
               <div className="flex items-center gap-1.5 px-1 pt-1">
                 <h3 className="t-micro font-semibold uppercase tracking-[0.12em] text-gray-700 dark:text-gray-300">
-                  {subTab === 'uncensored' ? 'All unfiltered models' : 'All mainstream models'}
+                  {[
+                    purpose ? `Best for ${bestFor === 'developer' ? 'Developer' : purpose}` : bestFor.startsWith('create:') ? `Best for Create · ${createPurpose.replaceAll('-', ' ')}` : null,
+                    uncensoredOnly || bestFor === 'uncensored' || subTab === 'uncensored' ? 'Unfiltered' : null,
+                    agenticOnly ? 'Agentic' : null,
+                  ].filter(Boolean).join(' · ') || 'Mainstream models'}
                 </h3>
                 <div className="flex-1 h-px bg-gray-200 dark:bg-white/[0.06]" />
               </div>
@@ -1067,7 +1164,7 @@ export function DiscoverModels({ category, search = '', searchSubmitToken = 0 }:
             </div>
             {activeTextModels.length === 0 && (
               <p className="text-center text-gray-500 py-4">
-                {subTab === 'uncensored' ? 'No unfiltered models match your search' : 'No mainstream models match your search'}
+                {uncensoredOnly && agenticOnly ? 'No models match both the Unfiltered and Agentic filters.' : agenticOnly ? 'No agentic models match this task or search.' : uncensoredOnly ? 'No unfiltered models match this task or search.' : bestFor === 'uncensored' || subTab === 'uncensored' ? 'No unfiltered models match your search' : 'No mainstream models match your search'}
               </p>
             )}
           </div>
@@ -1081,11 +1178,12 @@ export function DiscoverModels({ category, search = '', searchSubmitToken = 0 }:
                 <div className="flex-1 h-px bg-gray-200 dark:bg-white/[0.06]" />
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2.5">
-                {rankModelsForTask(hfSearchResults, search).map((model, i) => (
+                {rankModelsForTask(visibleHfSearchResults, search).map((model, i) => (
                   <motion.div key={model.name + i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 12) * 0.025 }}>
                     <ModelTile
                       variants={[model]}
                       vramGb={systemVRAM}
+                      ramGb={systemRAM}
                       isInstalled={isModelFullyInstalled}
                       dlState={getModelDownloadState}
                       onDownload={handleTextDownload}
@@ -1112,6 +1210,9 @@ export function DiscoverModels({ category, search = '', searchSubmitToken = 0 }:
         {infoModel && (
           <div className="space-y-3">
             <p className="text-[0.72rem] text-gray-700 dark:text-gray-200 leading-relaxed">{infoModel.description}</p>
+            {infoModel.sourceTask && <p className="t-micro text-gray-500 dark:text-gray-400">Source task: {infoModel.sourceTask}</p>}
+            {infoModel.trainedOn?.length ? <p className="t-micro text-gray-500 dark:text-gray-400">Training datasets: {infoModel.trainedOn.join(', ')}</p> : null}
+            {infoModel.sourceLanguages?.length ? <p className="t-micro text-gray-500 dark:text-gray-400">Languages: {infoModel.sourceLanguages.join(', ')}</p> : null}
             {isBelowChatMinimum(infoModel) && <p className="text-xs leading-relaxed text-gray-700 dark:text-gray-200">{SMALL_CHAT_MODEL_WARNING}</p>}
             <div className="flex items-center gap-1.5 flex-wrap">
               {infoModel.tags.map(t => (

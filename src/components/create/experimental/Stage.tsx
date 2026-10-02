@@ -147,7 +147,7 @@ export function Stage({ displayed, onOpenMaskEditor, onEditResult, onAnimateResu
     // Whatever the mode renders (empty state, dropzone, result, install card) is
     // centred inside this frame.
     <div className="flex-1 min-w-0 min-h-0 flex overflow-hidden p-2">
-      <div className="lazarus-stage-surface flex-1 min-w-0 flex flex-col overflow-visible relative">
+      <div className="lazarus-stage-surface flex-1 min-w-0 min-h-0 flex flex-col overflow-visible relative">
         <AnimatePresence mode="wait">
           <motion.div
             key={intent + (isGenerating ? ':gen' : '')}
@@ -155,7 +155,7 @@ export function Stage({ displayed, onOpenMaskEditor, onEditResult, onAnimateResu
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.12 }}
-            className="flex-1 min-h-0 flex flex-col overflow-visible"
+            className="flex-1 min-w-0 min-h-0 flex flex-col overflow-visible"
           >
             {body}
           </motion.div>
@@ -225,12 +225,11 @@ function InputSlot() {
   }
 
   return (
-    // Scroll-safe centering: `m-auto` centres the column when there's room and
-    // collapses to a scroll when the dropzone + gallery strip exceed a short
-    // window (e.g. a 1366×768 laptop) — previously the parent's overflow-hidden
-    // clipped the "or pick from your gallery" strip.
-    <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin flex flex-col">
-      <div className="m-auto w-full max-w-sm flex flex-col items-center p-6">
+    // Keep the dropzone and optional gallery strip inside the fixed stage;
+    // the target scales with viewport height and the stage never adds a
+    // scrollbar that competes with the composer below.
+    <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-center">
+      <div className="m-auto w-full max-w-sm min-h-0 flex flex-col items-center p-3">
         <div
           onClick={() => inputRef.current?.click()}
           onDragOver={(e) => { e.preventDefault(); setDrag(true) }}
@@ -244,11 +243,9 @@ function InputSlot() {
             if (item && !loading) void adoptFromGallery(item)
           }}
           className={cn(
-            // max-h trimmed 44vh→36vh so the "or pick from your gallery" strip
-            // below stays visible without scrolling at typical window heights
-            // (the 44vh drop target scaled with the window and always shoved the
-            // strip just past the fold). Still scrolls gracefully on tiny windows.
-            'w-full aspect-[5/4] min-h-[200px] max-h-[36vh] rounded-[var(--radius-panel)] border-2 border-dashed flex flex-col items-center justify-center gap-3 cursor-pointer transition-colors',
+            // Scale the drop target to leave room for the optional gallery strip
+            // and keep the entire upload area visible above the composer.
+            'w-full h-[min(32vh,220px)] min-h-[140px] max-h-full rounded-[var(--radius-panel)] border-2 border-dashed flex flex-col items-center justify-center gap-3 cursor-pointer transition-colors',
             drag ? 'border-blue-400 bg-blue-500/10' : 'border-white/10 bg-white/[0.02] hover:border-white/20',
           )}
         >
@@ -373,7 +370,7 @@ function InstallCardBody({ run, installing, status, err, onDismiss, onCancel, ca
   cancelTitle?: string
 }) {
   return (
-    <div className="flex flex-col items-center gap-2.5 pt-1">
+    <div className="flex w-full min-w-0 flex-col items-center gap-2.5 pt-1">
       {installing ? (
         <div className="flex flex-col items-center gap-1.5">
           <div className="t-control text-gray-400 flex items-center gap-2">
@@ -389,7 +386,7 @@ function InstallCardBody({ run, installing, status, err, onDismiss, onCancel, ca
           </button>
         </div>
       ) : (
-        <Button variant="primary" icon={Download} onClick={run}>Download &amp; install</Button>
+        <Button variant="primary" icon={Download} onClick={run} fullWidth>Download &amp; install</Button>
       )}
       {err && (
         <div className="relative t-control text-gray-300 bg-white/[0.03] rounded-[var(--radius-control)] px-2.5 py-2 pr-7 max-w-sm text-left">
@@ -410,8 +407,8 @@ function InstallCardBody({ run, installing, status, err, onDismiss, onCancel, ca
 const CAP_COPY = {
   rmbg: {
     icon: Scissors,
-    title: 'Background removal needs a one-time download',
-    description: 'The AI cutout runs fully locally (ComfyUI-RMBG). This installs the node now. The ~300 MB cutout model downloads automatically on your first cutout.',
+    title: 'Set up background removal',
+    description: 'Installs the RMBG node. Its 885 MB model weights download on first use.',
   },
   'inpaint-nodes': {
     icon: Wand2,
@@ -472,6 +469,7 @@ function CapabilityCard({ cap }: { cap: 'rmbg' | 'inpaint-nodes' | 'dwpose' }) {
     <EmptyState
       icon={copy.icon}
       tone="accent"
+      compact
       title={installing ? 'Setting this up for you' : copy.title}
       description={installing ? BUSY_DESCRIPTION.capability : copy.description}
     >
@@ -480,6 +478,14 @@ function CapabilityCard({ cap }: { cap: 'rmbg' | 'inpaint-nodes' | 'dwpose' }) {
         onDismiss={() => setErr(null)}
         onCancel={() => abortRef.current?.abort()}
       />
+      {cap === 'rmbg' && (
+        <a
+          href="https://huggingface.co/1038lab/RMBG-2.0/resolve/main/model.safetensors"
+          target="_blank"
+          rel="noreferrer"
+          className="block max-w-full truncate text-center text-[0.6rem] leading-tight text-gray-500 underline underline-offset-2 hover:text-gray-300"
+        >RMBG-2.0 weights · 885 MB</a>
+      )}
     </EmptyState>
   )
 }
@@ -537,6 +543,11 @@ const BUNDLE_COPY = {
 function videoBundleLine(intent: string): string {
   const b = bundleForVideoIntent(getVideoBundles(), intent)
   if (!b) return ''
+  if (intent === 'animate' || intent === 'extend' || intent === 'video') {
+    const name = b.name.replace(/\s*\([^)]*\)\s*$/, '')
+    const task = intent === 'video' ? 'text-to-video' : 'image-to-video'
+    return `Installs ComfyUI and ${name} ${task} files (~${b.totalSizeGB} GB; ${b.vramRequired} VRAM).`
+  }
   // Bundle names carry their own parenthetical ("Wan 2.2 · TI2V 5B (Image +
   // Text to Video)"), and two brackets in a row read as a typo.
   const name = b.name.replace(/\s*\([^)]*\)\s*$/, '')
@@ -554,9 +565,13 @@ function ModelInstallCard({ kind }: { kind: 'image' | 'video' | 'audio' | 'lipsy
   const mac = isMlxImageHost()
   const copy = (mac && (kind === 'image' || kind === 'video')) ? MAC_BUNDLE_COPY[kind] : BUNDLE_COPY[kind]
   // The Mac lane runs its own MLX stack and has no ComfyUI bundle to name.
-  const description = (kind === 'video' && !mac)
-    ? copy.description + videoBundleLine(intent)
-    : copy.description
+  const description = intent === 'lipsync'
+    ? 'Installs the Wan 2.2 S2V model and audio encoder (~20 GB; 12 GB VRAM recommended).'
+    : (kind === 'video' && !mac)
+      ? videoBundleLine(intent)
+      : intent === 'motion'
+        ? 'Installs the Wan VACE motion model and support files (~10.5 GB; 8 GB VRAM).'
+      : copy.description
 
   const run = () => startInstallRun(kind, (onStatus, signal) =>
     installModelBundle(kind, onStatus, signal).catch((e: unknown) => {
@@ -569,6 +584,7 @@ function ModelInstallCard({ kind }: { kind: 'image' | 'video' | 'audio' | 'lipsy
     <EmptyState
       icon={copy.icon}
       tone="accent"
+      compact
       title={installing ? 'Setting this up for you' : copy.title}
       description={installing ? (mac ? BUSY_DESCRIPTION.macBundle : BUSY_DESCRIPTION.bundle) : description}
     >

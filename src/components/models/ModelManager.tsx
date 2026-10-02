@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import {
   Download, ArrowLeft, RefreshCw, Search, MessagesSquare, Images, Clapperboard,
-  X as XIcon, HardDrive, Sparkles, PackageOpen, Video as VideoIcon, Image as ImageIcon,
-  Settings as SettingsIcon, Layers,
+  X as XIcon, HardDrive, Sparkles, PackageOpen, Video as VideoIcon, Image as ImageIcon, ChevronDown,
+  Settings as SettingsIcon, Layers, Bot, Unlock,
 } from 'lucide-react'
 import { useModels } from '../../hooks/useModels'
 import { useModelStore } from '../../stores/modelStore'
@@ -103,6 +103,10 @@ export function ModelManager() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchSubmitToken, setSearchSubmitToken] = useState(0)
   const [bestFor, setBestFor] = useState('')
+  const [uncensoredOnly, setUncensoredOnly] = useState(false)
+  const [agenticOnly, setAgenticOnly] = useState(false)
+  const [createPurposeOpen, setCreatePurposeOpen] = useState(false)
+  const [catalogResetToken, setCatalogResetToken] = useState(0)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   // The store still defaults categoryFilter to 'all' for legacy reasons, but
@@ -271,36 +275,68 @@ export function ModelManager() {
             </button>
             <h1 className="text-[0.85rem] font-semibold text-gray-900 dark:text-white">Models</h1>
 
-            <label className="relative flex items-center gap-1.5 t-micro text-gray-500 dark:text-gray-400">
-              <span className="sr-only">Best for</span>
-              <span className="absolute -inset-1 rounded-lg bg-purple-500/20 blur-md pointer-events-none" />
-              <select
-                value={bestFor}
-                onChange={(event) => {
-                  const value = event.target.value
-                  setBestFor(value)
-                  if (value === 'image' || value === 'video' || value === 'chat' || value === 'coding' || value === 'vision' || value === 'uncensored') {
-                    setLoraRail(false)
-                    setCategoryFilter(value === 'image' || value === 'video' ? value : 'text')
-                  }
-                  if (value) {
-                    setSearchQuery(value)
-                    setTab('discover')
-                    setSearchSubmitToken((token) => token + 1)
-                  }
+            <div className="relative flex items-center gap-1.5" aria-label="Browse models by Lazarus mode">
+              <button
+                onClick={() => {
+                  setBestFor('chat'); setCreatePurposeOpen(false); setLoraRail(false); setCategoryFilter('text'); setSearchQuery(''); setTab('discover')
                 }}
-                aria-label="Best for"
-                className="relative rounded-lg bg-gray-100 dark:bg-[#21152d] border border-purple-300/30 px-2 py-1.5 t-micro text-gray-700 dark:text-gray-300 shadow-[0_0_18px_rgba(168,85,247,0.22)] focus:outline-none focus:border-purple-400/60"
-              >
-                <option value="">Best for…</option>
-                <option value="coding">Coding agents</option>
-                <option value="chat">Chat and general use</option>
-                <option value="vision">Vision and documents</option>
-                <option value="image">Image generation</option>
-                <option value="video">Video generation</option>
-                <option value="uncensored">Uncensored models</option>
-              </select>
-            </label>
+                aria-pressed={bestFor === 'chat'}
+                className={`lazarus-control ${bestFor === 'chat' ? 'border-purple-400/60 bg-purple-500/15' : ''}`}
+              >Chat</button>
+              <button
+                onClick={() => {
+                  setBestFor('developer'); setCreatePurposeOpen(false); setLoraRail(false); setCategoryFilter('text'); setSearchQuery(''); setTab('discover')
+                }}
+                aria-pressed={bestFor === 'developer'}
+                className={`lazarus-control ${bestFor === 'developer' ? 'border-purple-400/60 bg-purple-500/15' : ''}`}
+              >Developer</button>
+              <button
+                onClick={() => {
+                  setBestFor('coding'); setCreatePurposeOpen(false); setLoraRail(false); setCategoryFilter('text'); setSearchQuery(''); setTab('discover')
+                }}
+                aria-pressed={bestFor === 'coding'}
+                className={`lazarus-control ${bestFor === 'coding' ? 'border-purple-400/60 bg-purple-500/15' : ''}`}
+              >Code</button>
+              <button
+                onClick={() => setCreatePurposeOpen(open => !open)}
+                aria-expanded={createPurposeOpen}
+                aria-haspopup="menu"
+                className={`lazarus-control inline-flex items-center gap-1 ${bestFor.startsWith('create:') ? 'border-purple-400/60 bg-purple-500/15' : ''}`}
+              >Create <ChevronDown size={13} className={createPurposeOpen ? 'rotate-180' : ''} /></button>
+              <button
+                onClick={() => { setUncensoredOnly(value => !value); setTab('discover') }}
+                aria-pressed={uncensoredOnly}
+                title="Show only models labeled unfiltered or abliterated"
+                className={`lazarus-control inline-flex items-center gap-1 ${uncensoredOnly ? 'border-purple-400/60 bg-purple-500/15 text-purple-200' : ''}`}
+              ><Unlock size={12} /> Unfiltered</button>
+              <button
+                onClick={() => { setAgenticOnly(value => !value); setTab('discover') }}
+                aria-pressed={agenticOnly}
+                title="Show only models with agent or tool-calling support"
+                className={`lazarus-control inline-flex items-center gap-1 ${agenticOnly ? 'border-purple-400/60 bg-purple-500/15 text-purple-200' : ''}`}
+              ><Bot size={12} /> Agentic</button>
+              {bestFor && <button
+                onClick={() => {
+                  setBestFor(''); setCreatePurposeOpen(false); setLoraRail(false); setCategoryFilter('text'); setSearchQuery(''); setTab('discover'); setCatalogResetToken(token => token + 1)
+                }}
+                className="lazarus-control"
+                title="Show all models"
+              >All</button>}
+              {createPurposeOpen && <div role="menu" className="absolute z-40 left-0 top-full mt-1 grid min-w-64 grid-cols-2 gap-1 rounded-xl border border-purple-300/20 bg-[#17121f] p-2 shadow-xl">
+                {[
+                  ['image', 'Image'], ['cutout', 'Cutout'], ['animate-image', 'Animate Image'],
+                  ['talking-character', 'Talking Character'], ['lip-sync', 'Lip Sync'], ['music', 'Music'],
+                  ['video', 'Video'], ['extend-video', 'Extend Video'], ['motion-control', 'Motion Control'],
+                ].map(([key, label]) => {
+                  const value = `create:${key}`
+                  return <button key={key} role="menuitem" onClick={() => {
+                    setBestFor(value); setCreatePurposeOpen(false); setLoraRail(false)
+                    setCategoryFilter(key === 'image' || key === 'cutout' ? 'image' : 'video')
+                    setSearchQuery(''); setTab('discover')
+                  }} className={`rounded-lg px-2.5 py-2 text-left t-micro hover:bg-white/10 ${bestFor === value ? 'bg-purple-500/20 text-purple-200' : 'text-gray-300'}`}>{label}</button>
+                })}
+              </div>}
+            </div>
 
             {/* Installed remains available as a compact status control; the
                 discovery catalog is the default Models view. */}
@@ -608,6 +644,11 @@ export function ModelManager() {
                 category={mode}
                 search={searchQuery}
                 searchSubmitToken={searchSubmitToken}
+                bestFor={bestFor}
+                uncensoredOnly={uncensoredOnly}
+                agenticOnly={agenticOnly}
+                onBestForReset={() => setBestFor('')}
+                catalogResetToken={catalogResetToken}
               />
             )
           )}

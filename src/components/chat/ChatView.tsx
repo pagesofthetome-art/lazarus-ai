@@ -3,18 +3,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useChat } from '../../hooks/useChat'
 import { useChatStore } from '../../stores/chatStore'
 import { useModelStore } from '../../stores/modelStore'
-import { useRAGStore } from '../../stores/ragStore'
 import { useAgentModeStore } from '../../stores/agentModeStore'
 import { AgentPanel } from './AgentPanel'
 import { MessageList } from './MessageList'
 import { ChatInput } from './ChatInput'
 import { COMPOSER_MAX_W } from './composer-width'
 import { RAGPanel } from './RAGPanel'
-import { DocsButton } from './DocsButton'
 import { RetrievalErrorBar } from './RetrievalErrorBar'
 import { ChatNotices } from './ChatNotices'
 import { LocalLaneWaitLine } from './LocalLaneWaitLine'
-import { useDocsAvailability } from '../../hooks/useDocsAvailability'
 import { AgentModeToggle } from './AgentModeToggle'
 import { AgentWorkspaceBadge } from './AgentWorkspaceBadge'
 import { ErrorBoundary } from '../ui/ErrorBoundary'
@@ -149,15 +146,6 @@ export const ChatView = memo(function ChatView() {
     localLaneHolderId ? s.conversations.find((c) => c.id === localLaneHolderId)?.title : undefined
   )
 
-  const docCount = useRAGStore((s) =>
-    activeConversationId ? (s.documents[activeConversationId] || []).length : 0
-  )
-  const ragEnabled = useRAGStore((s) =>
-    activeConversationId ? s.ragEnabled[activeConversationId] ?? false : false
-  )
-  // Document Chat needs an embeddings lane. The shared probe also lets the
-  // button explain where whole documents are indexed.
-  const docs = useDocsAvailability()
   const isAgentActive = useAgentModeStore((s) =>
     activeConversationId ? s.agentModeActive[activeConversationId] ?? false : false
   )
@@ -774,16 +762,6 @@ export const ChatView = memo(function ChatView() {
               composerAbove={<GroupCostHint />}
               composerActions={
                 <>
-                  {/* Documents (RAG) stays available so its panel can offer
-                      setup when the embeddings engine is missing. */}
-                  <DocsButton
-                    availability={docs}
-                    open={ragPanelOpen}
-                    ragEnabled={ragEnabled}
-                    docCount={docCount}
-                    onToggle={() => setRagPanelOpen(!ragPanelOpen)}
-                  />
-
                   {/* Plugins (Chat Tools + Caveman + Personas) */}
                   <PluginsDropdown openUpward />
 

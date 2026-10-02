@@ -30,3 +30,45 @@ export function rankModelsForTask(models: DiscoverModel[], query: string): Disco
     .sort((a, b) => b.score - a.score || a.index - b.index)
     .map(({ model }) => model)
 }
+
+/**
+ * Rank curated catalog families from structured capability metadata only.
+ * These weights intentionally do not inspect names or descriptions: `agent`
+ * is the catalog's explicit tool-use capability, and provider tags are
+ * metadata rather than free-text search terms.
+ */
+export type CatalogPurpose = 'coding' | 'developer' | 'chat' | 'vision'
+
+export function catalogPurposeScore(model: DiscoverModel, purpose: CatalogPurpose): number {
+  const tags = new Set(model.tags.map(tag => tag.trim().toLowerCase()))
+  const hasTag = (...values: string[]) => values.some(value => tags.has(value))
+
+  if (purpose === 'vision') {
+    return hasTag('vision', 'image-text-to-text', 'multimodal') ? 100 : 0
+  }
+  if (purpose === 'coding') {
+    if (hasTag('coding', 'code', 'coder', 'programming')) return 100
+    // Tool use is useful for a coding agent, but does not by itself mean a
+    // model was trained as a coding specialist.
+    return model.agent ? 35 : 0
+  }
+  if (purpose === 'developer') {
+    return model.agent || hasTag('agent', 'tool-use', 'tools', 'function-calling', 'function calling') ? 100 : 0
+  }
+
+  let score = 50 // all curated chat models remain eligible
+  if (hasTag('chat', 'conversational', 'instruct', 'instruction-tuned')) score += 25
+  if (hasTag('roleplay', 'rp')) score += 10
+  if (model.agent) score += 5
+  return score
+}
+
+export function rankCatalogGroupsForPurpose(
+  groups: DiscoverModel[][],
+  purpose: CatalogPurpose,
+): DiscoverModel[][] {
+  return groups
+    .map((group, index) => ({ group, index, score: Math.max(...group.map(model => catalogPurposeScore(model, purpose))) }))
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map(({ group }) => group)
+}

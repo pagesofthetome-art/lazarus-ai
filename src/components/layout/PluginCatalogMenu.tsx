@@ -47,7 +47,7 @@ export function PluginCatalogMenu({ active, onOpenCatalog, className }: PluginCa
         <span>Plugins</span>
       </button>
       {open && (
-        <div role="menu" aria-label="Plugin catalog" className="absolute left-1/2 top-full z-50 mt-2 w-80 -translate-x-1/2 rounded-xl border border-purple-300/25 bg-[#16121d] p-2 shadow-[0_0_32px_rgba(168,85,247,0.24)]">
+        <div role="menu" aria-label="Plugin catalog" className="absolute left-1/2 top-full z-50 mt-2 max-h-[calc(100dvh-5.5rem)] w-80 -translate-x-1/2 overflow-y-auto scrollbar-thin rounded-xl border border-purple-300/25 bg-[#16121d] p-2 shadow-[0_0_32px_rgba(168,85,247,0.24)]">
           <div className="relative">
             <Search size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-purple-300/60" />
             <input
@@ -57,7 +57,7 @@ export function PluginCatalogMenu({ active, onOpenCatalog, className }: PluginCa
               onKeyDown={(event) => { if (event.key === 'Enter') openCatalog({ query }) }}
               placeholder="Search plugins by name or keyword"
               aria-label="Search plugins by name or keyword"
-              className="w-full rounded-lg border border-purple-300/15 bg-black/25 py-2 pl-8 pr-2 text-xs text-gray-200 outline-none placeholder:text-gray-500 focus:border-purple-300/45"
+              className="w-full rounded-lg border border-purple-300/15 bg-black/25 py-1.5 pl-8 pr-2 text-xs text-gray-200 outline-none placeholder:text-gray-500 focus:border-purple-300/45"
             />
           </div>
           {matches.length > 0 && (
@@ -70,10 +70,10 @@ export function PluginCatalogMenu({ active, onOpenCatalog, className }: PluginCa
               ))}
             </div>
           )}
-          <p className="px-1 pb-1 pt-2 text-[0.6rem] uppercase tracking-wider text-purple-200/60">Browse by function</p>
-          <div className="grid grid-cols-2 gap-1">
+          <p className="px-1 pb-1 pt-1.5 text-[0.6rem] uppercase tracking-wider text-purple-200/60">Browse by function</p>
+          <div className="grid grid-cols-2 gap-0.5">
             {PLUGIN_CATEGORIES.map((category) => (
-              <button key={category.id} role="menuitem" onClick={() => openCatalog({ categoryId: category.id })} className="rounded-md px-2 py-2 text-left text-[0.68rem] text-gray-300 hover:bg-purple-500/15 hover:text-purple-100">
+              <button key={category.id} role="menuitem" onClick={() => openCatalog({ categoryId: category.id })} className="rounded-md px-2 py-1.5 text-left text-[0.66rem] text-gray-300 hover:bg-purple-500/15 hover:text-purple-100">
                 <span className="block font-medium">{category.label}</span>
                 <span className="mt-0.5 block line-clamp-2 text-[0.56rem] leading-snug text-gray-500">{category.description}</span>
               </button>
