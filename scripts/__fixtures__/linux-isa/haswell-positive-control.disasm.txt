@@ -1,0 +1,6 @@
+00000000004010e0 <haswell_kernel_fn>:
+  4010e0:	55                   	push   %rbp
+  4010e1:	48 89 e5             	mov    %rsp,%rbp
+  4010e4:	c4 e2 7d 58 c1       	vpbroadcastd %xmm1,%ymm0
+  4010e9:	c5 fc 77             	vzeroupper
+  4010ec:	c3                   	ret

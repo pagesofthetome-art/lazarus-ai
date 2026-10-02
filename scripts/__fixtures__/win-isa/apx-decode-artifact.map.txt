@@ -1,0 +1,6 @@
+ Static symbols
+
+ 0001:00000000       $LN4275                    0000000180097300 f   clip.obj
+ 0001:00000110       clip_own_avx512_kernel     0000000180097410 f   clip.obj
+ 0001:00000210       clip_own_avx512_kernel_end 0000000180097510 f   clip.obj
+ 0003:00000010       __isa_available            0000000180099898     MSVCRT:cpu_disp.obj

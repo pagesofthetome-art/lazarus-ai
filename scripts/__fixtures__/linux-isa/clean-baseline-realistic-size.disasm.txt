@@ -1,0 +1,235 @@
+0000000000401200 <clean_baseline_fn_realistic_size>:
+  401200:	55          	push   %rbp
+  401201:	48 89 e5          	mov    %rsp,%rbp
+  401204:	48 83 ec 20          	sub    $0x20,%rsp
+  401208:	0f 10 45 f0          	movups -0x10(%rbp),%xmm0
+  40120c:	66 0f 6f c1          	movdqa %xmm1,%xmm0
+  401210:	f3 0f b8 c0          	popcnt %eax,%eax
+  401214:	66 0f 3a 44 c1 00          	pclmulqdq $0x0,%xmm1,%xmm0
+  40121a:	0f 29 45 e0          	movaps %xmm0,-0x20(%rbp)
+  40121e:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  401221:	83 c0 01          	add    $0x1,%eax
+  401224:	89 45 fc          	mov    %eax,-0x4(%rbp)
+  401227:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  40122a:	3b 45 f8          	cmp    -0x8(%rbp),%eax
+  40122d:	0f 28 45 e0          	movaps -0x20(%rbp),%xmm0
+  401231:	0f 11 45 f0          	movups %xmm0,-0x10(%rbp)
+  401235:	8b 45 f8          	mov    -0x8(%rbp),%eax
+  401238:	55          	push   %rbp
+  401239:	48 89 e5          	mov    %rsp,%rbp
+  40123c:	48 83 ec 20          	sub    $0x20,%rsp
+  401240:	0f 10 45 f0          	movups -0x10(%rbp),%xmm0
+  401244:	66 0f 6f c1          	movdqa %xmm1,%xmm0
+  401248:	f3 0f b8 c0          	popcnt %eax,%eax
+  40124c:	66 0f 3a 44 c1 00          	pclmulqdq $0x0,%xmm1,%xmm0
+  401252:	0f 29 45 e0          	movaps %xmm0,-0x20(%rbp)
+  401256:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  401259:	83 c0 01          	add    $0x1,%eax
+  40125c:	89 45 fc          	mov    %eax,-0x4(%rbp)
+  40125f:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  401262:	3b 45 f8          	cmp    -0x8(%rbp),%eax
+  401265:	0f 28 45 e0          	movaps -0x20(%rbp),%xmm0
+  401269:	0f 11 45 f0          	movups %xmm0,-0x10(%rbp)
+  40126d:	8b 45 f8          	mov    -0x8(%rbp),%eax
+  401270:	55          	push   %rbp
+  401271:	48 89 e5          	mov    %rsp,%rbp
+  401274:	48 83 ec 20          	sub    $0x20,%rsp
+  401278:	0f 10 45 f0          	movups -0x10(%rbp),%xmm0
+  40127c:	66 0f 6f c1          	movdqa %xmm1,%xmm0
+  401280:	f3 0f b8 c0          	popcnt %eax,%eax
+  401284:	66 0f 3a 44 c1 00          	pclmulqdq $0x0,%xmm1,%xmm0
+  40128a:	0f 29 45 e0          	movaps %xmm0,-0x20(%rbp)
+  40128e:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  401291:	83 c0 01          	add    $0x1,%eax
+  401294:	89 45 fc          	mov    %eax,-0x4(%rbp)
+  401297:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  40129a:	3b 45 f8          	cmp    -0x8(%rbp),%eax
+  40129d:	0f 28 45 e0          	movaps -0x20(%rbp),%xmm0
+  4012a1:	0f 11 45 f0          	movups %xmm0,-0x10(%rbp)
+  4012a5:	8b 45 f8          	mov    -0x8(%rbp),%eax
+  4012a8:	55          	push   %rbp
+  4012a9:	48 89 e5          	mov    %rsp,%rbp
+  4012ac:	48 83 ec 20          	sub    $0x20,%rsp
+  4012b0:	0f 10 45 f0          	movups -0x10(%rbp),%xmm0
+  4012b4:	66 0f 6f c1          	movdqa %xmm1,%xmm0
+  4012b8:	f3 0f b8 c0          	popcnt %eax,%eax
+  4012bc:	66 0f 3a 44 c1 00          	pclmulqdq $0x0,%xmm1,%xmm0
+  4012c2:	0f 29 45 e0          	movaps %xmm0,-0x20(%rbp)
+  4012c6:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  4012c9:	83 c0 01          	add    $0x1,%eax
+  4012cc:	89 45 fc          	mov    %eax,-0x4(%rbp)
+  4012cf:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  4012d2:	3b 45 f8          	cmp    -0x8(%rbp),%eax
+  4012d5:	0f 28 45 e0          	movaps -0x20(%rbp),%xmm0
+  4012d9:	0f 11 45 f0          	movups %xmm0,-0x10(%rbp)
+  4012dd:	8b 45 f8          	mov    -0x8(%rbp),%eax
+  4012e0:	55          	push   %rbp
+  4012e1:	48 89 e5          	mov    %rsp,%rbp
+  4012e4:	48 83 ec 20          	sub    $0x20,%rsp
+  4012e8:	0f 10 45 f0          	movups -0x10(%rbp),%xmm0
+  4012ec:	66 0f 6f c1          	movdqa %xmm1,%xmm0
+  4012f0:	f3 0f b8 c0          	popcnt %eax,%eax
+  4012f4:	66 0f 3a 44 c1 00          	pclmulqdq $0x0,%xmm1,%xmm0
+  4012fa:	0f 29 45 e0          	movaps %xmm0,-0x20(%rbp)
+  4012fe:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  401301:	83 c0 01          	add    $0x1,%eax
+  401304:	89 45 fc          	mov    %eax,-0x4(%rbp)
+  401307:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  40130a:	3b 45 f8          	cmp    -0x8(%rbp),%eax
+  40130d:	0f 28 45 e0          	movaps -0x20(%rbp),%xmm0
+  401311:	0f 11 45 f0          	movups %xmm0,-0x10(%rbp)
+  401315:	8b 45 f8          	mov    -0x8(%rbp),%eax
+  401318:	55          	push   %rbp
+  401319:	48 89 e5          	mov    %rsp,%rbp
+  40131c:	48 83 ec 20          	sub    $0x20,%rsp
+  401320:	0f 10 45 f0          	movups -0x10(%rbp),%xmm0
+  401324:	66 0f 6f c1          	movdqa %xmm1,%xmm0
+  401328:	f3 0f b8 c0          	popcnt %eax,%eax
+  40132c:	66 0f 3a 44 c1 00          	pclmulqdq $0x0,%xmm1,%xmm0
+  401332:	0f 29 45 e0          	movaps %xmm0,-0x20(%rbp)
+  401336:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  401339:	83 c0 01          	add    $0x1,%eax
+  40133c:	89 45 fc          	mov    %eax,-0x4(%rbp)
+  40133f:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  401342:	3b 45 f8          	cmp    -0x8(%rbp),%eax
+  401345:	0f 28 45 e0          	movaps -0x20(%rbp),%xmm0
+  401349:	0f 11 45 f0          	movups %xmm0,-0x10(%rbp)
+  40134d:	8b 45 f8          	mov    -0x8(%rbp),%eax
+  401350:	55          	push   %rbp
+  401351:	48 89 e5          	mov    %rsp,%rbp
+  401354:	48 83 ec 20          	sub    $0x20,%rsp
+  401358:	0f 10 45 f0          	movups -0x10(%rbp),%xmm0
+  40135c:	66 0f 6f c1          	movdqa %xmm1,%xmm0
+  401360:	f3 0f b8 c0          	popcnt %eax,%eax
+  401364:	66 0f 3a 44 c1 00          	pclmulqdq $0x0,%xmm1,%xmm0
+  40136a:	0f 29 45 e0          	movaps %xmm0,-0x20(%rbp)
+  40136e:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  401371:	83 c0 01          	add    $0x1,%eax
+  401374:	89 45 fc          	mov    %eax,-0x4(%rbp)
+  401377:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  40137a:	3b 45 f8          	cmp    -0x8(%rbp),%eax
+  40137d:	0f 28 45 e0          	movaps -0x20(%rbp),%xmm0
+  401381:	0f 11 45 f0          	movups %xmm0,-0x10(%rbp)
+  401385:	8b 45 f8          	mov    -0x8(%rbp),%eax
+  401388:	55          	push   %rbp
+  401389:	48 89 e5          	mov    %rsp,%rbp
+  40138c:	48 83 ec 20          	sub    $0x20,%rsp
+  401390:	0f 10 45 f0          	movups -0x10(%rbp),%xmm0
+  401394:	66 0f 6f c1          	movdqa %xmm1,%xmm0
+  401398:	f3 0f b8 c0          	popcnt %eax,%eax
+  40139c:	66 0f 3a 44 c1 00          	pclmulqdq $0x0,%xmm1,%xmm0
+  4013a2:	0f 29 45 e0          	movaps %xmm0,-0x20(%rbp)
+  4013a6:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  4013a9:	83 c0 01          	add    $0x1,%eax
+  4013ac:	89 45 fc          	mov    %eax,-0x4(%rbp)
+  4013af:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  4013b2:	3b 45 f8          	cmp    -0x8(%rbp),%eax
+  4013b5:	0f 28 45 e0          	movaps -0x20(%rbp),%xmm0
+  4013b9:	0f 11 45 f0          	movups %xmm0,-0x10(%rbp)
+  4013bd:	8b 45 f8          	mov    -0x8(%rbp),%eax
+  4013c0:	55          	push   %rbp
+  4013c1:	48 89 e5          	mov    %rsp,%rbp
+  4013c4:	48 83 ec 20          	sub    $0x20,%rsp
+  4013c8:	0f 10 45 f0          	movups -0x10(%rbp),%xmm0
+  4013cc:	66 0f 6f c1          	movdqa %xmm1,%xmm0
+  4013d0:	f3 0f b8 c0          	popcnt %eax,%eax
+  4013d4:	66 0f 3a 44 c1 00          	pclmulqdq $0x0,%xmm1,%xmm0
+  4013da:	0f 29 45 e0          	movaps %xmm0,-0x20(%rbp)
+  4013de:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  4013e1:	83 c0 01          	add    $0x1,%eax
+  4013e4:	89 45 fc          	mov    %eax,-0x4(%rbp)
+  4013e7:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  4013ea:	3b 45 f8          	cmp    -0x8(%rbp),%eax
+  4013ed:	0f 28 45 e0          	movaps -0x20(%rbp),%xmm0
+  4013f1:	0f 11 45 f0          	movups %xmm0,-0x10(%rbp)
+  4013f5:	8b 45 f8          	mov    -0x8(%rbp),%eax
+  4013f8:	55          	push   %rbp
+  4013f9:	48 89 e5          	mov    %rsp,%rbp
+  4013fc:	48 83 ec 20          	sub    $0x20,%rsp
+  401400:	0f 10 45 f0          	movups -0x10(%rbp),%xmm0
+  401404:	66 0f 6f c1          	movdqa %xmm1,%xmm0
+  401408:	f3 0f b8 c0          	popcnt %eax,%eax
+  40140c:	66 0f 3a 44 c1 00          	pclmulqdq $0x0,%xmm1,%xmm0
+  401412:	0f 29 45 e0          	movaps %xmm0,-0x20(%rbp)
+  401416:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  401419:	83 c0 01          	add    $0x1,%eax
+  40141c:	89 45 fc          	mov    %eax,-0x4(%rbp)
+  40141f:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  401422:	3b 45 f8          	cmp    -0x8(%rbp),%eax
+  401425:	0f 28 45 e0          	movaps -0x20(%rbp),%xmm0
+  401429:	0f 11 45 f0          	movups %xmm0,-0x10(%rbp)
+  40142d:	8b 45 f8          	mov    -0x8(%rbp),%eax
+  401430:	55          	push   %rbp
+  401431:	48 89 e5          	mov    %rsp,%rbp
+  401434:	48 83 ec 20          	sub    $0x20,%rsp
+  401438:	0f 10 45 f0          	movups -0x10(%rbp),%xmm0
+  40143c:	66 0f 6f c1          	movdqa %xmm1,%xmm0
+  401440:	f3 0f b8 c0          	popcnt %eax,%eax
+  401444:	66 0f 3a 44 c1 00          	pclmulqdq $0x0,%xmm1,%xmm0
+  40144a:	0f 29 45 e0          	movaps %xmm0,-0x20(%rbp)
+  40144e:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  401451:	83 c0 01          	add    $0x1,%eax
+  401454:	89 45 fc          	mov    %eax,-0x4(%rbp)
+  401457:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  40145a:	3b 45 f8          	cmp    -0x8(%rbp),%eax
+  40145d:	0f 28 45 e0          	movaps -0x20(%rbp),%xmm0
+  401461:	0f 11 45 f0          	movups %xmm0,-0x10(%rbp)
+  401465:	8b 45 f8          	mov    -0x8(%rbp),%eax
+  401468:	55          	push   %rbp
+  401469:	48 89 e5          	mov    %rsp,%rbp
+  40146c:	48 83 ec 20          	sub    $0x20,%rsp
+  401470:	0f 10 45 f0          	movups -0x10(%rbp),%xmm0
+  401474:	66 0f 6f c1          	movdqa %xmm1,%xmm0
+  401478:	f3 0f b8 c0          	popcnt %eax,%eax
+  40147c:	66 0f 3a 44 c1 00          	pclmulqdq $0x0,%xmm1,%xmm0
+  401482:	0f 29 45 e0          	movaps %xmm0,-0x20(%rbp)
+  401486:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  401489:	83 c0 01          	add    $0x1,%eax
+  40148c:	89 45 fc          	mov    %eax,-0x4(%rbp)
+  40148f:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  401492:	3b 45 f8          	cmp    -0x8(%rbp),%eax
+  401495:	0f 28 45 e0          	movaps -0x20(%rbp),%xmm0
+  401499:	0f 11 45 f0          	movups %xmm0,-0x10(%rbp)
+  40149d:	8b 45 f8          	mov    -0x8(%rbp),%eax
+  4014a0:	55          	push   %rbp
+  4014a1:	48 89 e5          	mov    %rsp,%rbp
+  4014a4:	48 83 ec 20          	sub    $0x20,%rsp
+  4014a8:	0f 10 45 f0          	movups -0x10(%rbp),%xmm0
+  4014ac:	66 0f 6f c1          	movdqa %xmm1,%xmm0
+  4014b0:	f3 0f b8 c0          	popcnt %eax,%eax
+  4014b4:	66 0f 3a 44 c1 00          	pclmulqdq $0x0,%xmm1,%xmm0
+  4014ba:	0f 29 45 e0          	movaps %xmm0,-0x20(%rbp)
+  4014be:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  4014c1:	83 c0 01          	add    $0x1,%eax
+  4014c4:	89 45 fc          	mov    %eax,-0x4(%rbp)
+  4014c7:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  4014ca:	3b 45 f8          	cmp    -0x8(%rbp),%eax
+  4014cd:	0f 28 45 e0          	movaps -0x20(%rbp),%xmm0
+  4014d1:	0f 11 45 f0          	movups %xmm0,-0x10(%rbp)
+  4014d5:	8b 45 f8          	mov    -0x8(%rbp),%eax
+  4014d8:	55          	push   %rbp
+  4014d9:	48 89 e5          	mov    %rsp,%rbp
+  4014dc:	48 83 ec 20          	sub    $0x20,%rsp
+  4014e0:	0f 10 45 f0          	movups -0x10(%rbp),%xmm0
+  4014e4:	66 0f 6f c1          	movdqa %xmm1,%xmm0
+  4014e8:	f3 0f b8 c0          	popcnt %eax,%eax
+  4014ec:	66 0f 3a 44 c1 00          	pclmulqdq $0x0,%xmm1,%xmm0
+  4014f2:	0f 29 45 e0          	movaps %xmm0,-0x20(%rbp)
+  4014f6:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  4014f9:	83 c0 01          	add    $0x1,%eax
+  4014fc:	89 45 fc          	mov    %eax,-0x4(%rbp)
+  4014ff:	8b 45 fc          	mov    -0x4(%rbp),%eax
+  401502:	3b 45 f8          	cmp    -0x8(%rbp),%eax
+  401505:	0f 28 45 e0          	movaps -0x20(%rbp),%xmm0
+  401509:	0f 11 45 f0          	movups %xmm0,-0x10(%rbp)
+  40150d:	8b 45 f8          	mov    -0x8(%rbp),%eax
+  401510:	55          	push   %rbp
+  401511:	48 89 e5          	mov    %rsp,%rbp
+  401514:	48 83 ec 20          	sub    $0x20,%rsp
+  401518:	0f 10 45 f0          	movups -0x10(%rbp),%xmm0
+  40151c:	66 0f 6f c1          	movdqa %xmm1,%xmm0
+  401520:	f3 0f b8 c0          	popcnt %eax,%eax
+  401524:	48 8d 65 f8          	lea    -0x8(%rbp),%rsp
+  401528:	5b                   	pop    %rbx
+  401529:	5d                   	pop    %rbp
+  40152a:	c3                   	ret

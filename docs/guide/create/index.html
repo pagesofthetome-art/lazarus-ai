@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create in Lazarus: Image, Video, Audio, Character Studio and Trainer</title>
+<meta name="description" content="How the Create tab works in Lazarus: local image generation and editing, video, music and speech, Character Studio, and the LoRA trainer.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="canonical" href="/guide/create/">
+<meta property="og:title" content="Create in Lazarus: Image, Video, Audio, Character Studio and Trainer">
+<meta property="og:description" content="How the Create tab works in Lazarus: local image generation and editing, video, music and speech, Character Studio, and the LoRA trainer.">
+<meta property="og:url" content="/guide/create/">
+<meta property="og:type" content="article">
+<meta property="og:image" content="/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Create in Lazarus: Image, Video, Audio, Character Studio and Trainer","description":"How the Create tab works in Lazarus: local image generation and editing, video, music and speech, Character Studio, and the LoRA trainer.","url":"/guide/create/","dateModified":"2026-09-22","inLanguage":"en","author":{"@type":"Person","name":"Lazarus contributors","url":"/guide/"},"publisher":{"@type":"Organization","name":"Lazarus","url":"/"},"mainEntityOfPage":{"@type":"WebPage","@id":"/guide/create/"},"isPartOf":{"@type":"WebPage","name":"Lazarus Handbook","url":"/guide/"},"about":{"@type":"SoftwareApplication","name":"Lazarus","operatingSystem":"Windows, Linux","applicationCategory":"UtilitiesApplication"}}
+</script>
+<link rel="icon" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazarus.css">
+<script defer src="/assets/lazarus.js"></script>
+</head>
+<body>
+<nav class="lu-nav">
+  <a class="lu-nav-brand" href="/" aria-label="Lazarus">
+    <span class="lu-mono" data-mono="nav" data-size="40" aria-hidden="true"></span>
+    <span class="lu-nav-word">Lazarus</span>
+  </a>
+  <div class="lu-nav-links" id="lu-nav-links">
+    <a class="lu-nav-link" href="/">Home</a>
+    <a class="lu-nav-link" href="/blog/">Blog</a>
+    <a class="lu-nav-link" href="/guide/">Guide</a>
+    <a class="lu-nav-link" href="/remote-access/">Remote</a>
+  </div>
+  <div class="lu-nav-right">
+    <a class="lu-nav-icon" href="/guide/code/" title="GitHub" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg><span class="lu-nav-badge">1700+&#8202;⭐</span></a>
+    <a class="lu-nav-icon discord" href="/discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.45 3c-.2.36-.44.85-.6 1.23a18.3 18.3 0 0 0-5.7 0c-.16-.38-.4-.87-.6-1.23a19.7 19.7 0 0 0-4.87 1.37C.55 8.9-.32 13.3.11 17.63a19.9 19.9 0 0 0 6 3.03c.48-.66.9-1.36 1.27-2.1-.7-.26-1.36-.58-1.99-.96.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.24 0c.16.13.32.26.49.38-.63.38-1.3.7-2 .96.37.74.8 1.44 1.27 2.1a19.8 19.8 0 0 0 6-3.03c.5-5.03-.85-9.39-3.55-13.26ZM8.02 15c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.95 2.42-2.15 2.42Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.94 2.42-2.15 2.42Z"/></svg><span class="lu-nav-badge">900+&#8202;<span style="font-size:0.715em">🟢</span></span></a>
+    <span class="lu-nav-sep"></span>
+    <div class="switch" id="theme-switch" role="button" aria-label="Toggle theme"></div>
+    <a class="lu-nav-dl" href="/guide/install/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download</a>
+    <button type="button" class="lu-nav-toggle" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<article class="lu-doc" data-handbook-chapter="create">
+<div class="breadcrumb"><a href="/">Home</a> &rsaquo; <a href="/guide/">Handbook</a> &rsaquo; Create</div>
+<h1>Create: images, video, audio and characters</h1>
+<p class="subtitle">Image, video and audio on your own graphics card through ComfyUI, plus Character Studio and its trainer. Each lane names its local model and hardware needs.</p>
+<nav class="toc">
+<div class="toc-title">In this chapter</div>
+<a href="#lanes">Create lanes</a>
+<a href="#comfyui">ComfyUI, the program behind the lanes</a>
+<a href="#first-image">Your first image</a>
+<a href="#image-lanes">Edit, Cutout, Upscale, Erase</a>
+<a href="#qwen-image">Qwen-Image 2.1: one model that draws and edits</a>
+<a href="#video">Video, Animate, Extend, Motion, Lipsync</a>
+<a href="#music">Music</a>
+<a href="#character">Character Studio and the trainer</a>
+<a href="#advanced">Advanced settings and LoRAs</a>
+<a href="#gallery">The gallery</a>
+<a href="#wrong">When it goes wrong</a>
+</nav>
+
+<h2 id="lanes">Create lanes</h2>
+
+<p>The Create tab has a toolbar of lanes. Each lane is one job. Generation runs locally through ComfyUI and uses models installed on your computer.</p>
+
+<table>
+<tr><th>Lane (full name)</th><th>Job</th><th>Runs</th></tr>
+<tr><td>Image</td><td>A picture from a text prompt.</td><td>Local</td></tr>
+<tr><td>Edit (Edit / Image to Image)</td><td>Change a picture you upload, the whole thing or a painted area.</td><td>Local</td></tr>
+<tr><td>Cutout (Remove Background)</td><td>Cuts the subject out of a photo.</td><td>Local</td></tr>
+<tr><td>Video</td><td>A short clip from a text prompt.</td><td>Local</td></tr>
+<tr><td>Animate (Animate Image)</td><td>Turns a still picture into a clip.</td><td>Local</td></tr>
+<tr><td>Character (Character Studio)</td><td>Trains a character from photos, then uses it in prompts.</td><td>Local (12 GB card)</td></tr>
+<tr><td>Lipsync (Talking Character)</td><td>A face that speaks an audio clip.</td><td>Local</td></tr>
+<tr><td>Music</td><td>A track from a description, with optional lyrics.</td><td>Local</td></tr>
+<tr><td>Extend (Extend Video)</td><td>Continues a clip.</td><td>Local</td></tr>
+<tr><td>Motion (Motion Control)</td><td>Moves a character the way a reference clip moves.</td><td>Local</td></tr>
+</table>
+
+<h2 id="comfyui">ComfyUI, the program behind the lanes</h2>
+
+<p>Every local lane runs on ComfyUI, an open source image and video program that the app installs, starts, repairs and updates for you. You never see its node graphs; the app builds them. If you skipped it in the wizard, the first local lane you open shows a setup card, and Settings, AI Backends, ComfyUI (Image &amp; Video) has the buttons "Install ComfyUI", "Start", "Stop", "Restart", "Repair environment" and "Update ComfyUI".</p>
+
+<p>What "Install ComfyUI" does, in the order the status line shows it: it checks for Python (on Windows it installs Python 3.12 through winget if there is none), then "Step 1/4: Downloading ComfyUI repository...", "Step 2/4" downloads PyTorch built for your graphics card ("Downloading PyTorch + Torchvision + Torchaudio (~2 GB total)", which the status line says takes ten to fifteen minutes on a typical home connection, with the live pip output below it), "Step 3/4: Installing ComfyUI dependencies", and "Step 4/4: Checking that the environment really starts...". At the end: "Install finished. ComfyUI is ready to start." The whole install needs about 5 GB of disk. ComfyUI itself listens on port 8188 on your machine.</p>
+
+<p>Which PyTorch it picks depends on the card: a CUDA build for NVIDIA (with the newest CUDA for RTX 50 cards), AMD's ROCm build on Linux for the cards ROCm supports, AMD's own Windows ROCm build for RX 7000 and RX 9000 cards, and the processor build when there is no usable card. The status line names the choice, for example "NVIDIA GPU detected (compute capability 8.6), installing CUDA PyTorch." The FAQ in chapter 10 has the AMD details.</p>
+
+<p>The models the lanes need are separate downloads. Each lane's setup card names its model and size, and "Download &amp; install" fetches it into ComfyUI's models folder. The Models tab, rail "Image" and "Video", lists more.</p>
+
+<h2 id="first-image">Your first image</h2>
+
+<div class="step">
+<span class="step-num">1</span>
+<span class="step-title">Open the Image lane and install the starter checkpoint</span>
+<div class="step-body">
+<p>Click "Create" in the top bar; the Image lane is selected. If no image model is installed, a card reads "Local image generation needs a one-time download" and names the Juggernaut XL starter checkpoint (~6.5 GB). Click "Download &amp; install". The download runs in the app's download tray and you can keep using the app.</p>
+</div>
+</div>
+
+<div class="step">
+<span class="step-num">2</span>
+<span class="step-title">Write the prompt</span>
+<div class="step-body">
+<p>The composer's field reads "Describe your image…". Write what you want to see, as a description rather than an instruction: the subject, the setting, the light, the style. A "Negative" field takes what you do not want. Pick a Quality (Draft, Standard, High) and an Aspect (1:1, 3:4, 4:3, 16:9).</p>
+</div>
+</div>
+
+<div class="step">
+<span class="step-num">3</span>
+<span class="step-title">Create and wait</span>
+<div class="step-body">
+<p>Click "Create". The button becomes "Cancel" while it works. The first time, ComfyUI has to start and load the checkpoint, and the status line walks through "Queued...", "Loading model..." (after twelve seconds it adds "Loading the model into memory..."), "Sampling step 12/25..." and "Decoding image...". The first render of a session is the slowest, because the model has to be loaded; the ones after it are faster, because it stays loaded.</p>
+<p>If a chat model is loaded in the Lazarus Engine at the same time, the app frees the card first: "Checking VRAM…", "Freeing VRAM for the image model", "unloading Lazarus Engine (chat is preserved)", then "Loading the image model…" with the note "usually 30-90s (longer on a cold start)". After the render it reads "Restoring the chat model" and "Chat model restored". Your chat is not lost during this.</p>
+</div>
+</div>
+
+<h2 id="image-lanes">Edit, Cutout, Upscale, Erase</h2>
+
+<p>Edit takes a picture (drop it on the stage or upload it) and a prompt: "Describe the new look. Leave the mask empty to restyle the whole image, or paint an area to change just that…". The mask editor paints the area to change in red; everything red is regenerated, everything else is kept. An "Edit strength" slider sets how much may change: low keeps close to the original, high lets the prompt take over. In the gallery, a finished image has an "Edit with mask" button that sends it straight into this lane.</p>
+
+<p>Cutout takes a picture and needs no prompt. Locally it downloads a small background removal model (about 300 MB) the first time.</p>
+
+<p>Upscale and Erase Object are not part of the local Create workflow described here.</p>
+
+<h2 id="qwen-image">Qwen-Image 2.1: one model that draws and edits</h2>
+
+<p>Most image models do one job. Qwen-Image 2.1 does two with the same files: it makes a picture from a prompt in the Image lane, and it changes a picture in the Edit lane. It runs on your own card on Windows and Linux.</p>
+
+<p>The Models tab carries it as one bundle, "Qwen-Image 2.1 (Generate and Edit)": three files, 16.1 GB together, and the description names the licence before you start ("Qwen Research License, non-commercial use"). One click puts all three in the right ComfyUI folders. The app counts the bundle as installed once the running ComfyUI lists the files, so ComfyUI has to be up for that to happen.</p>
+
+<p>After that there is nothing new to learn. The model appears in the model picker of the Image lane and in the model picker of the Edit lane, next to every other local image model. No new button, no new tab.</p>
+
+<p>In the Image lane it takes a prompt and a negative prompt, and starts from 25 steps, CFG 1, the euler sampler, the simple scheduler and 1024x1024. Those are the values the official template uses. CFG under 1 is not usable with this model. Everything under "Advanced settings" works the way it does for the other models.</p>
+
+<p>In the Edit lane it takes one reference image and a prompt, and no mask: the mask path is closed for this model on purpose, and the output follows the reference image. The resolution follows the canvas you picked.</p>
+
+<p>It needs ComfyUI 0.37.0 or newer. If the node it runs on is missing, the app says so before it builds anything, and the sentence names the version and the place to fix it.</p>
+
+<p>Several things the model itself can do are not in this release: several reference images at once, RGBA output, masks with this model, a prompt enhancer, and the KV cache node. There is no LoRA for Qwen-Image 2.1, so the LoRA stack has nothing to offer it, although the stack stays open the way it is for every local image model.</p>
+
+<p>The long version is on the blog: <a href="/blog/how-to-run-qwen-image-2-1-locally.html">how to run Qwen-Image 2.1 locally</a>, and <a href="/blog/qwen-image-2-1-explained.html">what changed in the model</a>.</p>
+
+<h2 id="video">Video, Animate, Extend, Motion, Lipsync</h2>
+
+<p>Video takes a prompt ("Describe the motion and the scene…"). Animate Image takes a picture and a prompt ("Describe how the image should move…"). Extend Video takes a clip and a prompt ("Describe how the clip should continue…"). Motion Control takes a reference clip and a picture, with an optional prompt ("Optional: extra style/scene hints…"). Talking Character takes a face and an audio clip.</p>
+
+<p>Locally, each video lane shows a setup card the first time that names the model it installs and the VRAM it wants, in the form "installs (model) (~N GB, N VRAM)". The lightest video models start at 6 to 8 GB of VRAM; the Wan and Hunyuan models want 12 GB or more. Motion Control installs Wan VACE (~10.5 GB, runs from 8 GB VRAM). Talking Character installs Wan 2.2 S2V (~20 GB total) and is comfortable on 12 GB VRAM.</p>
+
+<p>Video has Size tiers instead of an aspect and a Frames control from 9 to 121 frames, with FPS under the advanced settings. The status line during a render goes through "Loading model...", "Sampling step N/M..." and "Decoding frames...". A video takes minutes, not seconds; the app allows 60 minutes before it gives up (Settings, General, Image / Video Generation Timeouts).</p>
+
+<p>The first time a video lane needs it, a box asks "Install MP4 support?": that installs the ComfyUI node pack that writes MP4 files.</p>
+
+<h2 id="music">Music</h2>
+
+<p>Music takes a description ("Describe the track. Genre, mood, tempo, instruments…"), a Length slider from 5 to 240 seconds and an optional Lyrics field. It installs the ACE Step 1.5 music model (~9.3 GB, runs from 6 GB VRAM).</p>
+
+<h2 id="character">Character Studio and the trainer</h2>
+
+<p>The Character Studio trains a LoRA, a small add-on file for the image model that knows one person or character, from your photos. Afterwards a trigger word in a prompt summons that character. The lane has two tabs: "Train new" and "Use character".</p>
+
+<div class="step">
+<span class="step-num">1</span>
+<span class="step-title">Add photos and a trigger word</span>
+<div class="step-body">
+<p>The stage reads "Drop 4 to 30 photos of your character here" and "One person or character, varied angles and lighting works best". Add between 4 and 30 photos (png, jpg or webp, up to 40 MB each). The counter reads "7/30 photos" and, below four, "need at least 4". Type a trigger word into the field "Trigger word, e.g. davechar": one word, no spaces, up to 30 characters. It becomes the character's name and the word you put in prompts.</p>
+</div>
+</div>
+
+<div class="step">
+<span class="step-num">2</span>
+<span class="step-title">Local: set up the trainer once</span>
+<div class="step-body">
+<p>In Local mode the panel first reads "Trains fully on your GPU. One time setup, about 3 GB." with a "Set up trainer" button. Pressing it downloads the trainer (musubi tuner), creates its own Python environment and installs PyTorch into it, in four steps the status line names: "Setting up the trainer (1/4): getting musubi tuner v0.3.4...", "(2/4): creating the training environment (venv)...", "(3/4): installing PyTorch into the trainer venv (~2.5 GB, one time)...", "(4/4): installing the trainer package...", then "checking that PyTorch loads..." and "Trainer environment ready." Before the first byte it checks that the drive has about 10 GB free.</p>
+<p>The trainer needs Python 3.10, 3.11 or 3.12. On Windows the app installs Python 3.12 through winget if there is none ("Installing Python 3.12 for the trainer..."); on Linux install it with your package manager.</p>
+<p>Next the panel reads "Z Image training base files are missing (about 19 GB, one time)." with "Download base files". Those three files (the Z Image base model, its text encoder and its VAE) are what the character is trained against and land in ComfyUI's models folder.</p>
+</div>
+</div>
+
+<div class="step">
+<span class="step-num">3</span>
+<span class="step-title">Train</span>
+<div class="step-body">
+<p>Pick a step count: "Quick" (400 steps), "Standard" (1200) or "Thorough" (2400). The help line names the step you picked: "Runs on your GPU and takes a while (Standard, 1200 steps). The local chat model pauses for the run. The character lands in your local LoRAs." Press "Create". The run goes "Freeing the card for training (the local chat model pauses until the run ends)...", "Step 1/4: Caching image latents...", "Step 2/4: Caching text encoder outputs...", "Step 3/4: Training (1200 steps). This runs for a while, the counter follows every step." with "Training 312/1200...", and "Step 4/4: Converting the LoRA for ComfyUI...". It ends with "Character ready: char_davechar_zimage.safetensors is in your loras. Put 'davechar' in a prompt on the Image tab with the LoRA active."</p>
+<p>The local recipe needs a card with 12 GB of memory. The code does not state how long a run takes; it depends on the card and the step count, and the counter is the honest measure. "Cancel" stops the run at once and frees the card.</p>
+</div>
+</div>
+
+<div class="step">
+<span class="step-num">4</span>
+<span class="step-title">Use the character</span>
+<div class="step-body">
+<p>The "Use character" tab lists your characters as chips with the trigger word ("Trigger word: davechar" on hover). Pick one; the footer reads "Put "davechar" in your prompt. Works best with a Z Image base model." Then switch to the Image lane, keep the LoRA active in the LoRA stack under the advanced settings, and write a prompt that contains the trigger word. Trained characters land in ComfyUI's <code>models/loras</code> folder as <code>char_&lt;trigger&gt;_zimage.safetensors</code>.</p>
+</div>
+</div>
+
+<h2 id="advanced">Advanced settings and LoRAs</h2>
+
+<p>"Advanced settings" under the composer opens the controls the Quality preset hides: Steps, CFG scale (or Guidance), Width and Height, Seed (-1 = random; the gallery shows the seed a picture used, so you can repeat it), Batch size, and for video Frames and FPS. An Expert group has Sampler, Scheduler, Denoise, Mask edge feather, VAE and Skip CLIP layers. Leave those alone until you know what they do; the presets are tuned.</p>
+
+<p>The LoRA stack lists the add-on files in ComfyUI's <code>models/loras</code> folder, each with a strength. Empty, it reads "No LoRAs found yet. Drop .safetensors files into ComfyUI's models/loras folder and hit Rescan. Characters trained in Character Studio land there automatically." Models has a LoRAs tab of its own: "Get new" searches CivitAI for LoRAs and downloads what you pick straight into that folder, "Installed" lists what is there with its size and deletes a file you no longer want. A LoRA from Hugging Face still goes into the folder by hand. The CivitAI API key and the Hugging Face token under Settings, AI Backends unlock downloads those sites gate behind a login.</p>
+
+<h2 id="gallery">The gallery</h2>
+
+<p>Finished work lands in the gallery next to the stage, with the seed under each picture and a "Download" button. Results are files on your own disk.</p>
+
+<h2 id="wrong">When it goes wrong</h2>
+
+<p><strong>"ComfyUI is not running. Start it from Settings or wait for auto-start."</strong> The app starts ComfyUI when you first render and shows "Starting ComfyUI… 14s" while it does. If it does not come up, open Settings, AI Backends, ComfyUI (Image &amp; Video), press "Start" and read the output panel below the buttons.</p>
+
+<p><strong>"Restarting ComfyUI..."</strong> in the status line means ComfyUI died during a render and the app is starting it again; it tries three times (at once, after 3 seconds, after 10 seconds). If all fail: "ComfyUI is not running and could not be restarted. See Settings, AI Backends for what it said on the way down."</p>
+
+<p><strong>"Generation stalled: no progress from ComfyUI for N minutes."</strong> or <strong>"ComfyUI stopped responding during generation"</strong> Usually the card ran out of memory on a model that is too big for it, or the render ran into the timeout. Pick a lower Size tier, fewer frames or a smaller model, or raise the timeout under Settings, General, Image / Video Generation Timeouts (Image 20 minutes, Video 60 minutes by default).</p>
+
+<p><strong>"ComfyUI is running on the CPU because you selected Force CPU. Generation will be extremely slow and may time out. Set Settings → Hardware → ComfyUI GPU back to Auto and restart ComfyUI from Settings → AI Backends to use your card again."</strong> Do what it says. The setting is under Settings, General, Hardware.</p>
+
+<p><strong>"ComfyUI is running on the CPU (no usable GPU detected). Generation will be extremely slow and may time out."</strong> The PyTorch in ComfyUI's environment does not see your card. On an NVIDIA card, update the graphics driver, then press "Repair environment" under Settings, AI Backends, ComfyUI, which rebuilds the Python environment (~2 GB) and leaves models, outputs and custom nodes alone. On an AMD card, read the FAQ in chapter 10.</p>
+
+<p><strong>"ComfyUI's Python environment is broken. Rebuilding it as an isolated venv now (~2 GB download). Models, outputs and custom nodes are left alone…"</strong> The app repairs the environment on its own, once, when a render finds it broken. Wait for it. If it ends with "The environment repair failed. See Settings, AI Backends for details.", the output panel there names the cause; two causes the repair cannot fix are named in chapter 9 (a missing Visual C++ runtime, a driver older than the PyTorch build).</p>
+
+<p><strong>"Your ComfyUI blocks direct loads (v0.19+), so previews use a slower fallback."</strong> A bar with the button "Let me do it for you!" appears. Press it: the app restarts ComfyUI with the flag that allows the previews. The bar does not come back for that ComfyUI version once dismissed.</p>
+
+<p><strong>"Qwen-Image 2.1 needs ComfyUI 0.37.0 or newer. Update ComfyUI in Settings."</strong> The model runs on a node that older ComfyUI versions do not have. Open Settings, AI Backends, ComfyUI (Image &amp; Video) and press "Update ComfyUI", then pick the model again.</p>
+
+<p><strong>"Please enter a prompt."</strong> The lane needs a description and the field is empty.</p>
+
+<p><strong>"No music model installed. Use Download &amp; install above to get ACE Step, then generate."</strong> Do that; the download is about 9.3 GB.</p>
+
+<p><strong>"This prompt was blocked: content sexualizing minors is never generated."</strong> Lazarus enforces this rule in the local generation workflow, and there is no setting for it.</p>
+
+<p><strong>"Start ComfyUI to see your image models"</strong> in the Models tab. The Image and Video rails list what ComfyUI reports, so ComfyUI has to run for them to fill.</p>
+
+<p><strong>Character Studio: "Training ran out of memory on the card. This card has N GB. The recipe needs 12 GB free on the card while it runs."</strong> Close other apps that use the card (a browser playing video, a game, ComfyUI with a model loaded), then press Create again. On a card under 12 GB the app refuses before the run with a sentence that starts "This card has N GB of memory and the local training recipe needs 12 GB".</p>
+
+<p><strong>Character Studio: "The trainer needs Python 3.10, 3.11 or 3.12 and this machine has Python 3.14.6."</strong> followed by where to get it. On Windows the app tried winget first; install Python 3.12 from python.org (any install option, it does not need to be on PATH), then press "Set up trainer" again. The app finds it on its own.</p>
+
+<p><strong>Character Studio: "Training failed."</strong> with details under it. The red bar scrolls, can be selected, and has a "Copy" button ("Copy the whole message"). Copy it into a bug report. The sentences chapter 9 lists under the trainer cover the usual causes.</p>
+
+<p><strong>Character Studio: "Your photos did not survive the app restart. Re-add them, then train."</strong> Photos are staged for one session. Drop them again.</p>
+
+<p><strong>Character Studio: "Pick a trigger word first, e.g. davechar. It becomes the token that summons your character."</strong> Fill the trigger word field.</p>
+
+<hr>
+<p class="small">Previous chapter: <a href="/guide/code/">Code tab</a>. Next chapter: <a href="/guide/remote-providers/">Remote providers</a>. Back to the <a href="/guide/">handbook overview</a>.</p>
+</article>
+<footer>
+  <div class="footer-row footer-meta"><span>&copy; 2026 &middot; Lazarus &middot; AGPL-3.0</span></div>
+  <div class="footer-row footer-links">
+    <a href="/blog/">Blog</a>
+    <a href="/guide/">Guide</a>
+    <a href="/remote-access/">Remote access</a>
+    <a href="/discord" target="_blank" rel="noopener">Discord</a>
+    <a href="/guide/code/">GitHub</a>
+    <a href="/guide/faq-and-glossary/">Discussions</a>
+    <a href="/guide/settings-and-troubleshooting/">Issues</a>
+    <a href="https://reddit.com/user/GroundbreakingMall54">Reddit</a>
+  </div>
+</footer>
+</body>
+</html>

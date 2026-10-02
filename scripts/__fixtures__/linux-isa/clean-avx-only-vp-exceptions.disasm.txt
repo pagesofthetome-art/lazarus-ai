@@ -1,0 +1,7 @@
+0000000000401180 <sandybridge_style_fn_with_legal_vp_permute_and_test>:
+  401180:	55                   	push   %rbp
+  401181:	48 89 e5             	mov    %rsp,%rbp
+  401184:	c4 e3 7d 18 c1 01     	vpermilps %ymm1,%ymm0,%ymm0
+  40118a:	c4 e2 7d 17 c1       	vptest %ymm0,%ymm1
+  40118f:	c5 fc 77             	vzeroupper
+  401192:	c3                   	ret

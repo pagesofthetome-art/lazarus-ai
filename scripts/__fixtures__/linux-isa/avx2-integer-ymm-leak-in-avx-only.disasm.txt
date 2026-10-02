@@ -1,0 +1,7 @@
+0000000000401160 <piledriver_style_fn_with_plain_vp_ymm_leak>:
+  401160:	55                   	push   %rbp
+  401161:	48 89 e5             	mov    %rsp,%rbp
+  401164:	c5 fc 58 c1          	vaddps %ymm1,%ymm0,%ymm0
+  401168:	c5 fd fe c1          	vpaddd %ymm1,%ymm0,%ymm0
+  40116e:	c5 fc 77             	vzeroupper
+  401171:	c3                   	ret

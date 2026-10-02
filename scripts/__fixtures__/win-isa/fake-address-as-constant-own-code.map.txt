@@ -1,0 +1,5 @@
+ Static symbols
+
+ 0001:00000000       fake_address_as_constant_kernel     0000000180070000 f   ggml-fake-red.obj
+ 0001:00000100       fake_address_as_constant_kernel_end 0000000180070100 f   ggml-fake-red.obj
+ 0003:00000010       __isa_available                     0000000180099898     MSVCRT:cpu_disp.obj

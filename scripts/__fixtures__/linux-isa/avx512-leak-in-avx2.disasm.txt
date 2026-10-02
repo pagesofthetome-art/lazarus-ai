@@ -1,0 +1,7 @@
+00000000004010c0 <alderlake_style_fn_with_avx512_leak>:
+  4010c0:	55                   	push   %rbp
+  4010c1:	48 89 e5             	mov    %rsp,%rbp
+  4010c4:	c4 e2 7d 58 c1       	vpbroadcastd %xmm1,%ymm0
+  4010c9:	62 f1 7c 48 58 c1    	vaddps %zmm1,%zmm0,%zmm0
+  4010cf:	c5 fc 77             	vzeroupper
+  4010d2:	c3                   	ret

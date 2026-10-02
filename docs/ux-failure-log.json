@@ -1,0 +1,16 @@
+[
+  {
+    "id": "settings-navigation-critical-2026-10-01",
+    "severity": "critical",
+    "area": "settings-navigation",
+    "summary": "Duplicate scrollable Settings navigation overlays content",
+    "details": [
+      "Settings sections rendered as a movable/scrolling field with disclosure arrows over the page",
+      "General appeared as a clickable control but did not open a distinct view",
+      "Duplicate Settings header and section navigation created confusing overlapping controls"
+    ],
+    "expected": "One static Settings header, static category buttons beside it, and one clear General section with normal content navigation",
+    "status": "recorded",
+    "recordedAt": "2026-10-01T00:00:00Z"
+  }
+]

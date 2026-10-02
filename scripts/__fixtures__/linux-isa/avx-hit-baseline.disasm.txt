@@ -1,0 +1,6 @@
+0000000000401040 <regressed_baseline_fn>:
+  401040:	55                   	push   %rbp
+  401041:	48 89 e5             	mov    %rsp,%rbp
+  401044:	c5 f8 28 c1          	vmovaps %xmm1,%xmm0
+  401048:	c5 fc 77             	vzeroupper
+  40104b:	c3                   	ret

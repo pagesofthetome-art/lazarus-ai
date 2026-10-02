@@ -1,0 +1,26 @@
+# Lazarus — detailed product notes
+
+Lazarus is a free, open-source desktop application for local AI workflows on Windows and Linux. It includes a local inference engine and can connect to other local services such as Ollama and LM Studio. Image, video, and audio workflows use local models and supporting tools such as ComfyUI.
+
+There is no Lazarus hosted model catalog, first-party hosted inference, Lazarus model API, account system, billing wallet, or cloud memory sync. Those services are not included in current Lazarus builds.
+
+## Network and data boundaries
+
+Local inference keeps prompts and responses on the device. The app downloads models and checks for updates when requested or configured. A user may add a remote AI provider. In that case, prompts, attachments, and generated requests sent through that provider leave the device and are handled under that provider's privacy, retention, security, and billing terms. Lazarus stores provider credentials using the operating-system credential store when available.
+
+Remote Access pairs a phone or another computer with the desktop app. Its permissions are off by default; users choose which capabilities to enable.
+
+## Main guides
+
+- Overview: /guide/what-it-is/
+- Install: /guide/install/
+- First start: /guide/first-start/
+- Chat and local models: /guide/chat/
+- Agent mode and tools: /guide/agent/
+- Code tab: /guide/code/
+- Local image, video, audio, and LoRA workflows: /guide/create/
+- User-configured remote providers: /guide/remote-providers/
+- Settings and troubleshooting: /guide/settings-and-troubleshooting/
+- FAQ: /guide/faq-and-glossary/
+
+For current build instructions, consult the repository README and project release materials.

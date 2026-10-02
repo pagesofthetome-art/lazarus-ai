@@ -1,0 +1,5 @@
+# Companion ggml/llama shared libraries for the dynamic-ISA sidecar builds
+# (Windows, Linux; see scripts/build-llama.sh, K1 3.0.1). Build artifacts,
+# never committed, same rule as src-tauri/bin/.gitignore.
+*/
+!.gitignore

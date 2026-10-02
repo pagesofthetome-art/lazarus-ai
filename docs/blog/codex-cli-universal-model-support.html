@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Local AI Coding Agent That Works With Any Model</title>
+<meta name="description" content="How Lazarus's Coding Agent works with any model: native tool calling plus Hermes XML fallback. Universal agent support for local LLMs.">
+<meta name="keywords" content="local AI agent, tool calling, Hermes XML, coding agent, MCP tools, Ollama tool calling, universal model support, Lazarus coding agent, local LLM agent, uncensored AI coding">
+<meta property="og:title" content="Your Local AI Agent Shouldn't Care Which Model You Run">
+<meta property="og:description" content="How Lazarus's Coding Agent works with any model — native tool calling for compatible models, Hermes XML fallback for everything else.">
+<meta property="og:image" content="/social-preview.png">
+<meta property="og:url" content="/blog/codex-cli-universal-model-support.html">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2026-04-09">
+<meta property="article:author" content="Lazarus contributors">
+<meta property="article:tag" content="Tool Calling">
+<meta property="article:tag" content="Local AI">
+<meta property="article:tag" content="Coding Agent">
+<meta property="article:tag" content="MCP Tools">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Your Local AI Agent Shouldn't Care Which Model You Run">
+<meta name="twitter:description" content="How Lazarus's Coding Agent works with any model — native tool calling for compatible models, Hermes XML fallback for everything else.">
+<meta name="twitter:image" content="/social-preview.png">
+<link rel="canonical" href="/blog/codex-cli-universal-model-support.html">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" href="../favicon.png">
+<!-- Privacy: No external fonts loaded. Using system fonts. -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","headline":"Your Local AI Agent Shouldn't Care Which Model You Run","description":"How Lazarus's Coding Agent works with any model — native tool calling for compatible models, Hermes XML fallback for everything else. Universal coding agent support for local LLMs.","image":"/social-preview.png","datePublished":"2026-04-09","dateModified":"2026-04-09","author":{"@type":"Person","name":"Lazarus contributors","url":"/guide/"},"publisher":{"@type":"Organization","name":"Lazarus","url":"/"},"mainEntityOfPage":{"@type":"WebPage","@id":"/blog/codex-cli-universal-model-support.html"},"keywords":"local AI agent, tool calling, Hermes XML, coding agent, MCP tools, Ollama tool calling, universal model support, Lazarus coding agent"}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazarus.css">
+<script defer src="/assets/lazarus.js"></script>
+</head>
+<body>
+
+<nav class="lu-nav">
+  <a class="lu-nav-brand" href="/" aria-label="Lazarus">
+    <span class="lu-mono" data-mono="nav" data-size="40" aria-hidden="true"></span>
+    <span class="lu-nav-word">Lazarus</span>
+  </a>
+  <div class="lu-nav-links" id="lu-nav-links">
+    <a class="lu-nav-link" href="/">Home</a>
+    <a class="lu-nav-link" href="/blog/">Blog</a>
+    <a class="lu-nav-link" href="/guide/">Guide</a>
+    <a class="lu-nav-link" href="/remote-access/">Remote</a>
+  </div>
+  <div class="lu-nav-right">
+    <a class="lu-nav-icon" href="/guide/code/" title="GitHub" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg><span class="lu-nav-badge">1700+&#8202;⭐</span></a>
+    <a class="lu-nav-icon discord" href="/discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.45 3c-.2.36-.44.85-.6 1.23a18.3 18.3 0 0 0-5.7 0c-.16-.38-.4-.87-.6-1.23a19.7 19.7 0 0 0-4.87 1.37C.55 8.9-.32 13.3.11 17.63a19.9 19.9 0 0 0 6 3.03c.48-.66.9-1.36 1.27-2.1-.7-.26-1.36-.58-1.99-.96.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.24 0c.16.13.32.26.49.38-.63.38-1.3.7-2 .96.37.74.8 1.44 1.27 2.1a19.8 19.8 0 0 0 6-3.03c.5-5.03-.85-9.39-3.55-13.26ZM8.02 15c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.95 2.42-2.15 2.42Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.94 2.42-2.15 2.42Z"/></svg><span class="lu-nav-badge">900+&#8202;<span style="font-size:0.715em">🟢</span></span></a>
+    <span class="lu-nav-sep"></span>
+    <div class="switch" id="theme-switch" role="button" aria-label="Toggle theme"></div>
+    <a class="lu-nav-dl" href="/guide/install/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download</a>
+    <button type="button" class="lu-nav-toggle" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<div class="container lu-doc">
+  <div class="breadcrumb"><a href="../">Lazarus</a> / <a href="./">Blog</a> / This Post</div>
+
+  <div class="post-meta">
+    <span class="post-tag">Tool Calling</span>
+    <span>April 9, 2026</span>
+    <span>&middot;</span>
+    <span>8 min read</span>
+  </div>
+
+  <article>
+    <h1>Your Local AI Agent Shouldn&rsquo;t Care Which Model You Run</h1>
+
+    <p>Most local AI apps that offer agent or coding features lock you into a handful of models. OpenAI function calling? Supported. Anthropic tool use? Supported. That random abliterated Llama finetune you pulled from HuggingFace last Tuesday? Good luck.</p>
+
+    <p>The core problem is <strong>tool calling</strong>. It&rsquo;s the mechanism that turns a chatbot into an agent &mdash; the model doesn&rsquo;t just generate text, it emits structured calls to functions like &ldquo;read this file&rdquo; or &ldquo;run this shell command.&rdquo; But there&rsquo;s no universal standard for how models express tool calls. OpenAI uses a JSON schema format. Anthropic has its own protocol. Ollama exposes native tool calling for some models but not others. And many local models &mdash; especially uncensored, abliterated, or community-finetuned variants &mdash; don&rsquo;t support structured tool calling at all.</p>
+
+    <p>So we built a system in <a href="/guide/code/">Lazarus</a> (v2.2.3) that makes our Coding Agent work with <strong>any model</strong>. Not &ldquo;any model from our approved list.&rdquo; Any model, period.</p>
+
+    <p>If the word agent is carrying a lot of weight in that sentence, Lazarus explains <a href="/blog/what-is-an-ai-agent-and-why-run-one-locally" target="_blank" rel="noopener">what an AI agent is and why you would run one locally</a>.</p>
+
+    <h2>The Dual-Strategy Approach</h2>
+
+    <p>The solution is two strategies that the app picks between automatically based on the model you&rsquo;re running.</p>
+
+    <p><strong>Strategy 1: Native tool calling.</strong> If the model supports structured tool calling through its API, we use it directly. This is the cleanest path &mdash; the model receives tool definitions in its native format and returns well-formed tool calls that we parse and execute. Cloud providers (OpenAI, Anthropic) always go through this path. For Ollama, we maintain a compatibility list of models known to handle native tool calling reliably.</p>
+
+    <p><strong>Strategy 2: Hermes XML fallback.</strong> If the model isn&rsquo;t on the compatibility list, we switch to an XML-based prompting strategy inspired by the Hermes function-calling format. Instead of relying on the model&rsquo;s native tool calling infrastructure, we inject tool definitions directly into the system prompt as XML schemas and instruct the model to emit tool calls as XML blocks in its response text. Then we parse those blocks out of the raw text output.</p>
+
+    <p>The decision happens automatically. You pick a model, start a Coding Agent session, and the app figures out the right strategy. You never see a &ldquo;this model doesn&rsquo;t support tools&rdquo; error.</p>
+
+    <h2>Which Models Get Native Tool Calling</h2>
+
+    <p>We tested and verified native tool calling with these model families through Ollama:</p>
+
+    <ul>
+      <li><strong>Hermes 3</strong></li>
+      <li><strong>Qwen 3</strong> and <strong>Qwen 3.5</strong></li>
+      <li><strong>Llama 3.x</strong> and <strong>Llama 4</strong></li>
+      <li><strong>Mistral</strong></li>
+      <li><strong>Phi-4</strong></li>
+      <li><strong>DeepSeek</strong></li>
+      <li><strong>Gemma 3</strong> and <strong>Gemma 4</strong></li>
+      <li><strong>Nemotron</strong></li>
+      <li><strong>Command-R</strong></li>
+    </ul>
+
+    <p>Cloud providers &mdash; OpenAI, Anthropic &mdash; always use native tool calling regardless of the specific model.</p>
+
+    <p>For any Ollama model not on this list, the Hermes XML strategy kicks in automatically.</p>
+
+    <h2>How the XML Fallback Actually Works</h2>
+
+    <p>When we detect that a model needs the XML strategy, three things happen at prompt construction time.</p>
+
+    <p>First, we build an <strong>XML tool prompt</strong>. Each of the available MCP tools gets described in a structured XML block &mdash; its name, description, and parameters with types. This goes into the system prompt along with instructions telling the model to use <code>&lt;tool_call&gt;</code> XML blocks when it needs to invoke a tool.</p>
+
+    <p>The conceptual structure looks something like this:</p>
+
+    <pre><code>&lt;tools&gt;
+  &lt;tool name="file_read"&gt;
+    &lt;description&gt;Read the contents of a file&lt;/description&gt;
+    &lt;parameters&gt;
+      &lt;param name="path" type="string" required="true"&gt;File path to read&lt;/param&gt;
+    &lt;/parameters&gt;
+  &lt;/tool&gt;
+  &lt;!-- ... more tools ... --&gt;
+&lt;/tools&gt;
+
+When you want to call a tool, emit:
+&lt;tool_call&gt;
+  &lt;name&gt;file_read&lt;/name&gt;
+  &lt;arguments&gt;{"path": "/src/main.rs"}&lt;/arguments&gt;
+&lt;/tool_call&gt;</code></pre>
+
+    <p>Second, when the model responds, we scan the raw text for <code>&lt;tool_call&gt;</code> blocks and parse them. The model doesn&rsquo;t need to support any special API &mdash; it just needs to be good enough at following instructions to emit the right XML structure in its text output.</p>
+
+    <p>Third, we run a <strong>JSON repair layer</strong> on the arguments. Even when a model gets the XML wrapper right, the JSON inside the arguments field is often messy &mdash; missing quotes, trailing commas, single quotes instead of doubles. The repair layer handles the most common malformations before passing arguments to the tool executor.</p>
+
+    <h2>Smart Tool Filtering Saves Your Context Window</h2>
+
+    <p>Here&rsquo;s a practical problem: we have <strong>13 MCP tools</strong> available &mdash; <code>web_search</code>, <code>web_fetch</code>, <code>file_read</code>, <code>file_write</code>, <code>file_list</code>, <code>file_search</code>, <code>shell_execute</code>, <code>code_execute</code>, <code>system_info</code>, <code>process_list</code>, <code>screenshot</code>, <code>image_generate</code>, and <code>run_workflow</code>. Injecting all 13 tool definitions into every prompt eats a significant chunk of context window, which is a real problem for local models running 4K&ndash;8K contexts.</p>
+
+    <p>The <strong>keyword-based filtering system</strong> analyzes each user message and injects only the tools that are relevant. Ask about files? You get file tools. Ask about your system? System info tools. Ask a general question? No tools at all. This saves roughly <strong>80% of tool-definition tokens</strong> compared to injecting everything blindly.</p>
+
+    <p>This matters more for the XML strategy than native tool calling, because the XML tool definitions live in the prompt text and directly consume context tokens.</p>
+
+    <h2>The 13 MCP Tools</h2>
+
+    <p>Every tool runs through Tauri&rsquo;s Rust backend with native OS access, gated by a granular permissions system. The full set:</p>
+
+    <ul>
+      <li><strong>file_read, file_write, file_list, file_search</strong> &mdash; full filesystem access within the selected project directory</li>
+      <li><strong>shell_execute</strong> &mdash; run any shell command asynchronously with streaming output</li>
+      <li><strong>code_execute</strong> &mdash; run code snippets in an isolated context</li>
+      <li><strong>web_search, web_fetch</strong> &mdash; search the web and fetch page content</li>
+      <li><strong>system_info, process_list</strong> &mdash; query hardware and running processes</li>
+      <li><strong>screenshot</strong> &mdash; capture the screen (combined with vision for visual debugging)</li>
+      <li><strong>image_generate</strong> &mdash; generate images through configured backends</li>
+      <li><strong>run_workflow</strong> &mdash; execute predefined multi-step workflows</li>
+    </ul>
+
+    <p>The agent can chain up to <strong>20 tool calls per task</strong>. In practice, a typical coding task &mdash; &ldquo;add input validation to this form and write tests&rdquo; &mdash; runs 5&ndash;10 iterations: read the existing code, write the validation, read the test file, write new tests, run them, fix failures, run again.</p>
+
+    <h2>Honest Assessment: Where This Works and Where It Doesn&rsquo;t</h2>
+
+    <p>Let me be direct about the limitations.</p>
+
+    <h3>Native tool calling with strong models is great</h3>
+
+    <p>Qwen 3 32B, Llama 4 Scout, and the cloud models handle multi-step tool-use workflows reliably. They pick the right tools, format arguments correctly, and iterate on errors intelligently. If you&rsquo;re running one of these, the experience is genuinely useful for real development work.</p>
+
+    <h3>The XML fallback is functional but rougher</h3>
+
+    <p>It works surprisingly well with models that are good at instruction following &mdash; even models that were never specifically trained for tool use. But smaller models (7B&ndash;13B) will sometimes botch the XML structure, emit partial tool calls, or hallucinate tool names that don&rsquo;t exist. The repair layers catch many of these failures, but you&rsquo;ll see more &ldquo;tool call failed, retrying&rdquo; iterations compared to native tool calling.</p>
+
+    <h3>Abliterated and uncensored models vary wildly</h3>
+
+    <p>The whole point of universal model support is that you can run whatever model you want, including ones that won&rsquo;t refuse tasks. Some abliterated models are excellent at instruction following and work well as coding agents. Others were abliterated crudely and lost some of their structured-output capabilities in the process. There&rsquo;s no way to predict this without trying &mdash; but at least the fallback strategy means they&rsquo;ll get a chance to work instead of being rejected outright.</p>
+
+    <h3>Cloud models are still better at agentic tasks</h3>
+
+    <p>This isn&rsquo;t a controversial take. GPT-4o and Claude 3.5 Sonnet are more reliable tool-callers than any local model. The value proposition of local model support isn&rsquo;t that it&rsquo;s better &mdash; it&rsquo;s that it&rsquo;s private, free, uncensored, and runs on your hardware. For many use cases, that matters more than peak reliability.</p>
+
+    <h2>Getting Started</h2>
+
+    <p>Lazarus is AGPL-3.0 licensed and free. Clone and run:</p>
+
+    <pre><code>git clone YOUR_LAZARUS_REPOSITORY_URL
+cd Lazarus
+# Windows: setup.bat | macOS/Linux: ./setup.sh</code></pre>
+
+    <p>Open the Coding Agent tab, pick any model, select a project folder, and start giving it tasks. The app handles the native-vs-XML strategy decision automatically. Check permissions settings if you want to control what the agent can access.</p>
+
+    <p>If you&rsquo;re running Ollama, any model works. If yours isn&rsquo;t on the native tool calling list, you&rsquo;ll be on the XML fallback &mdash; and honestly, for most tasks, you won&rsquo;t notice the difference until you&rsquo;re doing complex multi-step workflows.</p>
+
+    <p>The <a href="/guide/code/">GitHub repo</a> has full source, releases for Windows and Linux, and discussions if you want to report which models work well (or don&rsquo;t) as coding agents. Model compatibility reports from the community are genuinely useful: they help us expand the native tool calling list and improve the XML fallback parsing.</p>
+
+    <hr>
+
+    <p><em>Lazarus v2.2.3 is available now. AGPL-3.0 licensed and free to use. Built by <a href="/guide/">Lazarus contributors</a>.</em></p>
+  </article>
+
+  <div class="post-footer">
+    <p>Try universal model agent support in Lazarus</p>
+    <a href="/guide/install/" class="cta-btn" target="_blank">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      Download v2.2.3
+    </a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-row footer-meta"><span>&copy; 2026 &middot; Lazarus &middot; AGPL-3.0</span></div>
+  <div class="footer-row footer-links">
+    <a href="/blog/">Blog</a>
+    <a href="/guide/">Guide</a>
+    <a href="/remote-access/">Remote access</a>
+    <a href="/discord" target="_blank" rel="noopener">Discord</a>
+    <a href="/guide/code/">GitHub</a>
+    <a href="/guide/faq-and-glossary/">Discussions</a>
+    <a href="/guide/settings-and-troubleshooting/">Issues</a>
+    <a href="https://reddit.com/user/GroundbreakingMall54">Reddit</a>
+  </div>
+</footer>
+</body>
+</html>

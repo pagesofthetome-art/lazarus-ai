@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Install Lazarus on Windows or Linux, Update It, Uninstall It</title>
+<meta name="description" content="How to install Lazarus on Windows and Linux, what the SmartScreen warning means, how updates arrive, where the files land, and how to remove the app.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="canonical" href="/guide/install/">
+<meta property="og:title" content="Install Lazarus on Windows or Linux, Update It, Uninstall It">
+<meta property="og:description" content="How to install Lazarus on Windows and Linux, what the SmartScreen warning means, how updates arrive, where the files land, and how to remove the app.">
+<meta property="og:url" content="/guide/install/">
+<meta property="og:type" content="article">
+<meta property="og:image" content="/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Install Lazarus on Windows or Linux, Update It, Uninstall It","description":"How to install Lazarus on Windows and Linux, what the SmartScreen warning means, how updates arrive, where the files land, and how to remove the app.","url":"/guide/install/","dateModified":"2026-09-11","inLanguage":"en","author":{"@type":"Person","name":"Lazarus contributors","url":"/guide/"},"publisher":{"@type":"Organization","name":"Lazarus","url":"/"},"mainEntityOfPage":{"@type":"WebPage","@id":"/guide/install/"},"isPartOf":{"@type":"WebPage","name":"Lazarus Handbook: Install, Chat, Agent, Code, Create, Remote Providers","url":"/guide/"},"about":{"@type":"SoftwareApplication","name":"Lazarus","operatingSystem":"Windows, Linux","applicationCategory":"UtilitiesApplication"}}
+</script>
+<link rel="icon" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazarus.css">
+<script defer src="/assets/lazarus.js"></script>
+</head>
+<body>
+<nav class="lu-nav">
+  <a class="lu-nav-brand" href="/" aria-label="Lazarus">
+    <span class="lu-mono" data-mono="nav" data-size="40" aria-hidden="true"></span>
+    <span class="lu-nav-word">Lazarus</span>
+  </a>
+  <div class="lu-nav-links" id="lu-nav-links">
+    <a class="lu-nav-link" href="/">Home</a>
+    <a class="lu-nav-link" href="/blog/">Blog</a>
+    <a class="lu-nav-link" href="/guide/">Guide</a>
+    <a class="lu-nav-link" href="/remote-access/">Remote</a>
+  </div>
+  <div class="lu-nav-right">
+    <a class="lu-nav-icon" href="/guide/code/" title="GitHub" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg><span class="lu-nav-badge">1700+&#8202;⭐</span></a>
+    <a class="lu-nav-icon discord" href="/discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.45 3c-.2.36-.44.85-.6 1.23a18.3 18.3 0 0 0-5.7 0c-.16-.38-.4-.87-.6-1.23a19.7 19.7 0 0 0-4.87 1.37C.55 8.9-.32 13.3.11 17.63a19.9 19.9 0 0 0 6 3.03c.48-.66.9-1.36 1.27-2.1-.7-.26-1.36-.58-1.99-.96.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.24 0c.16.13.32.26.49.38-.63.38-1.3.7-2 .96.37.74.8 1.44 1.27 2.1a19.8 19.8 0 0 0 6-3.03c.5-5.03-.85-9.39-3.55-13.26ZM8.02 15c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.95 2.42-2.15 2.42Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.94 2.42-2.15 2.42Z"/></svg><span class="lu-nav-badge">900+&#8202;<span style="font-size:0.715em">🟢</span></span></a>
+    <span class="lu-nav-sep"></span>
+    <div class="switch" id="theme-switch" role="button" aria-label="Toggle theme"></div>
+    <a class="lu-nav-dl" href="/guide/install/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download</a>
+    <button type="button" class="lu-nav-toggle" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<article class="lu-doc" data-handbook-chapter="install">
+<div class="breadcrumb"><a href="/">Home</a> &rsaquo; <a href="/guide/">Handbook</a> &rsaquo; Install</div>
+<h1>Install and update</h1>
+<p class="subtitle">The Windows installer, the Linux AppImage, .deb and .rpm, what the security warnings mean, how updates arrive, where your files live, and how to uninstall.</p>
+<nav class="toc">
+<div class="toc-title">In this chapter</div>
+<a href="#download">Where to download</a>
+<a href="#windows">Windows</a>
+<a href="#linux">Linux</a>
+<a href="#warnings">What the security warnings mean</a>
+<a href="#updates">How updates arrive</a>
+<a href="#files">Where your files live</a>
+<a href="#uninstall">Uninstall</a>
+<a href="#wrong">When it goes wrong</a>
+</nav>
+
+<h2 id="download">Where to download</h2>
+
+<p>Get the Lazarus installer or Linux package from the release channel provided by the project maintainer. Before installing, verify the file name, version and published SHA-256 checksum. The release packages target Windows and Linux; there is no Mac build.</p>
+
+<p>Release package names identify the platform and version. These examples show the Lazarus names; use the version number published with your download:</p>
+
+<table>
+<tr><th>Platform</th><th>File</th></tr>
+<tr><td>Windows 10 and 11, x64</td><td><code>Lazarus_3.0.3_x64-setup.exe</code></td></tr>
+<tr><td>Linux x64, any distribution</td><td><code>Lazarus_3.0.3_amd64.AppImage</code></td></tr>
+<tr><td>Debian, Ubuntu, Mint</td><td><code>Lazarus_3.0.3_amd64.deb</code></td></tr>
+<tr><td>Fedora, openSUSE</td><td><code>Lazarus-3.0.3-1.x86_64.rpm</code></td></tr>
+</table>
+
+<p>The installer itself is small (about 14 MB on Windows). The models, the ComfyUI install and the PyTorch download come later, from inside the app, and those are the big files.</p>
+
+<h2 id="windows">Windows</h2>
+
+<div class="step">
+<span class="step-num">1</span>
+<span class="step-title">Run the installer</span>
+<div class="step-body">
+<p>Double-click the <code>.exe</code>. Windows SmartScreen usually shows a blue "Windows protected your PC" box first, because the installer is not yet signed with a Microsoft certificate. Read the section on warnings below before you decide what to do with that box.</p>
+<p>The installer asks for a language, then whether to install for the current user only or for all users. Either works; the current user option needs no administrator password. It then copies the app and the Lazarus Engine into the install folder, creates a desktop shortcut and a start menu entry named "Lazarus", and offers to start the app.</p>
+</div>
+</div>
+
+<div class="step">
+<span class="step-num">2</span>
+<span class="step-title">Let the wizard run</span>
+<div class="step-body">
+<p>The first start opens the setup wizard in its own small window. Chapter 3 walks through it. The Lazarus Engine listens only on your own machine (127.0.0.1) unless you turn on remote access or the Local API in Settings, so nothing is reachable from the network by default.</p>
+</div>
+</div>
+
+<h2 id="linux">Linux</h2>
+
+<p>Three packages are built for every release. Pick one:</p>
+
+<div class="step">
+<span class="step-num">1</span>
+<span class="step-title">AppImage: no installation</span>
+<div class="step-body">
+<p>Download the <code>.AppImage</code>, mark it executable and run it:</p>
+<pre><code>chmod +x Lazarus_3.0.3_amd64.AppImage
+./Lazarus_3.0.3_amd64.AppImage</code></pre>
+<p>The AppImage bundles the Lazarus Engine and the media framework. It needs the Vulkan loader (<code>libvulkan1</code> on Debian and Ubuntu, <code>vulkan-loader</code> on Fedora) and the OpenMP runtime (<code>libgomp1</code> or <code>libgomp</code>) on the system, because the engine loads them at start. Most desktop installs have both. If one is missing, the engine tells you the package name, and chapter 9 lists the sentence.</p>
+<p>The AppImage also needs FUSE to mount itself. Most desktops already have it; a fresh cloud or minimal install may not. Debian 13 and Ubuntu 24.04 and newer renamed the package from <code>libfuse2</code> to <code>libfuse2t64</code> (the time64 transition), so an older guide that says "install libfuse2" fails there with "package not found". Install the one that matches your system: <code>sudo apt install libfuse2t64</code> on Debian 13 or Ubuntu 24.04 and newer, <code>sudo apt install libfuse2</code> on older Debian and Ubuntu, <code>sudo dnf install fuse-libs</code> on Fedora. Without it the AppImage does not start at all, with no window and no error dialog, only a mount failure on the command line.</p>
+<p>A fresh Fedora install (in particular the Cloud Edition image) also ships without the WebKitGTK runtime the window needs: install <code>sudo dnf install webkit2gtk4.1 gtk3 libappindicator-gtk3</code> first if the app never shows a window.</p>
+</div>
+</div>
+
+<div class="step">
+<span class="step-num">2</span>
+<span class="step-title">.deb or .rpm: a normal package</span>
+<div class="step-body">
+<pre><code>sudo apt install ./Lazarus_3.0.3_amd64.deb
+sudo dnf install ./Lazarus-3.0.3-1.x86_64.rpm</code></pre>
+<p>Both packages declare their dependencies, including <code>libvulkan1</code> and <code>libgomp1</code> (or their Fedora names), so the package manager pulls them in. They install the Lazarus app and its <code>lazarus-llama-server</code> engine sidecar. The app appears in the application menu as "Lazarus".</p>
+</div>
+</div>
+
+<div class="step">
+<span class="step-num">3</span>
+<span class="step-title">Arch and the AUR</span>
+<div class="step-body">
+<p>Community packages may be available for Arch Linux. They are maintained separately; follow the package maintainer's instructions. The app's updater recognizes package-manager installs and handles them as described under updates below.</p>
+</div>
+</div>
+
+<div class="callout info">
+<div class="callout-title">Wayland and a window that stays black</div>
+On some Wayland desktops and some Mesa versions the window opens and never paints. On a Wayland session the app sets up to three environment variables at start to avoid that: <code>WEBKIT_DISABLE_DMABUF_RENDERER=1</code>, <code>WEBKIT_DISABLE_COMPOSITING_MODE=1</code>, and, in the AppImage only, <code>LD_PRELOAD</code> pointing at the system <code>libwayland-client.so.0</code>, because the AppImage carries its own copy and the host Mesa cannot create an EGL display against it. The app sets each one only if you have not set it yourself, and it prints one line per variable with the reason. If you want the GPU path back, set any of those variables before starting the app and the app leaves your value alone, or set <code>LAZARUS_NO_WAYLAND_WORKAROUND=1</code> and it sets none of them. The AppImage also clears <code>PYTHONHOME</code> and <code>PYTHONPATH</code> for every Python it starts, because the AppImage runtime exports them into its own mount and a system Python would otherwise die on "No module named 'encodings'".
+</div>
+
+<h2 id="warnings">What the security warnings mean</h2>
+
+<p>The Windows installer is built with NSIS and is not yet signed with a Microsoft Authenticode certificate. Without that certificate every reputation based check starts at zero trust, so three things happen: Windows SmartScreen shows "unrecognized app" on first run, some antivirus engines flag the file with a heuristic (Avast, for example, has reported <code>Win32:NSIS_Error[Heur]</code> on the installer bootstrap, and ESET has blocked it at run time), and behaviour scanners dislike that the app later downloads and starts other programs (the engine, ComfyUI, Python, model files). All of those downloads are visible in the source code. The project's <a href="/guide/code//blob/master/SECURITY.md#antivirus--browser-false-positives">SECURITY.md</a> keeps the current list of reports.</p>
+
+<p>What you can check yourself, before you click past a warning:</p>
+
+<ol>
+<li>The file came from the Releases page linked above, not from a mirror or a forum. Compare the file name and version with the release you meant to download.</li>
+<li>The SHA-256 of your download matches the checksum published by the release maintainer. On Windows: <code>certutil -hashfile Lazarus_3.0.3_x64-setup.exe SHA256</code>. On Linux: <code>sha256sum &lt;file&gt;</code>.</li>
+<li>The auto update channel, which brings every later version, is signed with a minisign key that the app verifies before it installs anything. The public key is printed in SECURITY.md. So the first install is the only unsigned step.</li>
+</ol>
+
+<p>A warning is not proof that a file is safe or malicious. If the source or the checksum does not match, stop and do not run the file. If they match and you still cannot establish trust, ask in the <a href="/discord" target="_blank" rel="noopener">Discord</a> or open an issue; a false positive is possible, and it must be investigated rather than assumed. Do not add a blanket folder exclusion to your antivirus for it.</p>
+
+<h2 id="updates">How updates arrive</h2>
+
+<p>The app checks GitHub Releases for a newer version five seconds after every start and then every six hours. It reads a small file called <code>latest.json</code> that the release carries, and it only ever offers versions the project has marked as the latest.</p>
+
+<div class="step">
+<span class="step-num">1</span>
+<span class="step-title">The badge in the top bar</span>
+<div class="step-body">
+<p>When a newer version exists, a badge appears in the top bar reading "Update to v3.0.1" (with the real number). Because "Download updates automatically" is on by default under Settings, General, Updates, the app fetches the update in the background right away and the badge changes to "Updating 42%" and then to "Restart to update". Nothing restarts on its own; the update installs only when you click.</p>
+<p>Clicking the badge opens a small panel headed "Update Available", "Downloading Update", "Ready to Install", "Installing..." or "Update Error". Its buttons are "Download Update" and "Later" before the download, "Restart Now" and "Later" once it is ready, and "Retry" and "Dismiss" after an error. The same controls sit under Settings, General, Updates, together with "Current Version", "Latest Version" and "Check for updates".</p>
+</div>
+</div>
+
+<div class="step">
+<span class="step-num">2</span>
+<span class="step-title">What happens when you click Restart Now</span>
+<div class="step-body">
+<p>The app stops the Lazarus Engine, writes your chats to disk and takes a copy of them outside the browser profile (the same backup it writes every five seconds while you use it), then hands over to the installer. On Windows that is the same NSIS installer as the first install; on a .deb or .rpm install it is a package install, and your system asks for your password the way it does for any package. Chats, settings and models live outside the install folder and survive the update.</p>
+<p>On Linux installs the updater cannot write (an AppImage in a read-only folder, a package-manager install, or files nothing owns), the app updates itself instead: it downloads a signed AppImage into <code>~/.local/share/Lazarus/</code>, writes a start menu entry that points at it, and starts again from there. The progress line shows the three short steps after the download: "Checking the signature", "Putting the new version in place", "Starting the new version". From then on updates are the usual one click.</p>
+</div>
+</div>
+
+<div class="callout tip">
+<div class="callout-title">Release notes</div>
+After an update the app opens a sheet with the release notes once. It does not open after a fresh install, because the wizard owns the screen then.
+</div>
+
+<h2 id="files">Where your files live</h2>
+
+<p>Nothing of yours lives in the install folder. Everything is under your user profile, in these places:</p>
+
+<table>
+<tr><th>What</th><th>Windows</th><th>Linux</th></tr>
+<tr><td>App data, logs, ComfyUI by default</td><td><code>%LOCALAPPDATA%\lazarus</code></td><td><code>~/.local/share/lazarus</code></td></tr>
+<tr><td>Log files (one per day, seven kept)</td><td><code>%LOCALAPPDATA%\lazarus\logs\lazarus.&lt;date&gt;.log</code></td><td><code>~/.local/share/lazarus/logs/lazarus.&lt;date&gt;.log</code></td></tr>
+<tr><td>Lazarus Engine model files (.gguf)</td><td><code>%APPDATA%\Lazarus\models</code></td><td><code>~/.local/share/Lazarus/models</code></td></tr>
+<tr><td>Chat backup copies</td><td><code>%APPDATA%\Lazarus\store_backup.json</code></td><td><code>~/.local/share/lazarus/stores/store_backup.json</code></td></tr>
+<tr><td>ComfyUI path, port and trainer root</td><td><code>%APPDATA%\lazarus-config\config.json</code></td><td><code>~/.config/lazarus-config/config.json</code></td></tr>
+<tr><td>Agent sandbox folders</td><td><code>%USERPROFILE%\agent-workspace</code></td><td><code>~/agent-workspace</code></td></tr>
+<tr><td>Character trainer (venv, base models, training sets)</td><td colspan="2">the trainer root in config.json, by default <code>musubi</code> under the app data folder</td></tr>
+</table>
+
+<p>Your conversations themselves are kept in the app's browser storage (IndexedDB), not in a file you can open. The backup file above is a snapshot of them that the app writes every five seconds and rotates through three generations, and it is what an update or a reset falls back on. To move chats between machines use "Export all chats" and "Import chats" under Settings, General, Chat Backup. The Lazarus Engine model folder can be moved to another drive under Settings, AI Backends, Model Storage.</p>
+
+<p>The ComfyUI the app installs lands in your home folder by default (<code>~/ComfyUI</code>), or in the path you set under Settings, AI Backends, ComfyUI (Image &amp; Video) before pressing "Install ComfyUI". Its models live inside it under <code>models/</code>.</p>
+
+<h2 id="uninstall">Uninstall</h2>
+
+<p>Windows: use "Apps" in the Windows settings, or the uninstaller entry in the start menu. The uninstaller removes the install folder and the shortcuts. It shows a checkbox that also deletes the app data; leave it unticked and your chats, settings and models stay in the folders listed above, so a later reinstall finds them again.</p>
+
+<p>Linux: remove the Lazarus package with your package manager; for the AppImage, delete the file. Uninstalling does not remove personal chats, settings, models or ComfyUI data under your home directory. Remove those data folders yourself only if you want to erase them. Upgrading an older Lazarus installation preserves its existing data and migrates it into the current app folders.</p>
+
+<h2 id="wrong">When it goes wrong</h2>
+
+<p><strong>SmartScreen shows "Windows protected your PC" and only offers not to run the file.</strong> Click "More info" in that box to reveal the other button. Before you use it, do the checks in the warnings section above. If the checks fail, do not run it.</p>
+
+<p><strong>The antivirus removed the file right after the download.</strong> Leave it in quarantine while you check the detection name in the antivirus history and compare the download's checksum with the Releases page. Report the version, the file name and the detection name in a GitHub issue. Do not add a folder exclusion.</p>
+
+<p><strong>The installer says a file is in use.</strong> A Lazarus Engine from an earlier session is still running. The installer frees it by itself and, if it still cannot write after four tries, moves the old file aside as <code>lu-llama-server.exe.old</code> and continues. If the installer still stops, quit the app from the tray icon ("Quit") and run the installer again.</p>
+
+<p><strong>The app does not open a second time; nothing happens.</strong> The app runs one instance. A second start brings the existing window to the front instead, and if the window was closed to the tray, look for the "Lazarus" icon in the tray (it may sit in the overflow area) and double-click it, or choose "Show" from its menu.</p>
+
+<p><strong>Closing the window did not quit the app.</strong> That is by design. The X hides the window to the tray, and after 30 seconds the app also unloads the local models so the graphics card is free again. "Quit" in the tray menu ends the app and its helper programs.</p>
+
+<p><strong>"Could not reach the update server. Check your connection and try again."</strong> The check against GitHub failed. It is retried every six hours, or press "Check for updates" under Settings, General, Updates.</p>
+
+<p><strong>"The update could not be downloaded."</strong> or <strong>"The downloaded update was lost when the app restarted. Download it again."</strong> Press "Retry" in the update panel or "Download Update" again. The download starts over.</p>
+
+<p><strong>"The update could not be installed."</strong> On Windows, download the current installer from the Releases page and run it over the existing install; your data stays. On Linux, the same sentence used to appear after a password prompt on installs the updater could not write, such as the AUR package. Since 2.6.9 those installs update themselves as described above; if you still see it, download the AppImage from the Releases page and run that.</p>
+
+<p><strong>The .deb refuses to install because of <code>/usr/bin/llama-server</code>.</strong> Older packages used the same engine command name as Debian's <code>llama.cpp-tools</code>. Current Lazarus packages use <code>lazarus-llama-server</code>. Remove the conflicting older package and install the current Lazarus package.</p>
+
+<p><strong>Linux: the window opens but stays empty.</strong> See the Wayland callout above. If you have set <code>WEBKIT_DISABLE_DMABUF_RENDERER</code>, <code>WEBKIT_DISABLE_COMPOSITING_MODE</code> or <code>LD_PRELOAD</code> yourself, unset them so the app can apply its defaults. The app also reveals its window after ten seconds at the latest, so wait that long before you decide.</p>
+
+<hr>
+<p class="small">Previous chapter: <a href="/guide/what-it-is/">What it is</a>. Next chapter: <a href="/guide/first-start/">First start</a>. Back to the <a href="/guide/">handbook overview</a>.</p>
+</article>
+<footer>
+  <div class="footer-row footer-meta"><span>&copy; 2026 &middot; Lazarus &middot; AGPL-3.0</span></div>
+  <div class="footer-row footer-links">
+    <a href="/blog/">Blog</a>
+    <a href="/guide/">Guide</a>
+    <a href="/remote-access/">Remote access</a>
+    <a href="/discord" target="_blank" rel="noopener">Discord</a>
+    <a href="/guide/code/">GitHub</a>
+    <a href="/guide/faq-and-glossary/">Discussions</a>
+    <a href="/guide/settings-and-troubleshooting/">Issues</a>
+    <a href="https://reddit.com/user/GroundbreakingMall54">Reddit</a>
+  </div>
+</footer>
+</body>
+</html>

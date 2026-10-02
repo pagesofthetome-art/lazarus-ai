@@ -1,0 +1,23 @@
+import { expect, test } from '@playwright/test'
+
+test('real memory settings protect a new entry across reload and allow explicit unmarking', async ({ page }, testInfo) => {
+  await page.goto('/e2e/memory-sensitive-proof.html')
+  await expect(page.getByRole('note')).toContainText('Remote sessions can retain previously shared memory')
+  await expect(page.getByRole('note')).toContainText('End the remote session')
+  await page.getByRole('button', { name: 'Add Memory', exact: true }).click()
+  await page.getByPlaceholder('What should I remember?').fill('Private preference')
+  await page.getByPlaceholder('Details… (required)').fill('Synthetic private preference')
+  await page.getByLabel('Sensitive: exclude from AI requests').check()
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await page.getByRole('button', { name: 'Preview AI memory context' }).click()
+  await expect(page.locator('#result')).toHaveText('No eligible memories')
+  await page.reload()
+  await expect(page.getByLabel('Sensitive: exclude from AI requests')).toBeChecked()
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.screenshot({ path: testInfo.outputPath('memory-sensitive-mobile.png'), fullPage: true })
+  await page.getByRole('button', { name: 'Preview AI memory context' }).click()
+  await expect(page.locator('#result')).toHaveText('No eligible memories')
+  await page.getByLabel('Sensitive: exclude from AI requests').uncheck()
+  await page.getByRole('button', { name: 'Preview AI memory context' }).click()
+  await expect(page.locator('#result')).toContainText('Synthetic private preference')
+})

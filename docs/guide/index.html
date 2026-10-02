@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lazarus Handbook: Install, Chat, Agent, Code, Create, Remote Providers</title>
+<meta name="description" content="The complete manual for Lazarus: install on Windows or Linux, set up the Lazarus Engine, chat, use the agent and Code tab, generate images, video and audio, configure optional providers, and troubleshoot.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="canonical" href="/guide/">
+<meta property="og:title" content="Lazarus Handbook: Install, Chat, Agent, Code, Create, Remote Providers">
+<meta property="og:description" content="The complete manual for Lazarus: install on Windows or Linux, set up the Lazarus Engine, chat, use the agent and Code tab, generate images, video and audio, configure optional providers, and troubleshoot.">
+<meta property="og:url" content="/guide/">
+<meta property="og:type" content="article">
+<meta property="og:image" content="/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","name":"Lazarus Handbook: Install, Chat, Agent, Code, Create, and Remote Providers","description":"The complete Lazarus manual: install on Windows or Linux, set up the local engine, chat, use the agent and Code tab, generate images, video and audio, configure optional providers, and troubleshoot.","url":"/guide/","dateModified":"2026-09-11","inLanguage":"en","isPartOf":{"@type":"WebSite","name":"Lazarus","url":"/"},"hasPart":[{"@type":"TechArticle","name":"What Lazarus is","url":"/guide/what-it-is/"},{"@type":"TechArticle","name":"Install and update","url":"/guide/install/"},{"@type":"TechArticle","name":"First start: the setup wizard","url":"/guide/first-start/"},{"@type":"TechArticle","name":"Chat","url":"/guide/chat/"},{"@type":"TechArticle","name":"Agent mode","url":"/guide/agent/"},{"@type":"TechArticle","name":"The Code tab","url":"/guide/code/"},{"@type":"TechArticle","name":"Create: images, video, audio and characters","url":"/guide/create/"},{"@type":"TechArticle","name":"Remote providers","url":"/guide/remote-providers/"},{"@type":"TechArticle","name":"Settings and troubleshooting","url":"/guide/settings-and-troubleshooting/"},{"@type":"TechArticle","name":"FAQ and glossary","url":"/guide/faq-and-glossary/"}]}
+</script>
+<link rel="icon" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazarus.css">
+<script defer src="/assets/lazarus.js"></script>
+</head>
+<body>
+<nav class="lu-nav">
+  <a class="lu-nav-brand" href="/" aria-label="Lazarus">
+    <span class="lu-mono" data-mono="nav" data-size="40" aria-hidden="true"></span>
+    <span class="lu-nav-word">Lazarus</span>
+  </a>
+  <div class="lu-nav-links" id="lu-nav-links">
+    <a class="lu-nav-link" href="/">Home</a>
+    <a class="lu-nav-link" href="/blog/">Blog</a>
+    <a class="lu-nav-link" href="/guide/">Guide</a>
+    <a class="lu-nav-link" href="/remote-access/">Remote</a>
+  </div>
+  <div class="lu-nav-right">
+    <a class="lu-nav-icon" href="/guide/code/" title="GitHub" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg><span class="lu-nav-badge">1700+&#8202;⭐</span></a>
+    <a class="lu-nav-icon discord" href="/discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.45 3c-.2.36-.44.85-.6 1.23a18.3 18.3 0 0 0-5.7 0c-.16-.38-.4-.87-.6-1.23a19.7 19.7 0 0 0-4.87 1.37C.55 8.9-.32 13.3.11 17.63a19.9 19.9 0 0 0 6 3.03c.48-.66.9-1.36 1.27-2.1-.7-.26-1.36-.58-1.99-.96.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.24 0c.16.13.32.26.49.38-.63.38-1.3.7-2 .96.37.74.8 1.44 1.27 2.1a19.8 19.8 0 0 0 6-3.03c.5-5.03-.85-9.39-3.55-13.26ZM8.02 15c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.95 2.42-2.15 2.42Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.94 2.42-2.15 2.42Z"/></svg><span class="lu-nav-badge">900+&#8202;<span style="font-size:0.715em">🟢</span></span></a>
+    <span class="lu-nav-sep"></span>
+    <div class="switch" id="theme-switch" role="button" aria-label="Toggle theme"></div>
+    <a class="lu-nav-dl" href="/guide/install/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download</a>
+    <button type="button" class="lu-nav-toggle" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<article class="lu-doc" data-handbook-hub>
+<div class="breadcrumb"><a href="/">Home</a> &rsaquo; Handbook</div>
+<h1>The Lazarus handbook</h1>
+<p class="subtitle">Install Lazarus, run models locally, use the agent and Create tools, connect a provider you choose, and troubleshoot the app. Written for version 3.0.3 from the app's source.</p>
+<p>Lazarus is a local-first desktop app for Windows and Linux. Chat, the coding agent, and image, video and audio tools are available in one window. You can also configure a local server or a remote AI provider of your choice; Lazarus does not operate a hosted model service or account.</p>
+
+<p>This handbook is written for someone who has never used a local AI app. Each chapter explains what a part of the app is for, then walks through it in numbered steps with the button labels exactly as they appear on screen, and ends with the things that usually go wrong and how to fix them. Every fact comes from the app's source code for version 3.0.3, so where the code does not settle a question, the handbook says so instead of guessing.</p>
+
+<h2 id="chapters">Chapters</h2>
+
+<div class="post-card" data-handbook-chapter="what-it-is"><h2><a href="/guide/what-it-is/">1. What Lazarus is</a></h2><p>What runs locally, how optional provider connections work, and what needs a GPU.</p></div>
+<div class="post-card" data-handbook-chapter="install"><h2><a href="/guide/install/">2. Install and update</a></h2><p>Windows installer, Linux packages, the SmartScreen warning, updates, file locations, uninstall.</p></div>
+<div class="post-card" data-handbook-chapter="first-start"><h2><a href="/guide/first-start/">3. First start: the setup wizard</a></h2><p>The wizard step by step, with the exact button labels, and why the starter model is 7B.</p></div>
+<div class="post-card" data-handbook-chapter="chat"><h2><a href="/guide/chat/">4. Chat</a></h2><p>Model picker, context window, thinking, sampling controls, personas, memory, documents, voice, export.</p></div>
+<div class="post-card" data-handbook-chapter="agent"><h2><a href="/guide/agent/">5. Agent mode</a></h2><p>Tools, the workspace folder and the sandbox, approvals, Stop, background agents, loops.</p></div>
+<div class="post-card" data-handbook-chapter="code"><h2><a href="/guide/code/">6. The Code tab</a></h2><p>Modes, the plan bar, workspace permissions, and model setup.</p></div>
+<div class="post-card" data-handbook-chapter="create"><h2><a href="/guide/create/">7. Create: images, video, audio and characters</a></h2><p>Local image, video, audio, character training, and LoRA tools.</p></div>
+<div class="post-card" data-handbook-chapter="remote-providers"><h2><a href="/guide/remote-providers/">8. Remote model providers</a></h2><p>Configure an API provider you choose and review the data sent with remote requests.</p></div>
+<div class="post-card" data-handbook-chapter="settings-and-troubleshooting"><h2><a href="/guide/settings-and-troubleshooting/">9. Settings and troubleshooting</a></h2><p>Every settings tab, the log file, the exact engine and trainer errors with fixes, Linux notes, storage paths, reset.</p></div>
+<div class="post-card" data-handbook-chapter="faq-and-glossary"><h2><a href="/guide/faq-and-glossary/">10. FAQ and glossary</a></h2><p>The questions from the help channels, and the words the app uses.</p></div>
+
+<h2 id="how-to-read">If you only read one page</h2>
+
+<p>Install the app (chapter 2), let the wizard set up the Lazarus Engine and download the starter model (chapter 3), and send your first message (chapter 4). That is a working local AI on most machines with a graphics card that has 6 GB of memory or more. Everything else in the handbook is optional and can wait until you want it.</p>
+
+<section class="callout info" aria-labelledby="data-boundaries">
+<h2 id="data-boundaries">Local by default, with optional network features</h2>
+<p>Local inference stays on your machine. Lazarus makes network requests for model downloads and update checks. If you configure a remote provider, prompts, attachments and generated requests sent through it leave your machine and are handled under that provider's terms. Remote Access can expose app content to a device you pair, so review its permissions before connecting.</p>
+<p>For provider setup and data handling, read <a href="/guide/remote-providers/">the remote providers guide</a>. Local chat needs a downloaded model, and document chat also needs an embedding model. Image and video generation need ComfyUI and additional model downloads, which the app can install for you. Performance depends on your hardware.</p>
+</section>
+
+<h2 id="before-you-install">Before you install: the security warnings</h2>
+
+<p>The Windows installer is not yet signed with a Microsoft code signing certificate, so Windows SmartScreen shows an "unrecognized app" warning on first run, and some antivirus engines flag the file with a heuristic. Chapter 2 explains what is behind that. The short version: confirm that the file came from the project's <a href="/guide/install/">official Releases page</a> and matches the exact version you meant to download. Source availability alone does not verify a downloaded executable. Stop if the source or checksum does not match.</p>
+
+<section aria-labelledby="antivirus-warning">
+<h3 id="antivirus-warning">If your antivirus flags the app</h3>
+<ul>
+<li>Keep protection enabled and leave the file blocked or quarantined while you check. Do not add a blanket folder exclusion.</li>
+<li>Look up the detection name and the affected file in your security product's history, update its definitions and scan again with its normal controls.</li>
+<li>A false positive is possible on this installer, and it must be investigated rather than assumed. Report the app version, the release file name and the detection name in the project's issue tracker. Do not post private files, credentials or unredacted logs.</li>
+<li>Microsoft's own guidance is at <a href="https://support.microsoft.com/en-us/windows/security/threat-malware-protection/virus-and-threat-protection-in-the-windows-security-app">Virus and threat protection in the Windows Security app</a>. Exclusions reduce protection and are not a normal installation step.</li>
+</ul>
+</section>
+
+<h2 id="help">Where to get help</h2>
+
+<p>Most problems are covered in chapter 9. When you ask for help in the project's support channel or issue tracker, say which version, operating system and graphics card you use, and attach today's log file from Settings, General, Troubleshoot. Read the log first and remove private paths, prompts, credentials or other data before sharing it.</p>
+</article>
+<footer>
+  <div class="footer-row footer-meta"><span>&copy; 2026 &middot; Lazarus &middot; AGPL-3.0</span></div>
+  <div class="footer-row footer-links">
+    <a href="/blog/">Blog</a>
+    <a href="/guide/">Guide</a>
+    <a href="/remote-access/">Remote access</a>
+    <a href="/discord" target="_blank" rel="noopener">Discord</a>
+    <a href="/guide/code/">GitHub</a>
+    <a href="/guide/faq-and-glossary/">Discussions</a>
+    <a href="/guide/settings-and-troubleshooting/">Issues</a>
+    <a href="https://reddit.com/user/GroundbreakingMall54">Reddit</a>
+  </div>
+</footer>
+</body>
+</html>

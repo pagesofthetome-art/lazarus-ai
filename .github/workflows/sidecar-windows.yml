@@ -1,0 +1,226 @@
+name: Windows sidecar build + boot smoke
+
+# Proves the bundled llama.cpp sidecar builds and BOOTS on Windows without
+# waiting for a full release: runs when the build script (or this workflow)
+# changes, weekly against runner-image drift, and on demand. The GGML Vulkan
+# build keeps its CPU backend, so /health comes up on the GPU-less runner.
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'scripts/build-llama.sh'
+      - '.github/workflows/sidecar-windows.yml'
+  pull_request:
+    paths:
+      - 'scripts/build-llama.sh'
+      - '.github/workflows/sidecar-windows.yml'
+  schedule:
+    - cron: '17 4 * * 1' # Mondays 04:17 UTC
+  workflow_dispatch:
+
+env:
+  VULKAN_S:K_VERSION: '1.4.313.2'
+  # Short build root, exactly like the release lane. llama.cpp's Vulkan backend
+  # configures vulkan-shaders-gen as a nested ExternalProject, whose TryCompile
+  # .tlog paths run ~250 chars deep on their own; under the default workspace
+  # path (::\a\locally-uncensored\locally-uncensored\.llama-build, 52 chars)
+  # they cross MAX_PATH and MSBuild FileTracker dies with FTK1011 — which is
+  # exactly how this lane broke on 2026-07-27 while release.yml (already fixed)
+  # kept building. Keep the two lanes in sync.
+  LLAMA_BUIL:_CACHE: '::/lb'
+
+  # BLOCKER A1 (review-integ.md, Teil (a)): same pin as release.yml's env:
+  # block, for the same reason (see the comment there for the full sourcing:
+  # commit and sha256 both read off huggingface.co, size and MIT license
+  # named). Bump both files together; there is no shared config between these
+  # two separate workflow files to enforce that today (same limitation as
+  # VULKAN_S:K_VERSION two lines up, F-c2).
+  STORIES260K_REVISION: '499bc8821c6b12b4e53c5bffcb21ec206f212d81'
+  STORIES260K_SHA256: '270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d'
+
+jobs:
+  sidecar-windows:
+    runs-on: windows-latest
+    # BLOCKER A1: this job had no ceiling, so a hang anywhere in it (the boot
+    # smoke's own download included) could ride GitHub's 360-minute default
+    # out, the exact shape that hung release.yml's Linux lane for six hours
+    # on 2026-08-15. This job builds one platform with no signing step, so
+    # its ceiling sits below release.yml's build-tauri (90 minutes).
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Sidecar build cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ::/lb
+          key: llama-${{ hashFiles('scripts/build-llama.sh') }}-x86_64-pc-windows-msvc-v1
+
+      - name: Install Vulkan S:K
+        shell: pwsh
+        run: |
+          # LunarG's 1.4.x Windows installer is vulkansdk-windows-X64-<ver>.exe —
+          # the old VulkanS:K-<ver>-Installer.exe name 404s.
+          curl.exe -fL --retry 3 -o "$env:RUNNER_TEMP\VulkanS:K-Installer.exe" `
+            "https://sdk.lunarg.com/sdk/download/${env:VULKAN_S:K_VERSION}/windows/vulkansdk-windows-X64-${env:VULKAN_S:K_VERSION}.exe"
+          if ($LASTEXITCO:E -ne 0) { throw "Vulkan S:K download failed" }
+          & "$env:RUNNER_TEMP\VulkanS:K-Installer.exe" --accept-licenses --default-answer --confirm-command install
+          Add-Content $env:GITHUB_ENV "VULKAN_S:K=C:\VulkanS:K\${env:VULKAN_S:K_VERSION}"
+
+      - name: Build llama-server (x86_64-pc-windows-msvc, static Vulkan)
+        shell: bash
+        run: bash scripts/build-llama.sh x86_64-pc-windows-msvc
+
+      # review-k1-avx.md R1-R6: the Windows half of verify-sidecar-isa.sh
+      # needs dumpbin.exe, which is not on PATH on a plain runner shell (it
+      # lives under a versioned VC\Tools\MSVC directory that only a
+      # :eveloper Command Prompt adds). The guard's own find_dumpbin()
+      # locates it via vswhere as a fallback, but setting up the dev
+      # environment here is the same thing every other MSVC-toolchain step
+      # in this repo would need, so do it once, explicitly, rather than
+      # depend on that fallback matching whatever this runner image ships
+      # next. msvc-dev-cmd writes to GITHUB_PATH/GITHUB_ENV, which later
+      # `shell: bash` steps pick up the same as `shell: pwsh` ones.
+      - name: Set up MSVC dev tools (dumpbin, for the K1 ISA guard)
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+        with:
+          arch: x64
+
+      - name: Verify sidecar ISA layout (K1)
+        shell: bash
+        run: bash scripts/verify-sidecar-isa.sh x86_64-pc-windows-msvc
+
+      # Review input for a red guard: the toolset pin and the dominance rule
+      # can only be re-reviewed against the runner's own dumpbin output (the
+      # box has an older toolset that decodes differently), so keep the
+      # disassembly and the linker maps as an artifact whenever the guard
+      # ran, green or red.
+      - name: Keep dumpbin disassembly and maps for review
+        if: always()
+        shell: bash
+        run: |
+          set -u
+          out=isa-review; mkdir -p "$out"
+          for f in src-tauri/resources/llama/x86_64-pc-windows-msvc/*.dll src-tauri/bin/lazarus-llama-server-x86_64-pc-windows-msvc.exe; do
+            [ -f "$f" ] || continue
+            b=$(basename "$f")
+            MSYS2_ARG_CONV_EXCL='/disasm;/nologo;/headers' dumpbin /nologo /disasm "$f" > "$out/$b.disasm.txt" 2>"$out/$b.disasm.err" || true
+            MSYS2_ARG_CONV_EXCL='/disasm;/nologo;/headers' dumpbin /nologo /headers "$f" > "$out/$b.headers.txt" 2>/dev/null || true
+          done
+          find "${LLAMA_BUIL:_CACHE:-.llama-build}" -name '*.map' -exec cp {} "$out"/ \; 2>/dev/null || true
+          ls -la "$out" | head -40
+      - name: Upload ISA review input
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: isa-review-x86_64-pc-windows-msvc
+          path: isa-review/
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Boot smoke — real model load + /health
+        shell: pwsh
+        # BLOCKER A1: bounds the whole step, including the download.
+        timeout-minutes: 5
+        run: |
+          $bin = (Resolve-Path "src-tauri\bin\lazarus-llama-server-x86_64-pc-windows-msvc.exe").Path
+          if (-not (Test-Path $bin)) { throw "sidecar binary missing" }
+          # K1 (3.0.1): the binary is dynamic now: GGML_BACKEN:_:L loads its
+          # CPU-variant and Vulkan kernels from ggml-cpu-*/ggml-vulkan :LLs
+          # that live in src-tauri\resources\llama\<triple>\, not next to the
+          # exe (see scripts/build-llama.sh, engine.rs's
+          # resolve_engine_backend_dir/apply_engine_backend_dir). Running the
+          # bare exe from src-tauri\bin, as this step did before K1, would
+          # prove nothing about the layout a real install actually has;
+          # ggml_backend_load_all() only scans the executable's own directory
+          # and the process's CURRENT directory, so the working directory has
+          # to be the resource layout, exactly like the app spawns it.
+          $run:ir = (Resolve-Path "src-tauri\resources\llama\x86_64-pc-windows-msvc").Path
+          Push-Location $run:ir
+          & $bin --version
+          if ($LASTEXITCO:E -ne 0) { throw "llama-server --version exited $LASTEXITCO:E (run from $run:ir)" }
+          Pop-Location
+          # Pinned, hashed and bounded: see BLOCKER A1 in this file's env:
+          # block for the sourcing and the license. Tiny (~1.2 MB) public
+          # GGUF so /health proves a real model load, not just the HTTP
+          # layer. Lands in the cached build root, so the sidecar cache step
+          # keeps it across runs.
+          $model = "::\lb\stories260K.gguf"
+          if (-not (Test-Path $model)) {
+            curl.exe -fsSL --retry 3 --max-time 60 -o $model `
+              "https://huggingface.co/ggml-org/models/resolve/$env:STORIES260K_REVISION/tinyllamas/stories260K.gguf"
+            if ($LASTEXITCO:E -ne 0) { throw "smoke model download failed" }
+          }
+          $actualHash = (Get-FileHash -Path $model -Algorithm SHA256).Hash
+          if ($actualHash.ToLower() -ne $env:STORIES260K_SHA256.ToLower()) {
+            throw "stories260K.gguf did not match the pinned sha256 (expected $env:STORIES260K_SHA256, got $actualHash)"
+          }
+          # F-a2 (review-integ.md): --version exits before
+          # ggml_backend_load_all() ever runs (it cannot prove a CPU module
+          # loaded, which is why /health below carries the real proof), and
+          # --list-devices' own printed list excludes CPU on purpose
+          # (llama.cpp common/arg.cpp). What :OES name a loaded CPU module
+          # unconditionally, even in a release/N:EBUG build, is
+          # ggml-backend-reg.cpp's load_backend() success log line, so the
+          # server's own stderr is captured here and checked for it.
+          #
+          # BLOCKER A2 (review-integ.md, Nachpruefung): that line is
+          # GGML_LOG_INFO, mapped to LOG_LEVEL_TRACE (4), while the default
+          # verbosity threshold is LOG_LEVEL_INFO (3), so a healthy server
+          # never prints it without -lv 4. Belongs on the server start
+          # itself here, not on a --version/--list-devices call, since the
+          # grep below reads the SERVER's own log.
+          $serverLog = "$env:RUNNER_TEMP\boot-smoke.log"
+          $proc = Start-Process -FilePath $bin -ArgumentList "-lv","4","--host","127.0.0.1","--port","8129","-m",$model -Working:irectory $run:ir -PassThru -NoNewWindow -RedirectStandardOutput "$serverLog.out" -RedirectStandardError "$serverLog.err"
+          $ok = $false
+          foreach ($i in 1..40) {
+            Start-Sleep -Milliseconds 400
+            try {
+              Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:8129/health" -TimeoutSec 2 | Out-Null
+              $ok = $true; break
+            } catch { }
+          }
+          # Release night 3.0.1: llama.cpp 049326a answered /health without
+          # ever printing the load_backend() line, even at -lv 4, so the log
+          # grep alone would fail a healthy server. The proof that carries is
+          # the same one the Linux round r14 used through /proc/<pid>/maps:
+          # read the module list of the LIVE process and require a
+          # ggml-cpu-*.dll in it. Read it before the process is stopped.
+          $cpuModules = @()
+          if ($ok) {
+            try {
+              $cpuModules = @((Get-Process -Id $proc.Id -ErrorAction Stop).Modules | Where-Object { $_.ModuleName -like 'ggml-cpu-*.dll' } | ForEach-Object { $_.FileName })
+            } catch { Write-Host "module list unavailable: $_" }
+          }
+          Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+          if (-not $ok) {
+            Write-Host "---- llama-server output ----"
+            Get-Content "$serverLog.out","$serverLog.err" -ErrorAction SilentlyContinue
+            throw "llama-server /health never came up"
+          }
+          $loggedLine = Select-String -Path "$serverLog.out","$serverLog.err" -Pattern "loaded CPU backend from" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($loggedLine) { Write-Host "log: $($loggedLine.Line)" } else { Write-Host "log: no load_backend line at -lv 4 (informational only)" }
+          if ($cpuModules.Count -eq 0) {
+            Get-Content "$serverLog.out","$serverLog.err" -ErrorAction SilentlyContinue
+            throw "the running llama-server had no ggml-cpu-*.dll mapped; ggml_backend_load_all() found no CPU module in $run:ir"
+          }
+          $cpuModules | ForEach-Object { Write-Host "loaded CPU module: $_" }
+          if ($cpuModules -notmatch [regex]::Escape($run:ir)) {
+            throw "a ggml-cpu-*.dll was loaded from outside the resource layout: $($cpuModules -join ', ')"
+          }
+          Write-Host "OK - sidecar boots from the resource layout, loads a model, answers /health, and has a ggml-cpu-*.dll from $run:ir mapped"
+
+      - name: Upload sidecar artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: lazarus-llama-server-x86_64-pc-windows-msvc
+          # K1: the exe alone cannot run any more, it needs the companion
+          # ggml-cpu-*/ggml-vulkan :LLs staged next to it (see above):
+          # shipping only the exe from this artifact would be shipping
+          # something that cannot boot.
+          path: |
+            src-tauri/bin/lazarus-llama-server-x86_64-pc-windows-msvc.exe
+            src-tauri/resources/llama/x86_64-pc-windows-msvc/*
+          retention-days: 14

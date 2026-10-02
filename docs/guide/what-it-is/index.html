@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What Lazarus Is: Local Models, Providers, and Hardware</title>
+<meta name="description" content="What the Lazarus desktop app does, what runs on your own machine, how optional providers work, and which parts need a graphics card.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="canonical" href="/guide/what-it-is/">
+<meta property="og:title" content="What Lazarus Is: Local Models, Providers, and Hardware">
+<meta property="og:description" content="What the Lazarus desktop app does, what runs on your own machine, how optional providers work, and which parts need a graphics card.">
+<meta property="og:url" content="/guide/what-it-is/">
+<meta property="og:type" content="article">
+<meta property="og:image" content="/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"What Lazarus Is: Local Models, Providers, and Hardware","description":"What the Lazarus desktop app does, what runs on your own machine, how optional providers work, and which parts need a graphics card.","url":"/guide/what-it-is/","dateModified":"2026-09-11","inLanguage":"en","author":{"@type":"Person","name":"Lazarus contributors","url":"/guide/"},"publisher":{"@type":"Organization","name":"Lazarus","url":"/"},"mainEntityOfPage":{"@type":"WebPage","@id":"/guide/what-it-is/"},"isPartOf":{"@type":"WebPage","name":"Lazarus Handbook","url":"/guide/"},"about":{"@type":"SoftwareApplication","name":"Lazarus","operatingSystem":"Windows, Linux","applicationCategory":"UtilitiesApplication"}}
+</script>
+<link rel="icon" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazarus.css">
+<script defer src="/assets/lazarus.js"></script>
+</head>
+<body>
+<nav class="lu-nav">
+  <a class="lu-nav-brand" href="/" aria-label="Lazarus">
+    <span class="lu-mono" data-mono="nav" data-size="40" aria-hidden="true"></span>
+    <span class="lu-nav-word">Lazarus</span>
+  </a>
+  <div class="lu-nav-links" id="lu-nav-links">
+    <a class="lu-nav-link" href="/">Home</a>
+    <a class="lu-nav-link" href="/blog/">Blog</a>
+    <a class="lu-nav-link" href="/guide/">Guide</a>
+    <a class="lu-nav-link" href="/remote-access/">Remote</a>
+  </div>
+  <div class="lu-nav-right">
+    <a class="lu-nav-icon" href="/guide/code/" title="GitHub" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg><span class="lu-nav-badge">1700+&#8202;⭐</span></a>
+    <a class="lu-nav-icon discord" href="/discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.45 3c-.2.36-.44.85-.6 1.23a18.3 18.3 0 0 0-5.7 0c-.16-.38-.4-.87-.6-1.23a19.7 19.7 0 0 0-4.87 1.37C.55 8.9-.32 13.3.11 17.63a19.9 19.9 0 0 0 6 3.03c.48-.66.9-1.36 1.27-2.1-.7-.26-1.36-.58-1.99-.96.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.24 0c.16.13.32.26.49.38-.63.38-1.3.7-2 .96.37.74.8 1.44 1.27 2.1a19.8 19.8 0 0 0 6-3.03c.5-5.03-.85-9.39-3.55-13.26ZM8.02 15c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.95 2.42-2.15 2.42Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.94 2.42-2.15 2.42Z"/></svg><span class="lu-nav-badge">900+&#8202;<span style="font-size:0.715em">🟢</span></span></a>
+    <span class="lu-nav-sep"></span>
+    <div class="switch" id="theme-switch" role="button" aria-label="Toggle theme"></div>
+    <a class="lu-nav-dl" href="/guide/install/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download</a>
+    <button type="button" class="lu-nav-toggle" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<article class="lu-doc" data-handbook-chapter="what-it-is">
+<div class="breadcrumb"><a href="/">Home</a> &rsaquo; <a href="/guide/">Handbook</a> &rsaquo; What it is</div>
+<h1>What Lazarus is</h1>
+<p class="subtitle">One app for chat, an agent, a coding tab and image, video and audio generation. This chapter explains what runs where, what needs a graphics card, and what is free.</p>
+<nav class="toc">
+<div class="toc-title">In this chapter</div>
+<a href="#one-window">One window, four tabs</a>
+<a href="#local">Local models and optional providers</a>
+<a href="#gpu">What needs a graphics card</a>
+<a href="#free">What is free</a>
+<a href="#platforms">Which computers it runs on</a>
+</nav>
+
+<h2 id="one-window">One window, four tabs</h2>
+
+<p>The top bar of the app has these entries: Chat, Create, Compare, Benchmark, Models and Settings. Most of your time goes into the first two.</p>
+
+<p>Chat is a conversation with a language model. At the top of a chat you can switch the conversation into Agent mode, where the model gets tools (web search, files, a shell, screenshots, image and video generation), or into the Code tab, where a coding agent works inside a project folder with a file explorer and a plan. Chapters 4, 5 and 6 cover those three.</p>
+
+<p>Create is where images, video and audio are made. Its toolbar has twelve lanes: Image, Edit, Cutout, Upscale, Erase, Video, Animate, Character, Lipsync, Music, Extend and Motion. Chapter 7 covers them.</p>
+
+<p>Compare puts two to four models side by side on the same prompt. Benchmark measures a model on your own hardware for speed, cost and correctness. Models is where you download, delete and inspect models. Settings has four tabs, which chapter 9 lists.</p>
+
+<h2 id="local">Local models and optional providers</h2>
+
+<p>The app has two ways to do its work, and a switch next to the model picker moves between them.</p>
+
+<p>Local means the model runs on your computer. Lazarus includes its own engine, which runs model files you download. It can also talk to local engines such as Ollama or LM Studio, or to a remote server that you configure and that speaks the OpenAI API. Images and video use ComfyUI, which Lazarus can install, start and repair. Local inference keeps prompts on your machine. The app makes network requests for model downloads and update checks.</p>
+
+<p>Remote providers are optional. You add and configure them under Settings, AI Backends, Providers, using your own endpoint and credentials. Requests sent to a remote provider leave your machine, and that provider's privacy, retention and billing terms apply. Lazarus does not provide a hosted model catalog, account or memory-sync service. Chapter 8 explains provider setup.</p>
+
+<h2 id="gpu">What needs a graphics card</h2>
+
+<p>Local chat works without a dedicated graphics card. The Lazarus Engine runs the model on the processor when it has to, and the app says so in the status line when that happens. It is slower, and a 7B model on a processor alone answers at a walking pace, but it works.</p>
+
+<p>Local chat is much faster on a graphics card with enough memory (VRAM) to hold the model. The starter model the wizard offers needs about 6 GB of VRAM for a full GPU run. The Models tab shows, for every model, how much memory it needs, and marks what fits your card.</p>
+
+<p>Images and video need ComfyUI and a graphics card. Image generation starts at around 6 GB of VRAM with the Juggernaut XL starter checkpoint. Video needs more, and each setup card names its model and memory requirement. Character Studio needs a supported card with 12 GB or more. On an AMD card, support depends on the operating system and model; the FAQ in chapter 10 has the details.</p>
+
+<h2 id="free">What is free</h2>
+
+<p>The desktop app is free and open source under the AGPL-3.0 licence. Everything that runs locally is free: chat, the agent, the Code tab, images, video, music, the Character Studio trainer, voice in and out, document chat, memory and remote access from your phone. There is no account, no usage limit and no time limit on the local side.</p>
+
+<p>Local inference does not have a per-message fee. An external provider may bill API use under its own pricing. Lazarus stores provider credentials using the operating system credential store where available; read the provider guide before sending data to a remote endpoint.</p>
+
+<h2 id="platforms">Which computers it runs on</h2>
+
+<p>Windows 10 and 11 on x64, and Linux on x64 as an AppImage, a .deb or an .rpm. There is no Mac build. A phone does not run the desktop app, but a paired phone can drive the app on your PC over your network, which the Remote tab in the sidebar sets up.</p>
+
+<div class="callout info">
+<div class="callout-title">Version</div>
+This handbook describes version 3.0.3. The app shows its version under Settings, General, Updates, and a sheet of release notes opens once after every update. If a button in your app is not where this handbook says, check that version first.
+</div>
+
+<hr>
+<p class="small">Next chapter: <a href="/guide/install/">Install</a>. Back to the <a href="/guide/">handbook overview</a>.</p>
+</article>
+<footer>
+  <div class="footer-row footer-meta"><span>&copy; 2026 &middot; Lazarus &middot; AGPL-3.0</span></div>
+  <div class="footer-row footer-links">
+    <a href="/blog/">Blog</a>
+    <a href="/guide/">Guide</a>
+    <a href="/remote-access/">Remote access</a>
+    <a href="/discord" target="_blank" rel="noopener">Discord</a>
+    <a href="/guide/code/">GitHub</a>
+    <a href="/guide/faq-and-glossary/">Discussions</a>
+    <a href="/guide/settings-and-troubleshooting/">Issues</a>
+    <a href="https://reddit.com/user/GroundbreakingMall54">Reddit</a>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,12 @@
+Dump of file fixture: the artificial "rot probe" (review-k1-avx.md R4).
+Synthetic, not from a real build: an own-code object (ggml-fake-red.obj,
+not msvcprt/MSVCRT and not wmemcmp/memcmp) that reaches a VEX instruction
+with NO preceding __isa_available/__isa_enabled/_Avx2WmemEnabled load
+anywhere in the owning function. This must always come out RED: if a
+future change to the guard's decision logic ever lets this fixture pass,
+the allowlist or the dominance check has been loosened past the point
+review-k1-avx.md judged safe.
+
+  0000000180050000: 48 89 5C 24 08     mov         qword ptr [rsp+8],rbx
+  0000000180050005: C5 F9 6E D8        vmovd       xmm3,eax
+  000000018005000A: C3                 ret

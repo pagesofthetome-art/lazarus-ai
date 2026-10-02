@@ -1,0 +1,8 @@
+0000000000401020 <clean_baseline_fn>:
+  401020:	55                   	push   %rbp
+  401021:	48 89 e5             	mov    %rsp,%rbp
+  401024:	0f 10 45 f0          	movups -0x10(%rbp),%xmm0
+  401028:	66 0f 6f c1          	movdqa %xmm1,%xmm0
+  40102c:	f3 0f b8 c0          	popcnt %eax,%eax
+  401030:	66 0f 3a 44 c1 00    	pclmulqdq $0x0,%xmm1,%xmm0
+  401036:	c3                   	ret

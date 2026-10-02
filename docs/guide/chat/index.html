@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat in Lazarus: Models, Context Window, Thinking, Sampling, Voice</title>
+<meta name="description" content="How chat works in Lazarus: the model picker, the context window and its three labels, thinking mode, the sampling controls, personas, memory, documents, voice and export.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="canonical" href="/guide/chat/">
+<meta property="og:title" content="Chat in Lazarus: Models, Context Window, Thinking, Sampling, Voice">
+<meta property="og:description" content="How chat works in Lazarus: the model picker, the context window and its three labels, thinking mode, the sampling controls, personas, memory, documents, voice and export.">
+<meta property="og:url" content="/guide/chat/">
+<meta property="og:type" content="article">
+<meta property="og:image" content="/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Chat in Lazarus: Models, Context Window, Thinking, Sampling, Voice","description":"How chat works in Lazarus: the model picker, the context window and its three labels, thinking mode, the sampling controls, personas, memory, documents, voice and export.","url":"/guide/chat/","dateModified":"2026-09-11","inLanguage":"en","author":{"@type":"Person","name":"Lazarus contributors","url":"/guide/"},"publisher":{"@type":"Organization","name":"Lazarus","url":"/"},"mainEntityOfPage":{"@type":"WebPage","@id":"/guide/chat/"},"isPartOf":{"@type":"WebPage","name":"Lazarus Handbook: Install, Chat, Agent, Code, Create, Remote Providers","url":"/guide/"},"about":{"@type":"SoftwareApplication","name":"Lazarus","operatingSystem":"Windows, Linux","applicationCategory":"UtilitiesApplication"}}
+</script>
+<link rel="icon" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazarus.css">
+<script defer src="/assets/lazarus.js"></script>
+</head>
+<body>
+<nav class="lu-nav">
+  <a class="lu-nav-brand" href="/" aria-label="Lazarus">
+    <span class="lu-mono" data-mono="nav" data-size="40" aria-hidden="true"></span>
+    <span class="lu-nav-word">Lazarus</span>
+  </a>
+  <div class="lu-nav-links" id="lu-nav-links">
+    <a class="lu-nav-link" href="/">Home</a>
+    <a class="lu-nav-link" href="/blog/">Blog</a>
+    <a class="lu-nav-link" href="/guide/">Guide</a>
+    <a class="lu-nav-link" href="/remote-access/">Remote</a>
+  </div>
+  <div class="lu-nav-right">
+    <a class="lu-nav-icon" href="/guide/code/" title="GitHub" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg><span class="lu-nav-badge">1700+&#8202;⭐</span></a>
+    <a class="lu-nav-icon discord" href="/discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.45 3c-.2.36-.44.85-.6 1.23a18.3 18.3 0 0 0-5.7 0c-.16-.38-.4-.87-.6-1.23a19.7 19.7 0 0 0-4.87 1.37C.55 8.9-.32 13.3.11 17.63a19.9 19.9 0 0 0 6 3.03c.48-.66.9-1.36 1.27-2.1-.7-.26-1.36-.58-1.99-.96.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.24 0c.16.13.32.26.49.38-.63.38-1.3.7-2 .96.37.74.8 1.44 1.27 2.1a19.8 19.8 0 0 0 6-3.03c.5-5.03-.85-9.39-3.55-13.26ZM8.02 15c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.95 2.42-2.15 2.42Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.94 2.42-2.15 2.42Z"/></svg><span class="lu-nav-badge">900+&#8202;<span style="font-size:0.715em">🟢</span></span></a>
+    <span class="lu-nav-sep"></span>
+    <div class="switch" id="theme-switch" role="button" aria-label="Toggle theme"></div>
+    <a class="lu-nav-dl" href="/guide/install/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download</a>
+    <button type="button" class="lu-nav-toggle" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<article class="lu-doc" data-handbook-chapter="chat">
+<div class="breadcrumb"><a href="/">Home</a> &rsaquo; <a href="/guide/">Handbook</a> &rsaquo; Chat</div>
+<h1>Chat</h1>
+<p class="subtitle">The model picker, the context window, thinking, the sampling controls, personas, memory, document chat, voice in and out, and export.</p>
+<nav class="toc">
+<div class="toc-title">In this chapter</div>
+<a href="#first-message">Your first message</a>
+<a href="#picker">The model picker</a>
+<a href="#context">The context window</a>
+<a href="#thinking">Thinking and effort</a>
+<a href="#sampling">The sampling controls</a>
+<a href="#images">Images in the chat</a>
+<a href="#documents">Document chat</a>
+<a href="#personas">Personas, memory and plugins</a>
+<a href="#voice">Voice in and out</a>
+<a href="#export">Export, compact, new chat</a>
+<a href="#wrong">When it goes wrong</a>
+</nav>
+
+<h2 id="first-message">Your first message</h2>
+
+<div class="step">
+<span class="step-num">1</span>
+<span class="step-title">Check the model</span>
+<div class="step-body">
+<p>The model picker sits next to the message box. After the wizard it shows the starter model, "Qwen 2.5 7B (Starter)", or the model you picked. If the picker shows no model, open the Models tab and install one first; the "New Chat" button in the sidebar reads "Pick or install a model first" until then.</p>
+</div>
+</div>
+
+<div class="step">
+<span class="step-num">2</span>
+<span class="step-title">Type and send</span>
+<div class="step-body">
+<p>Click into the box with the placeholder "Message...", type, and press Enter or the send button ("Send message"). The first answer takes longer than the following ones, because the Lazarus Engine loads the model file into memory first; a 4 GB file takes some seconds from an SSD and longer on the first cold start. While an answer streams in, the send button becomes "Stop generation". Stop means stop: the request is cancelled at once.</p>
+</div>
+</div>
+
+<div class="step">
+<span class="step-num">3</span>
+<span class="step-title">Start a new chat</span>
+<div class="step-body">
+<p>"New Chat" in the sidebar starts a fresh conversation with the same model. Old conversations stay in the list on the left, where each row has "Rename chat" and "Delete chat" buttons. Everything is stored on your machine, in the app's browser storage, with a backup file that chapter 2 names.</p>
+</div>
+</div>
+
+<h2 id="picker">The model picker</h2>
+
+<p>The picker groups models by family, and each row shows the model name. A row with an On/Off switch is a model the engine can load or unload; "Unload all models" at the bottom frees the memory of every loaded model. A model that comes from LM Studio carries a hint that using it starts the LM Studio server and makes LM Studio the chat backend in place of the Lazarus Engine. Models from other configured providers appear in the same picker.</p>
+
+<p>If the picker says "No AI backend is enabled", every provider is switched off under Settings, AI Backends, Providers; enable the Lazarus Engine there. Chapter 9 lists the other providers and their default addresses.</p>
+
+<h2 id="context">The context window</h2>
+
+<p>The context window is how much text the model can hold at once, measured in tokens (a token is roughly three quarters of a word in English). Everything counts against it: the system prompt, your messages, the answers, attached documents and tool results. When it is full, older turns fall out or the answer is cut.</p>
+
+<p>Above the message box a small dropdown shows the current value and a counter next to it shows how much of it this conversation uses. Open the dropdown to change it:</p>
+
+<ul>
+<li>"Auto" leaves the choice to the app: at most 16,384 tokens in a plain chat and at most 32,768 in Agent mode (an agent turn carries every tool definition and needs the room), and never more than the model's own maximum. The Lazarus Engine's own starting value is 8,192, set under Settings, AI Backends, Lazarus Engine (expert), "Context length (tokens)".</li>
+<li>The fixed values run from 4,096 to 131,072 and are cut at the model's maximum.</li>
+<li>Three labels say where the current value came from: "from server" (the engine reported it), "set by you" (you picked it) or "estimated" (the app guessed from the model's metadata).</li>
+</ul>
+
+<p>On the Lazarus Engine the tooltip reads "Changing it reloads the model so it takes effect now." The reload takes as long as the first load did. Memory grows with the context: the KV cache, where the model keeps the conversation while it works, grows linearly with the context length, so 32,768 on a 7B model can push a 6 GB card into RAM. If answers become slow after you raised it, put it back.</p>
+
+<p>On a server you run yourself (Ollama, LM Studio, llama.cpp, vLLM, KoboldCpp, or a custom OpenAI compatible address) the tooltip reads "This server decides its own context; pick the value it actually runs with so the counter and the request budget match it." The app asks those servers what they run with where it can (llama.cpp, vLLM, KoboldCpp and LM Studio answer), and a note under the dropdown reads "Current value 8,192 (from server). Your pick is saved for this model on this server." A provider may impose its own context limit; check that provider's model documentation.</p>
+
+<h2 id="thinking">Thinking and effort</h2>
+
+<p>Some models can reason before they answer, writing a hidden draft first. The "Think" button next to the message box switches that on and off for models that support it. Its tooltip tells you what the current model can do: "Thinking ON", "Thinking OFF", "Thinking is always on for this model" or "Model does not support thinking".</p>
+
+<p>Next to it, the effort control cycles through Low, Medium, High and Max. Its tooltip reads "Reasoning effort: High. Click to cycle. Higher effort spends more output tokens." The default is High. Higher effort uses more output tokens and can take longer.</p>
+
+<h2 id="sampling">The sampling controls</h2>
+
+<p>Next to the message box a small trigger reads "Sampling: 0.70". A star after it means "Changed from the defaults". Click it to open four sliders:</p>
+
+<table>
+<tr><th>Control</th><th>Range</th><th>What it does</th></tr>
+<tr><td>Temperature</td><td>0 to 2, step 0.05, default 0.7</td><td>Lower is more predictable, higher is more varied. 0 always picks the most likely word.</td></tr>
+<tr><td>Top P</td><td>0 to 1, default 0.9</td><td>Only the most likely words whose probabilities add up to this share are considered.</td></tr>
+<tr><td>Top K</td><td>0 to 200, default 40</td><td>Only the K most likely words are considered. OpenAI style backends ignore it.</td></tr>
+<tr><td>Max tokens</td><td>0 = auto</td><td>The longest answer allowed. 0 lets the app decide.</td></tr>
+</table>
+
+<p>A help line under the sliders reads "Reasoning models accept these and react less to them." "Reset" puts everything back to the defaults. The same four values live under Settings, General, Generation as the defaults for new chats; the trigger changes them for the current chat.</p>
+
+<h2 id="images">Images in the chat</h2>
+
+<p>The paper clip next to the message box attaches up to five images ("Attach images. For PDFs and documents use the Documents panel"). Only a vision model can read them. If the current model cannot, the app says "This model can't read images. Switch to a vision model (Gemma 4, LLaVA, Qwen-VL) to use the attachment." The Models tab marks vision models with an image icon in its legend.</p>
+
+<h2 id="documents">Document chat</h2>
+
+<p>The "Docs" button above the message box opens the Documents panel. Drop a .pdf, .docx or .txt file into it and the app splits the text into pieces, turns each piece into numbers with the embedding model, and for every question you ask it fetches the pieces that match and hands them to the chat model. This is what people call RAG.</p>
+
+<p>Document chat needs the embedding model from step 4 of the wizard. If you skipped it, the panel shows "Embedding model needed" and "Document Chat needs nomic-embed-text (274 MB). One-time download." with a button to fetch it. The panel also tells you where the indexing runs: "Your documents are indexed on this computer and stay here" on a local backend, or, on a remote embedding server you configured, "Indexing runs on (address), so the full text of every document you add is sent there".</p>
+
+<h2 id="personas">Personas, memory and plugins</h2>
+
+<p>A persona is a system prompt with a name. The default persona is "No Filter", which tells the model that it is your own model, running for you alone, and carries the house conduct rules; it has a real role, so a plain question gets a plain answer. Twenty five personas are built in and you can write your own under Settings, Agent, Personas ("Use personas" switches the feature on). The "Plugins" button above the message box opens a panel where "Persona" has the checkbox "Enable persona for this chat".</p>
+
+<p>The same panel holds "Chat Tools" (web, file, image and video tools for the plain chat), "Caveman Mode" (Off "Normal responses", Lite "Slightly shorter", Full "Very terse", Ultra "Maximum brevity") and "Group chat" ("Pick 2 to 4 models. They answer in turn on every message, and each sees what the others said.").</p>
+
+<p>Memory is a small store of facts about you that the app injects into every prompt. The Memory toggle above the message box ("Memory: view, add or delete the context injected into prompts") shows what is in it. Settings, Agent, Memory manages the store.</p>
+
+<h2 id="voice">Voice in and out</h2>
+
+<p>Voice runs locally. Speech to text uses faster-whisper, which you install under Settings, Voice &amp; Remote, Speech with "Download &amp; Install"; the microphone button reads "Start voice input" and, while recording, "Stop recording". If it is not installed, the app says "Speech-to-text is not installed. Install faster-whisper in Settings → Voice &amp; Remote."</p>
+
+<p>Text to speech uses Piper, a small neural voice of about 63 MB. "Enable read-aloud" under the same settings adds a speaker button to every answer ("Read aloud" / "Stop speaking"), and "Auto-read new responses" reads every answer as it arrives. Speech recognition and speech playback use the local engine you configure.</p>
+
+<h2 id="export">Export, compact, new chat</h2>
+
+<p>"Export chat" above the message box saves the conversation as Markdown or JSON; Ctrl+E saves Markdown at once. Settings, General, Chat Backup exports all chats in one file and imports them again, and Settings, General, Import from other chatbots reads the export files of ChatGPT, Claude and Gemini.</p>
+
+<p>When a long conversation nears the end of its context window, type <code>/compact</code>. The app summarises the older turns into a short recap and the conversation keeps going with the summary in place of the history. "Auto-compact at" under Settings, General, Generation does that on its own once the context is a set percentage full; 0 means off.</p>
+
+<p>Ctrl+K opens a command palette with the field "Search actions…" that jumps to any tab or action by name.</p>
+
+<h2 id="wrong">When it goes wrong</h2>
+
+<p><strong>The answer never starts.</strong> The engine is probably still loading the model. Wait for the load; the budget is 60 seconds plus 4 seconds per gigabyte of model file, up to ten minutes for a huge file on a cold disk. If it fails, the sentence that appears is one of the engine sentences in chapter 9.</p>
+
+<p><strong>"Couldn't start the Lazarus Engine with "(model)": (reason)"</strong> The engine could not load that file. The reason after the colon is explained in chapter 9; the most common ones are a damaged download ("does not start with the GGUF marker") and a graphics card problem ("This looks like a graphics-card problem").</p>
+
+<p><strong>The answer is nonsense, mixed scripts, question marks.</strong> Almost always a model under 7B or a model that does not fit the card at all. Pick a 7B or larger model that the Models tab marks green or blue for your card. If it persists with a good model, set GPU Layers to 0 under Settings, AI Backends, Lazarus Engine (expert) to run on the processor once and see whether the text is clean; if it is, the graphics driver is the suspect.</p>
+
+<p><strong>"Cut off at the length limit"</strong> appears as a badge under an answer. The model hit Max tokens. Raise Max tokens in the sampling controls (0 = auto) or under Settings, General, Generation, then send "continue".</p>
+
+<p><strong>"Your documents could not be searched for this message"</strong> The embedding model or its server did not answer. Check Settings, AI Backends for the embedding provider; on the Lazarus Engine, the embedding server runs on port 8128 next to the chat engine.</p>
+
+<p><strong>The model forgets the start of the conversation.</strong> The context window is full and the oldest turns fell out. Type <code>/compact</code>, raise the context in the dropdown if the model and your memory allow it, or start a new chat.</p>
+
+<p><strong>Ollama or LM Studio is installed but the picker shows nothing from it.</strong> The server is not running. Ollama: start the app or run <code>ollama serve</code>. LM Studio: start its local server in LM Studio's Developer tab. Then press "Test" next to the provider under Settings, AI Backends, Providers.</p>
+
+<hr>
+<p class="small">Previous chapter: <a href="/guide/first-start/">First start</a>. Next chapter: <a href="/guide/agent/">Agent</a>. Back to the <a href="/guide/">handbook overview</a>.</p>
+</article>
+<footer>
+  <div class="footer-row footer-meta"><span>&copy; 2026 &middot; Lazarus &middot; AGPL-3.0</span></div>
+  <div class="footer-row footer-links">
+    <a href="/blog/">Blog</a>
+    <a href="/guide/">Guide</a>
+    <a href="/remote-access/">Remote access</a>
+    <a href="/discord" target="_blank" rel="noopener">Discord</a>
+    <a href="/guide/code/">GitHub</a>
+    <a href="/guide/faq-and-glossary/">Discussions</a>
+    <a href="/guide/settings-and-troubleshooting/">Issues</a>
+    <a href="https://reddit.com/user/GroundbreakingMall54">Reddit</a>
+  </div>
+</footer>
+</body>
+</html>

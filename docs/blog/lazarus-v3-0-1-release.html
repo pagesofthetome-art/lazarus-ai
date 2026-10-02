@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lazarus v3.0.1: Qwen-Image 2.1 Locally, a LoRAs Tab, and a Calmer Linux</title>
+<meta name="description" content="v3.0.1 release notes: Qwen-Image 2.1 generates and edits locally on Windows and Linux, LoRAs get their own tab in Models, a card with no free memory reading is planned carefully, and the AppImage stops leaking its runtime.">
+<meta name="keywords" content="Lazarus 3.0.1, qwen-image 2.1 local, local image editing comfyui, lora manager local ai, appimage ld_library_path fix, vram planning local llm">
+<meta property="og:title" content="Lazarus v3.0.1: Qwen-Image 2.1 Locally, a LoRAs Tab, and a Calmer Linux">
+<meta property="og:description" content="One model that draws and edits, a LoRAs tab of its own, a safer plan for a card that cannot report free memory, and a Linux AppImage that keeps its runtime to itself.">
+<meta property="og:image" content="/social-preview.png">
+<meta property="og:url" content="/blog/lazarus-v3-0-1-release.html">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2026-09-18">
+<meta property="article:author" content="Lazarus contributors">
+<meta property="article:tag" content="Release">
+<meta property="article:tag" content="Create">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="Models">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Lazarus v3.0.1: Qwen-Image 2.1 Locally and a LoRAs Tab">
+<meta name="twitter:description" content="Generate and edit with one local image model, manage LoRAs in their own tab, and take two Linux fixes that stop healthy systems from looking broken.">
+<meta name="twitter:image" content="/social-preview.png">
+<link rel="canonical" href="/blog/lazarus-v3-0-1-release.html">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" href="../favicon.png">
+<!-- Privacy: No external fonts loaded. Using system fonts. -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","headline":"Lazarus v3.0.1: Qwen-Image 2.1 Locally, a LoRAs Tab, and a Calmer Linux","description":"Lazarus 3.0.1 adds Qwen-Image 2.1 as a local model that both generates and edits, gives LoRAs their own tab in Models, plans a card whose free memory cannot be measured more carefully, and stops the Linux AppImage from handing its own runtime to every program the app starts.","image":"/social-preview.png","datePublished":"2026-09-18","dateModified":"2026-09-18","inLanguage":"en","author":{"@type":"Person","name":"Lazarus contributors","url":"/guide/"},"publisher":{"@type":"Organization","name":"Lazarus","url":"/"},"mainEntityOfPage":{"@type":"WebPage","@id":"/blog/lazarus-v3-0-1-release.html"},"keywords":"Lazarus 3.0.1, qwen-image 2.1 local, local image editing comfyui, lora manager local ai, appimage ld_library_path fix, vram planning local llm"}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What changed in Lazarus 3.0.1?","acceptedAnswer":{"@type":"Answer","text":"Qwen-Image 2.1 is downloadable in the Model Manager and runs locally on Windows and Linux, generating from a prompt and editing from a reference image. Models has a LoRAs tab of its own with CivitAI search, an installed list and deletion. A GPU whose free memory could not be measured is planned with a bigger safety margin instead of as an empty card. The Linux AppImage no longer hands its own runtime to the programs Lazarus starts. The local model answers one conversation at a time and says how many are waiting."}},{"@type":"Question","name":"What does Qwen-Image 2.1 need?","acceptedAnswer":{"@type":"Answer","text":"About 16 GB across three files, and ComfyUI 0.37.0 or newer for the encode node it runs on. An older ComfyUI is told which version to update to before anything is built. It takes one reference image at a time and no painted masks, because that encode node accepts neither. The weights carry the Qwen Research License, which allows research and evaluation but not commercial use, and the bundle says so with a link before the download starts."}},{"@type":"Question","name":"Why did a Linux install break a working Python before 3.0.1?","acceptedAnswer":{"@type":"Answer","text":"The AppImage runtime exports its own LD_LIBRARY_PATH, PYTHONHOME and related variables, and every program Lazarus started inherited them: git, a system Python, pip, ffmpeg, nvidia-smi, the coding agent shell and the Character Trainer. A perfectly healthy system Python then failed to import ssl or find its standard library, and the error pointed at the Python install rather than at the inheritance. From 3.0.1 those variables stop at the AppImage boundary."}},{"@type":"Question","name":"Is there a macOS build of 3.0.1?","acceptedAnswer":{"@type":"Answer","text":"No. Every release builds Windows and Linux only. On a Mac, remote provider runs in the browser at remote provider."}},{"@type":"Question","name":"Why does a chat sometimes wait its turn now?","acceptedAnswer":{"@type":"Answer","text":"The local model runs one conversation at a time. Before 3.0.1 a second chat sent while the first was still streaming could mix the two answers together. A chat that has to wait now says so, with a line showing how many are ahead of it, and Stop works while it waits and takes it out of the line."}}]}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazarus.css">
+<script defer src="/assets/lazarus.js"></script>
+</head>
+<body>
+<nav class="lu-nav">
+  <a class="lu-nav-brand" href="/" aria-label="Lazarus">
+    <span class="lu-mono" data-mono="nav" data-size="40" aria-hidden="true"></span>
+    <span class="lu-nav-word">Lazarus</span>
+  </a>
+  <div class="lu-nav-links" id="lu-nav-links">
+    <a class="lu-nav-link" href="/">Home</a>
+    <a class="lu-nav-link" href="/blog/">Blog</a>
+    <a class="lu-nav-link" href="/guide/">Guide</a>
+    <a class="lu-nav-link" href="/remote-access/">Remote</a>
+  </div>
+  <div class="lu-nav-right">
+    <a class="lu-nav-icon" href="/guide/code/" title="GitHub" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg><span class="lu-nav-badge">1700+&#8202;⭐</span></a>
+    <a class="lu-nav-icon discord" href="/discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.45 3c-.2.36-.44.85-.6 1.23a18.3 18.3 0 0 0-5.7 0c-.16-.38-.4-.87-.6-1.23a19.7 19.7 0 0 0-4.87 1.37C.55 8.9-.32 13.3.11 17.63a19.9 19.9 0 0 0 6 3.03c.48-.66.9-1.36 1.27-2.1-.7-.26-1.36-.58-1.99-.96.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.24 0c.16.13.32.26.49.38-.63.38-1.3.7-2 .96.37.74.8 1.44 1.27 2.1a19.8 19.8 0 0 0 6-3.03c.5-5.03-.85-9.39-3.55-13.26ZM8.02 15c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.95 2.42-2.15 2.42Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.94 2.42-2.15 2.42Z"/></svg><span class="lu-nav-badge">900+&#8202;<span style="font-size:0.715em">🟢</span></span></a>
+    <span class="lu-nav-sep"></span>
+    <div class="switch" id="theme-switch" role="button" aria-label="Toggle theme"></div>
+    <a class="lu-nav-dl" href="/guide/install/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download</a>
+    <button type="button" class="lu-nav-toggle" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<div class="container lu-doc">
+  <div class="breadcrumb"><a href="../">Lazarus</a> / <a href="./">Blog</a> / This Post</div>
+
+  <div class="post-meta">
+    <span class="post-tag">Release</span>
+    <span>September 18, 2026</span>
+    <span>&middot;</span>
+    <span>6 min read</span>
+  </div>
+
+  <article>
+    <h1>v3.0.1: One Local Model That Draws and Edits, and a Calmer Linux</h1>
+
+    <p><a href="/guide/code/">Lazarus</a> 3.0.1 follows 3.0.0 with two additions and a long list of corrections. The additions are a local image model that generates and edits with the same weights, and a place in Models where your LoRAs finally live. The corrections are mostly about machines that were fine and were treated as if they were not: a graphics card that cannot report its free memory, a system Python that a Linux install made look broken, a processor without AVX2.</p>
+
+    <p>Quick TL;DR before we dig in:</p>
+
+    <ul>
+      <li><strong>Qwen-Image 2.1</strong> downloads in the Model Manager and runs on your own card: prompt to picture, or reference image plus prompt to edit, with no mask to paint</li>
+      <li><strong>LoRAs have their own tab in Models</strong>, with CivitAI search, an installed list with sizes and trigger words, and deletion</li>
+      <li><strong>A card whose free memory could not be measured</strong> is planned with a bigger margin, and the log stops calling total capacity free</li>
+      <li><strong>The Linux AppImage keeps its runtime to itself</strong>, so git, Python, pip and ffmpeg behave the way they do outside the app</li>
+      <li><strong>One local conversation at a time</strong>, with a queue that says how many are ahead and a Stop that works while waiting</li>
+      <li><strong>Sampling belongs to the chat you moved it in</strong>, not to every open chat at once</li>
+    </ul>
+
+    <h2>Qwen-Image 2.1, Generating and Editing</h2>
+
+    <p><strong>Qwen-Image 2.1 is in the Model Manager and runs locally on Windows and Linux.</strong> One model does both jobs. Write a prompt and it generates a picture. Add a reference image plus a prompt and it edits that picture, with no mask to paint first. It shows up in the Generate picker and in the Edit picker like every other installed image model, so nothing about the Create tab has to be learned again.</p>
+
+    <p>What it costs you in disk and setup: the bundle pulls three files, about 16 GB together, and it needs ComfyUI 0.37.0 or newer for the encode node it runs on. An older ComfyUI is told which version to update to before anything is built, instead of failing halfway through a graph.</p>
+
+    <div class="callout info">
+    <div class="callout-title">What it does not do, stated up front</div>
+    One reference image at a time, and no painted masks. Its encode node takes neither, so both are out of reach rather than merely unfinished. The weights carry the Qwen Research License, which allows research and evaluation but not commercial use, and the bundle says so with a link before you start the download.
+    </div>
+
+    <h2>LoRAs Have a Tab of Their Own</h2>
+
+    <p>Until now a LoRA sat unnamed among the checkpoints in the Image tab, which is a poor place to look for one. <strong>Models now has a LoRAs tab on Windows and Linux.</strong> Get searches CivitAI and downloads what you pick straight into ComfyUI's <code>models/loras</code> folder. Installed lists what is actually on disk with its size, marks a character you trained yourself with its trigger word, and deletes a file you no longer want.</p>
+
+    <p>There is a matching fix in Create: a character LoRA now offers only the models that were trained for that character's family. The picker could previously suggest a pairing that was guaranteed to fail at generation time, which is a cost you only discovered after waiting for it.</p>
+
+    <p>This tab is not offered on a Mac. Local media there runs on Apple MLX, and there is no ComfyUI <code>models/loras</code> folder to list.</p>
+
+    <h2>A Card That Cannot Report Free Memory</h2>
+
+    <p>This is the fix the release is named for in the changelog. When free VRAM could not actually be measured, with no nvidia-smi present for instance, the planner used to proceed as though the entire card were sitting empty, and the log line said "N MiB are free" about a number that was really the total size of the card, every other program's usage included.</p>
+
+    <p>Two things changed. That weaker reading now gets a bigger safety margin, so a start places fewer layers rather than too many. And the log line says total capacity, because that is what the number is. A start that plans too many layers does not fail politely; it takes the engine down with it.</p>
+
+    <p>Two neighbours in the same area: the local engine picks its processor code path at startup, so an older processor without AVX2 runs local models instead of the engine exiting right after start, and when it genuinely cannot run it names the missing instruction set, measured from the processor rather than guessed, and stops retrying a binary that would fail the same way twice.</p>
+
+    <h2>Linux: the AppImage Stops Leaking Its Runtime</h2>
+
+    <p>An AppImage runtime exports its own <code>LD_LIBRARY_PATH</code>, <code>PYTHONHOME</code> and related variables, and everything Lazarus started inherited them: git, a system Python, pip, ffmpeg, nvidia-smi, the coding agent shell, and every program the Character Trainer launches. The result was a healthy system Python that could not import <code>ssl</code> or find its own standard library, with a diagnosis that pointed at a broken Python install rather than at the inheritance. <strong>Those variables now stop at the boundary.</strong></p>
+
+    <p>The distributions that refuse to let pip write into the system Python (Arch, Debian 12 and newer, Fedora 38 and newer, Ubuntu 23.04 and newer) had a second version of the same problem: the isolated environment Lazarus had already built there was killed at the first pip call. That is fixed, and the same fix keeps the Coding Agent's own terminal from inheriting the broken environment for every git, pip or python command typed into it.</p>
+
+    <p>Two more Linux corrections worth naming. Installing or repairing ComfyUI now searches the interpreters already on your machine for one that PyTorch actually ships wheels for, and uses it, with no picker in Settings; if there is none it says so and names what to install before starting the roughly 2 GB PyTorch download instead of failing at the end of it. And a ComfyUI install missing python3-venv now says so, rather than ending with "venv creation failed:" and nothing after the colon, which is what happened while Lazarus read only stderr and Python printed its hint on stdout.</p>
+
+    <h2>Chats Wait Their Turn, and Say So</h2>
+
+    <p>Sending in one conversation while another was still streaming used to mix their text together, and a second agent run could be dropped silently while the first was going. <strong>The local model runs one conversation at a time now</strong>, and a chat that has to wait says so, with a line showing how many chats are ahead of it. Stop works while it is still waiting and takes it out of the line. Stop, signing out and quitting reach every conversation, including one that has not started yet, not only the one open on screen.</p>
+
+    <p>Alongside that, the sampling controls were quietly shared before: moving Temperature, Top P or Max tokens changed every open chat, because they all read one value from the Settings page. Each now belongs to the conversation you moved it in. A chat with no slider of its own still follows Settings, and a field nobody moved anywhere is left out of the request entirely, so the model applies its own default rather than ours.</p>
+
+    <h2>Agent and Workflow Corrections</h2>
+
+    <ul>
+      <li><strong>Workflow steps go through the same tool approval as the rest of Agent mode</strong>, and only offer the tools your permissions allow. Built-in workflows take their input from the call itself instead of waiting forever for an answer nobody could give, and the Play button under Agent Workflows that never did anything is gone</li>
+      <li><strong>A sub-agent delegated in the foreground is no longer cut off after 60 seconds</strong>, and a timeout or a Stop ends the tool call it was running instead of leaving it going in the background</li>
+      <li><strong>Pressing Stop while the Coding Agent is running code stops that run</strong>, the way it already stopped a shell command</li>
+      <li><strong>Troubleshoot tests the LM Studio address you configured</strong>, instead of always trying the default 127.0.0.1:1234</li>
+      <li><strong>Picking a specific GPU keeps that physical card</strong> for a local model or the Character Trainer, even if the system renumbers the cards between detection and start</li>
+      <li><strong>Replacing an OpenAI compatible backend parks the displaced API key in the OS keychain</strong> instead of dropping it, and gives it back if you switch back. The warning that a key will be lost now appears only on a device with no keychain to park it in</li>
+    </ul>
+
+    <h2>Cloud, Briefly</h2>
+
+    <p>Two small things on the cloud track. A video render now offers exactly the clip lengths the picked model supports, read from the live catalog, instead of the same fixed pair for every model. And a render started without a prompt, a presenter reading a script for example, gets a real name in the gallery instead of an empty tile. The catalogue itself is unchanged in this release; the counts on the <a href="/guide/remote-providers/">cloud page</a> still hold.</p>
+
+    <h2>Download</h2>
+
+    <p>3.0.1 is on <a href="/guide/install/">GitHub Releases</a>, with one installer for Windows and three packages for Linux. The signed auto update channel picks it up on next launch if you are already on 3.0.x. There is no macOS build; on a Mac, remote provider runs in the browser. New here? The <a href="/guide/">handbook</a> takes you from installer to first generation, and the <a href="/guide/install/">install chapter</a> lists the file names.</p>
+
+    <h2>Related</h2>
+
+    <ul>
+      <li><a href="easiest-local-ai-image-generator.html">The easiest local AI image generator</a>, the Create tab Qwen-Image 2.1 joins</li>
+      <li><a href="character-lora-training-local.html">Character LoRA training, locally</a>, where the trigger words in the new tab come from</li>
+      <li><a href="image-to-image-local-ai.html">Image to image with local AI</a>, the lane that now has a maskless option</li>
+      <li><a href="lazarus-2-5-9.html">v2.5.9 release notes</a>, the previous release write-up on this site</li>
+    </ul>
+
+    <hr>
+
+    <p><em>Lazarus 3.0.1. AGPL-3.0 licensed. Built by <a href="/guide/">Lazarus contributors</a>. Bug reports and feature requests on <a href="/guide/settings-and-troubleshooting/">GitHub Issues</a> or in the <a href="/discord">Discord</a>.</em></p>
+  </article>
+
+  <div class="post-footer">
+    <p>One local model that draws and edits, a LoRAs tab, and a calmer Linux</p>
+    <a href="/guide/install/" class="cta-btn" target="_blank">
+      Download 3.0.1
+    </a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-row footer-meta"><span>&copy; 2026 &middot; Lazarus &middot; AGPL-3.0</span></div>
+  <div class="footer-row footer-links">
+    <a href="/blog/">Blog</a>
+    <a href="/guide/">Guide</a>
+    <a href="/remote-access/">Remote access</a>
+    <a href="/discord" target="_blank" rel="noopener">Discord</a>
+    <a href="/guide/code/">GitHub</a>
+    <a href="/guide/faq-and-glossary/">Discussions</a>
+    <a href="/guide/settings-and-troubleshooting/">Issues</a>
+    <a href="https://reddit.com/user/GroundbreakingMall54">Reddit</a>
+  </div>
+</footer>
+</body>
+</html>

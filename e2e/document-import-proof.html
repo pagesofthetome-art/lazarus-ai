@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Document extraction proof</title></head>
+<body>
+<label>Document <input id="document" type="file"></label>
+<output id="result" aria-live="polite"></output>
+<script type="module">
+import { extractText } from '/src/api/rag.ts';
+document.querySelector('#document').addEventListener('change', async (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  try { document.querySelector('#result').textContent = await extractText(file); }
+  catch { document.querySelector('#result').textContent = 'Document extraction failed.'; }
+});
+</script>
+</body>
+</html>

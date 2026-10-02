@@ -1,0 +1,7 @@
+0000000000401060 <sandybridge_style_fn>:
+  401060:	55                   	push   %rbp
+  401061:	48 89 e5             	mov    %rsp,%rbp
+  401064:	c5 fc 58 c1          	vaddps %ymm1,%ymm0,%ymm0
+  401068:	c4 e2 7d 18 05 00 00 00 00 	vbroadcastss 0x0(%rip),%ymm0
+  401071:	c5 fc 77             	vzeroupper
+  401074:	c3                   	ret

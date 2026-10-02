@@ -1,0 +1,14 @@
+Dump of file fixture: Opus's fake-green pattern A (review-waechter-windows.md
+N1). An own-code object with a genuine isa-flag read (left over from an
+earlier, unrelated loop), then an UNRELATED null-pointer test whose jump
+also happens to land past the hit, then an unconditional VEX instruction.
+The old dominance check ("some isa read before the hit, some conditional
+jump landing after it") accepted this; it must come out UNPROTECTED, because
+the jump that actually reaches past the hit never evaluates the isa flag at
+all.
+
+  0000000180060000: 8B 0D BC 19 07 00  mov         ecx,dword ptr [0000000180099898h]
+  0000000180060010: 48 85 C0           test        rax,rax
+  0000000180060014: 74 1A              je          0000000180060030
+  0000000180060020: C5 F9 6E D8        vmovd       xmm3,eax
+  0000000180060030: C3                 ret

@@ -1,0 +1,4 @@
+ Static symbols
+
+ 0001:00000000       ??$__std_find_trivial_impl@U_Find_traits_1@?A0x8417fefe@@E@?A0x8417fefe@@YAPEBXPEBX0E@Z 0000000180091f00 f   msvcprt:vector_algorithms.obj
+ 0001:00000100       __std_find_trivial_1       0000000180092000 f   msvcprt:vector_algorithms.obj

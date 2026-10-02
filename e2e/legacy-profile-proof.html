@@ -1,0 +1,118 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Legacy profile proof</title></head><body>
+<!--
+  A customer profile from before the attachment store, in a real Chromium:
+  N images of M MiB base64 each, inline in the saved chat history.
+
+    ?seed&images=100&mib=2   writes that profile straight into IndexedDB
+                             (no app module loaded, like an old build left it)
+    ?launch                  loads the chat store the way the app does and
+                             measures hydration, every write, the migration
+    ?verify                  second launch: small value, every image readable
+
+  Run through vite.memory-proof.config.ts (port 5297). Synthetic data only.
+-->
+<pre id="out">loading</pre>
+<script type="module">
+const out = document.querySelector('#out')
+const show = v => { out.textContent = JSON.stringify(v, null, 2); document.title = v.status }
+const params = new URLSearchParams(location.search)
+const heap = () => performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : null
+const assert = (ok, msg) => { if (!ok) throw new Error(msg) }
+
+function rawIdb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('locally-uncensored-store', 1)
+    req.onupgradeneeded = () => req.result.createObjectStore('kv')
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+}
+async function rawGet(key) {
+  const db = await rawIdb()
+  return new Promise(r => { const q = db.transaction('kv').objectStore('kv').get(key); q.onsuccess = () => r(q.result) })
+}
+async function rawPut(key, value) {
+  const db = await rawIdb()
+  return new Promise((r, j) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(value, key); tx.oncomplete = r; tx.onerror = tx.onabort = () => j(tx.error ?? new Error('transaction aborted')) })
+}
+
+try {
+  if (params.has('seed')) {
+    const images = Number(params.get('images') ?? 100), mib = Number(params.get('mib') ?? 2)
+    await new Promise(r => { const q = indexedDB.deleteDatabase('lu-chat-attachments'); q.onsuccess = q.onerror = q.onblocked = r })
+    show({ status: 'SEEDING', images, mib })
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+    const block = Array.from({ length: 65536 }, (_, i) => alphabet[(i * 7919) % 64]).join('')
+    const conversations = []
+    for (let c = 0; c < images / 5; c++) {
+      const messages = []
+      for (let t = 0; t < 5; t++) {
+        const n = c * 5 + t
+        // Unique per image, so content addressing cannot fold them together.
+        const data = String(n).padStart(8, 'A').replace(/[^A-Za-z0-9]/g, 'A') + block.repeat(Math.ceil(mib * 16)).slice(8, mib * 1048576)
+        messages.push({ id: `u${n}`, role: 'user', content: `photo ${n}`, timestamp: n, images: [{ data, mimeType: 'image/jpeg', name: `p${n}.jpg` }] })
+        messages.push({ id: `a${n}`, role: 'assistant', content: `answer ${n}`, timestamp: n + 0.5 })
+      }
+      conversations.push({ id: `chat${c}`, title: `chat ${c}`, createdAt: c, updatedAt: c, messages })
+    }
+    const value = JSON.stringify({ state: { conversations, activeConversationId: 'chat0' }, version: 0 })
+    await rawPut('chat-conversations', value)
+    localStorage.setItem('proof-seed', JSON.stringify({ images, mib, bytes: value.length }))
+    show({ status: 'SEEDED', images, mib, historyMiB: Math.round(value.length / 1048576) })
+  } else if (params.has('launch')) {
+    const t0 = performance.now()
+    const writes = []
+    const { onIdbWrite } = await import('/src/lib/idbStorage.ts')
+    onIdbWrite((key, value) => {
+      if (key !== 'chat-conversations' || value == null) return
+      const conversations = JSON.parse(value).state.conversations
+      writes.push({ atMs: Math.round(performance.now() - t0), bytes: value.length, chats: conversations.length,
+        inline: conversations.reduce((n, c) => n + c.messages.filter(m => m.images?.some(i => !i.data.startsWith('lu-attachment:'))).length, 0) })
+    })
+    const { useChatStore } = await import('/src/stores/chatStore.ts')
+    const { isBackupHeld } = await import('/src/lib/backup-hold.ts')
+    // What the app does at launch before hydration is done.
+    useChatStore.getState().setActiveConversationModel('proof-model')
+    useChatStore.getState().createConversation('proof-model', '')
+    let peak = heap()
+    const sample = setInterval(() => { peak = Math.max(peak ?? 0, heap() ?? 0) }, 50)
+    await new Promise(r => useChatStore.persist.hasHydrated() ? r() : useChatStore.persist.onFinishHydration(r))
+    const hydratedMs = Math.round(performance.now() - t0)
+    const writesBeforeHydration = writes.filter(w => w.atMs <= hydratedMs).length
+    const heldDuringMigration = isBackupHeld()
+    while (writes.length === 0 || writes.at(-1).inline > 0) await new Promise(r => setTimeout(r, 100))
+    // Let the swap and its follow-up write land.
+    await new Promise(r => setTimeout(r, 1000))
+    clearInterval(sample)
+    const seed = JSON.parse(localStorage.getItem('proof-seed'))
+    const state = useChatStore.getState()
+    assert(writesBeforeHydration === 0, 'a write happened before hydration')
+    assert(writes.every(w => w.chats >= seed.images / 5), 'a write carried fewer chats than the profile has')
+    assert(state.conversations.flatMap(c => c.messages).every(m => !m.images || m.images.every(i => i.data.startsWith('lu-attachment:'))), 'live state still inline')
+    assert(!isBackupHeld(), 'backup still held after migration')
+    const stored = await rawGet('chat-conversations')
+    const result = { status: 'PASS_LAUNCH', seed, hydratedMs, migratedMs: writes.at(-1).atMs, writes, heldDuringMigration,
+      storedBytesAfter: stored.length, heapMiBPeak: peak, heapMiBNow: heap() }
+    localStorage.setItem('proof-launch', JSON.stringify(result))
+    show(result)
+  } else if (params.has('verify')) {
+    const t0 = performance.now()
+    const { useChatStore } = await import('/src/stores/chatStore.ts')
+    const { originalAttachment } = await import('/src/lib/chat-attachments.ts')
+    await new Promise(r => useChatStore.persist.hasHydrated() ? r() : useChatStore.persist.onFinishHydration(r))
+    const hydratedMs = Math.round(performance.now() - t0)
+    const seed = JSON.parse(localStorage.getItem('proof-seed'))
+    const images = useChatStore.getState().conversations.flatMap(c => c.messages.flatMap(m => m.images ?? []))
+    assert(images.length === seed.images, `expected ${seed.images} images, found ${images.length}`)
+    let checked = 0
+    for (const image of images) {
+      const original = await originalAttachment(image)
+      assert(original.data.length === seed.mib * 1048576, `original changed size: ${original.data.length}`)
+      checked++
+    }
+    const texts = useChatStore.getState().conversations.flatMap(c => c.messages.map(m => m.content))
+    assert(texts.filter(t => t.startsWith('answer ')).length === seed.images, 'assistant text lost')
+    show({ status: 'PASS_VERIFY', hydratedMs, imagesReadable: checked, storedBytes: (await rawGet('chat-conversations')).length, heapMiB: heap(), launch: JSON.parse(localStorage.getItem('proof-launch')) })
+  } else show({ status: 'IDLE' })
+} catch (error) { show({ status: 'FAIL', error: String(error), stack: error.stack }) }
+</script></body></html>

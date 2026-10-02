@@ -1,0 +1,7 @@
+0000000000401120 <alderlake_style_fn_with_opmask_leak>:
+  401120:	55                   	push   %rbp
+  401121:	48 89 e5             	mov    %rsp,%rbp
+  401124:	c4 e2 7d 58 c1       	vpbroadcastd %xmm1,%ymm0
+  401128:	c5 f8 90 c8          	kmovw  %eax,%k1
+  40112c:	c5 fc 77             	vzeroupper
+  40112f:	c3                   	ret

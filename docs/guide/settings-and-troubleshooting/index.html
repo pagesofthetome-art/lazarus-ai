@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lazarus Settings and Troubleshooting: Every Tab, Log File, Engine Errors</title>
+<meta name="description" content="Every settings tab of Lazarus in one line each, where the log file is and what to send when asking for help, the exact engine and trainer error sentences and their fixes, Linux notes, storage paths and reset.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="canonical" href="/guide/settings-and-troubleshooting/">
+<meta property="og:title" content="Lazarus Settings and Troubleshooting: Every Tab, Log File, Engine Errors">
+<meta property="og:description" content="Every settings tab of Lazarus in one line each, where the log file is and what to send when asking for help, the exact engine and trainer error sentences and their fixes, Linux notes, storage paths and reset.">
+<meta property="og:url" content="/guide/settings-and-troubleshooting/">
+<meta property="og:type" content="article">
+<meta property="og:image" content="/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Lazarus Settings and Troubleshooting: Every Tab, Log File, Engine Errors","description":"Every settings tab of Lazarus in one line each, where the log file is and what to send when asking for help, the exact engine and trainer error sentences and their fixes, Linux notes, storage paths and reset.","url":"/guide/settings-and-troubleshooting/","dateModified":"2026-09-11","inLanguage":"en","author":{"@type":"Person","name":"Lazarus contributors","url":"/guide/"},"publisher":{"@type":"Organization","name":"Lazarus","url":"/"},"mainEntityOfPage":{"@type":"WebPage","@id":"/guide/settings-and-troubleshooting/"},"isPartOf":{"@type":"WebPage","name":"Lazarus Handbook","url":"/guide/"},"about":{"@type":"SoftwareApplication","name":"Lazarus","operatingSystem":"Windows, Linux","applicationCategory":"UtilitiesApplication"}}
+</script>
+<link rel="icon" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazarus.css">
+<script defer src="/assets/lazarus.js"></script>
+</head>
+<body>
+<nav class="lu-nav">
+  <a class="lu-nav-brand" href="/" aria-label="Lazarus">
+    <span class="lu-mono" data-mono="nav" data-size="40" aria-hidden="true"></span>
+    <span class="lu-nav-word">Lazarus</span>
+  </a>
+  <div class="lu-nav-links" id="lu-nav-links">
+    <a class="lu-nav-link" href="/">Home</a>
+    <a class="lu-nav-link" href="/blog/">Blog</a>
+    <a class="lu-nav-link" href="/guide/">Guide</a>
+    <a class="lu-nav-link" href="/remote-access/">Remote</a>
+  </div>
+  <div class="lu-nav-right">
+    <a class="lu-nav-icon" href="/guide/code/" title="GitHub" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg><span class="lu-nav-badge">1700+&#8202;⭐</span></a>
+    <a class="lu-nav-icon discord" href="/discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.45 3c-.2.36-.44.85-.6 1.23a18.3 18.3 0 0 0-5.7 0c-.16-.38-.4-.87-.6-1.23a19.7 19.7 0 0 0-4.87 1.37C.55 8.9-.32 13.3.11 17.63a19.9 19.9 0 0 0 6 3.03c.48-.66.9-1.36 1.27-2.1-.7-.26-1.36-.58-1.99-.96.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.24 0c.16.13.32.26.49.38-.63.38-1.3.7-2 .96.37.74.8 1.44 1.27 2.1a19.8 19.8 0 0 0 6-3.03c.5-5.03-.85-9.39-3.55-13.26ZM8.02 15c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.95 2.42-2.15 2.42Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.94 2.42-2.15 2.42Z"/></svg><span class="lu-nav-badge">900+&#8202;<span style="font-size:0.715em">🟢</span></span></a>
+    <span class="lu-nav-sep"></span>
+    <div class="switch" id="theme-switch" role="button" aria-label="Toggle theme"></div>
+    <a class="lu-nav-dl" href="/guide/install/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download</a>
+    <button type="button" class="lu-nav-toggle" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<article class="lu-doc" data-handbook-chapter="settings-and-troubleshooting">
+<div class="breadcrumb"><a href="/">Home</a> &rsaquo; <a href="/guide/">Handbook</a> &rsaquo; Settings and troubleshooting</div>
+<h1>Settings and troubleshooting</h1>
+<p class="subtitle">The four settings tabs, the log file and what to send when you ask for help, the exact error sentences the Lazarus Engine and the trainer can show and what fixes them, the Linux notes, where your files are, and how to reset.</p>
+<nav class="toc">
+<div class="toc-title">In this chapter</div>
+<a href="#tabs">The four settings tabs</a>
+<a href="#help">The log file, and what to send when you ask for help</a>
+<a href="#engine">Lazarus Engine errors</a>
+<a href="#models">Model download and storage errors</a>
+<a href="#comfy">ComfyUI errors the repair cannot fix</a>
+<a href="#trainer">Trainer errors</a>
+<a href="#linux">Linux notes</a>
+<a href="#reset">Reset</a>
+</nav>
+
+<h2 id="tabs">The four settings tabs</h2>
+
+<p>Settings opens from the top bar. It has four tabs: "General", "AI Backends", "Agent" and "Voice &amp; Remote". Each section below names the tab and the section heading as they appear, so you can find things with Ctrl+K as well.</p>
+
+<h3>General</h3>
+
+<table>
+<tr><th>Section</th><th>What is in it</th></tr>
+<tr><td>Appearance</td><td>Theme (Light or Dark, dark by default) and a profile picture.</td></tr>
+<tr><td>Generation</td><td>The defaults for new chats: Temperature 0.7, Top P 0.9, Top K 40, Max Tokens 0 (auto), "Context window (Ollama)" 0 (auto) and "Auto-compact at" as a percentage, 0 = off. Chapter 4.</td></tr>
+<tr><td>Hardware (GPU picker)</td><td>Vendor (Auto, NVIDIA, AMD, Intel) and "ComfyUI GPU (image / video)" with Auto, Force GPU and Force CPU. Leave both on Auto unless a message tells you otherwise.</td></tr>
+<tr><td>Import from other chatbots</td><td>Reads the export files of ChatGPT, Claude and Gemini into your chat list.</td></tr>
+<tr><td>Chat Backup</td><td>"Export all chats" to one file and "Import chats" from it.</td></tr>
+<tr><td>Image / Video Generation Timeouts</td><td>How long a render may take before the app gives up: Image 20 minutes, Video 60 minutes, each settable from 1 to 480.</td></tr>
+<tr><td>Privacy</td><td>The app's own statement of what leaves your machine, and where its data folder is.</td></tr>
+<tr><td>Onboarding</td><td>"Re-run onboarding" starts the wizard from chapter 3 again.</td></tr>
+<tr><td>Updates</td><td>"Current Version", "Latest Version", "Check for updates", "Download Update" and "Restart Now", and the switch "Download updates automatically" ("Fetches the update in the background so installing is one click. Never restarts on its own."). Chapter 2.</td></tr>
+<tr><td>Troubleshoot</td><td>A probe of the backends and your hardware, "Re-probe", and the log file card. Below.</td></tr>
+</table>
+
+<h3>AI Backends</h3>
+
+<table>
+<tr><th>Section</th><th>What is in it</th></tr>
+<tr><td>Providers</td><td>Local engines and providers you configure, each with "Test", "Enable" or "Disable", and "Add Provider" for one that is not listed. Local presets include Lazarus Engine, Ollama, LM Studio, vLLM, llama.cpp, LiteLLM, KoboldCpp, text-generation-webui, LocalAI, Jan, TabbyAPI, GPT4All, Aphrodite, SGLang and TGI. Optional remote API presets include OpenRouter, Groq, Together, DeepSeek, Mistral, OpenAI, Anthropic and "Custom (OpenAI-compat)". Remote requests go to the endpoint you configured and may be billed by that provider. "Test" reports connectivity and model availability.</td></tr>
+<tr><td>Model Storage</td><td>Three rows. "Lazarus Engine folder" with "Browse…" and "Reset": the app downloads GGUF files here and reads every .gguf in a folder you set, up to four levels down. "LM Studio folder" (read only, shown when LM Studio is installed). "Ollama" keeps its own model store. "Scan for local models" finds files from other tools and "Import" links them into the Lazarus Engine folder without copying.</td></tr>
+<tr><td>CivitAI API key, Hugging Face token</td><td>Keys for downloads those sites refuse without a login ("a gated repository refuses the download with HTTP 401. A free read token is enough").</td></tr>
+<tr><td>Lazarus Engine (expert)</td><td>"Context length (tokens)" (0 = default 8192), "Flash attention" (auto, on, off), "KV cache" K and V types, "CPU threads" (-1 = auto), "GPU layers" ("-1 = all layers on GPU · 0 = CPU only · N = partial offload for models bigger than your VRAM."), "Lock model in RAM (mlock)", "Load fully into RAM (disable mmap)", and "Apply &amp; Restart Engine". The line under the heading shows "Port: 8127", "Port: 8130 (8127 was taken)" or "Engine not running".</td></tr>
+<tr><td>ComfyUI (Image &amp; Video)</td><td>Status (Running, Not responding, Starting, Stopped, Not Installed), Host and Path with "Connect", Port with "Set" (8188 by default; "Port saved. Restart ComfyUI to apply."), and the buttons "Start", "Stop", "Restart", "Repair environment", "Install ComfyUI" or "Re-install ComfyUI", "Update ComfyUI" and "Cancel" while a job runs. The note "Installs to your home folder by default. Set Path above (e.g. D:\ComfyUI) to install on another drive." Chapter 7.</td></tr>
+</table>
+
+<h3>Agent</h3>
+
+<table>
+<tr><th>Section</th><th>What is in it</th></tr>
+<tr><td>Personas</td><td>"Use personas" and the list of built in and own personas. Chapter 4.</td></tr>
+<tr><td>Memory</td><td>The facts the app injects into prompts. Chapter 4.</td></tr>
+<tr><td>Agent Permissions</td><td>Blocked, Ask First or Auto per tool category, "Reset to defaults", "Reset tutorial". Chapter 5.</td></tr>
+<tr><td>Sub-agents</td><td>"Sub-agent tool calls" and "Sub-agent steps" ("0 = use the defaults", which are 10 and 5). Chapter 5.</td></tr>
+<tr><td>Agent Workflows</td><td>Saved sequences the agent runs with run_workflow.</td></tr>
+<tr><td>MCP Servers</td><td>Outside tool servers, "Command (only npx or uvx)". Chapter 5.</td></tr>
+<tr><td>Coding Agent</td><td>"Maximum /loop passes" (0 = unlimited), "Stage file_write changes (review before apply)", "Confirm shell &amp; code commands", "Code-Review mode (read-only)". Chapter 6.</td></tr>
+<tr><td>Search Provider</td><td>Auto (SearXNG, then DuckDuckGo), Brave Search or Tavily, with key fields for the last two.</td></tr>
+</table>
+
+<h3>Voice &amp; Remote</h3>
+
+<table>
+<tr><th>Section</th><th>What is in it</th></tr>
+<tr><td>Speech</td><td>"Voice runs 100% locally, no cloud". Speech to text: faster-whisper with "Download &amp; Install". Text to speech: "Enable read-aloud", "Auto-read new responses", Engine (Piper neural, about 63 MB, or an external HTTP server) and the voice list. Chapter 4.</td></tr>
+<tr><td>Remote Access</td><td>Lets a phone or another computer drive this app. Four permission switches: "Filesystem Access", "Downloads &amp; Installs", "Process Control", "Shell &amp; Code Execution", all off until you turn them on, and a "Connected Devices" list. Pairing happens in the sidebar's "Remote" tab by QR code and passcode, over your network or through a Cloudflare tunnel; the app listens on port 11435 for it.</td></tr>
+<tr><td>Local API</td><td>"One OpenAI-compatible address for every model on this machine", on port 8129 by default, for other programs on your computer. "Reachable on the network" opens it to the LAN; off, it answers this machine only. It needs a token ("The API will not start without a token. Generate one first.") and every request must carry it.</td></tr>
+</table>
+
+<h2 id="help">The log file, and what to send when you ask for help</h2>
+
+<p>The app writes one log file per day and keeps the last seven. The card under Settings, General, Troubleshoot reads "Lazarus writes a log every day and keeps the last seven." and asks you to attach today's file to a bug report, because it holds what the app was doing right before the problem, which a screenshot cannot show. It has the buttons "Open folder" and "Copy path". The folder is <code>%LOCALAPPDATA%\lazarus\logs</code> on Windows and <code>~/.local/share/lazarus/logs</code> on Linux, the file is <code>lazarus.&lt;date&gt;.log</code> with the UTC date, and a crash writes <code>crash.log</code> one level up.</p>
+
+<p>The log records, for every engine start, the port, the context length, the model size, the full command line ("starting the Lazarus Engine llama-server"), the offload decision with the card memory it saw, the layer count and why it chose that, and, if the engine died, its exit code and last lines. So a bug report with the log answers most questions before they are asked.</p>
+
+<p>Above the log card, the probe lists Backends (Ollama, ComfyUI, LM Studio, each Reachable, Not running, Not installed or Error) and Host (Lazarus version, OS, Arch, CPUs, RAM, Disk free (home), VRAM (GPU)). Copy those lines into the report too. Say what you did, what you expected and what happened instead. Do not post private files, credentials or unredacted logs; read the log before you attach it and blank what should not be public.</p>
+
+<h2 id="engine">Lazarus Engine errors</h2>
+
+<p>These are the sentences the Lazarus Engine can show, mostly in the chat when a model fails to load, or after "Test" under Settings, AI Backends, Providers. Each is followed by what it means and what to do.</p>
+
+<p><strong>"The Lazarus Engine could not open a local port. Every port it may use between 8127 and 8148 is taken or blocked on this machine. Close whatever is holding them (a llama-server left over from an earlier session is the usual cause), or check whether a firewall or a reserved Windows port range covers that block, then try again."</strong> The engine walks from 8127 up to 8148 (skipping 8128, which the embedding server uses) and found nothing free. Quit the app from the tray, check for a leftover <code>lu-llama-server</code> process in Task Manager or <code>ps</code>, end it, start the app again. If no such process exists, reboot.</p>
+
+<p><strong>"The Lazarus Engine could not open port 8127. Another program holds it, or the port sits in a range this system has reserved. The app already tried the next free ports and got the same answer. Close that program or reboot, then try again."</strong> Same cause, different symptom. Reboot.</p>
+
+<p><strong>"Port 8127 answers health checks, but the engine this app just started exited immediately. Another llama-server (likely left over from a previous session or crash) is occupying the port. Quit that process or reboot, then try again."</strong> An old engine is still answering. End it or reboot.</p>
+
+<p><strong>"The Lazarus Engine started and exited again before it could serve on port 8127. It was tried twice. This looks like a graphics-card problem. Open Settings, Lazarus Engine and set GPU Layers to 0 to run on the CPU, then try again."</strong> The engine crashed while putting the model on the card, twice. Update the graphics driver first. If that does not help, set "GPU layers" to 0 under Settings, AI Backends, Lazarus Engine (expert), press "Apply &amp; Restart Engine", and chat on the processor while you sort out the card.</p>
+
+<p><strong>"The Lazarus Engine exited before serving on port 8127. Tried with GPU offload and again on CPU. The log file under Settings, Troubleshoot carries the full command line of both attempts and the engine's own output."</strong> The app tried the card and then the processor, and both died. The log has the reason; the last lines of the engine's output are appended to the message. A damaged model file (see the GGUF sentences below) or too little RAM for the model are the usual causes.</p>
+
+<p><strong>"Running on the CPU. The GPU start failed; see the log file in Settings &gt; Troubleshoot."</strong> in the status line, with "GPU layers: 0, the GPU start failed" under it. The card failed and the processor took over, so chat works but slowly. Read the log for the card's error, update the driver, then "Apply &amp; Restart Engine".</p>
+
+<p><strong>"The Lazarus Engine did not become healthy on port 8127 within 180s (the budget scales with model size, and huge GGUFs can take minutes on a cold first load)."</strong> The engine was alive but not ready in time. The budget is 60 seconds plus 4 per gigabyte, capped at ten minutes. On a slow disk, try once more; the second load is faster because the file is cached.</p>
+
+<p><strong>"The model file "(name)" does not start with the GGUF marker, so it is not a GGUF at all. Open Models, Get new and download it again."</strong> and <strong>"... carries a GGUF version of (N), which is not a version at all. The file is damaged, most likely a download that did not finish. Open Models, Get new and download it again."</strong> The file is not a complete model. Delete it under Models, Installed and download it again. The same sentence with "The vision file next to this model" means the model's second file (the vision projector) is the damaged one.</p>
+
+<p><strong>"Model file not found: (path)"</strong> and <strong>"The Lazarus Engine has no model file named "(name)". It may have been deleted, moved, or the download did not finish. Open Models, Get new and download it again."</strong> The file was moved or deleted outside the app, or the models folder was changed under Model Storage. Put the folder back or download the model again.</p>
+
+<p><strong>"The engine could not read the model file. It may be damaged, cut short, or of a type this engine cannot run. Open Models, Get new and download it again, or pick another model."</strong> Appended to a start failure when the engine complained about the file. Same fix as above; if a fresh download fails the same way, the model's format is one this llama.cpp build cannot run, and another quantisation of the same model usually can.</p>
+
+<p><strong>"A system library the Lazarus Engine needs is missing on this machine: libvulkan.so.1. Debian and Ubuntu: sudo apt install libvulkan1. Fedora: sudo dnf install vulkan-loader. On other distributions, install the package that provides libvulkan.so.1. If you installed Lazarus from the .deb or the .rpm, reinstalling also pulls it in."</strong> (Linux; the same shape for <code>libgomp.so.1</code> with <code>libgomp1</code> or <code>libgomp</code>.) Install the named package.</p>
+
+<p><strong>"The Lazarus Engine program (lazarus-llama-server.exe) is missing from this installation. Reinstall Lazarus, or pick a different backend in Settings, AI Backends."</strong> The engine binary was removed, often by an antivirus. Check the antivirus history (chapter 2), then reinstall.</p>
+
+<p><strong>"The Lazarus Engine started and exited again before it could serve on port 8127. It was tried twice. Reinstall Lazarus if this keeps happening, or pick a different backend in Settings, AI Backends."</strong> The general case, with the engine's last twelve lines appended. Read those lines; they usually name the cause.</p>
+
+<p><strong>"The Lazarus Engine is installed but has no chat model to load yet. Open Models, Get new and install one, then test again."</strong> After "Test": no model yet. Install one.</p>
+
+<p><strong>"The engine is installed but not started yet. It starts when you pick a chat model, or when you press Test."</strong> The "Not running" status. Not an error.</p>
+
+<p><strong>"This model is loaded in the Lazarus Engine right now. Stop the engine or switch to another model, then delete it."</strong> When deleting a model. Pick another model first.</p>
+
+<p><strong>"Could not link the model into the Lazarus Engine folder ((reason)). Linking needs source and destination on the same drive. Move the models folder (Settings, Model Storage) to that drive, or copy the file there yourself."</strong> Importing a model from another tool works by a link, which cannot cross drives. Either move the Lazarus Engine folder to that drive or copy the file.</p>
+
+<h2 id="models">Model download and storage errors</h2>
+
+<p><strong>"(file) cannot be downloaded without a login at this host (HTTP 401)."</strong> (or 403) The model is behind a login on Hugging Face or CivitAI. Paste a Hugging Face token or a CivitAI API key under Settings, AI Backends, then download again.</p>
+
+<p><strong>HTTP 404 or 410</strong> The file was removed from the host. Pick another quantisation or another model.</p>
+
+<p><strong>HTTP 429</strong> The host asks you to slow down. Wait a few minutes.</p>
+
+<p><strong>"Not enough free space for (file)"</strong> The drive holding the Lazarus Engine folder is full. Free space, or move the folder to another drive under Settings, AI Backends, Model Storage.</p>
+
+<p><strong>"Below 7B: for local loading tests and experiments only. Not recommended for chat or agent work. Choose a model with at least 7B parameters."</strong> Not an error but a warning on small models. Chapter 3 explains why.</p>
+
+<p><strong>"Delete Model. Are you sure you want to delete (name)? This removes the model file from your disk and frees the space."</strong> The confirmation when you press "Delete" under Models, Installed. The engine is stopped first if that model is loaded.</p>
+
+<h2 id="comfy">ComfyUI errors the repair cannot fix</h2>
+
+<p>Most ComfyUI problems end with "Repair environment" under Settings, AI Backends, ComfyUI (Image &amp; Video), and chapter 7 covers those. Two live outside the ComfyUI folder, and the app says so:</p>
+
+<p><strong>"A Microsoft Visual C++ runtime library is missing on this machine: VCOMP140.DLL. PyTorch loads it at import time and Windows does not install it on its own, so nothing pip does can fix this. Install the current Visual C++ Redistributable for x64 from https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist, restart Windows, then start ComfyUI again. Repair environment does not help here: the missing library belongs to Windows, not to the ComfyUI folder."</strong> Do what it says.</p>
+
+<p><strong>"PyTorch is on disk but its native libraries will not load on this machine. Two things cause that, in this order: the Microsoft Visual C++ Redistributable for x64 is missing or out of date (install the current one from https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist and restart Windows), or the GPU driver is older than the CUDA build that was installed (update the graphics driver). Do both, then start ComfyUI again. Repair environment does not help here: it rebuilds the folder, and both of these live outside it."</strong> Do both.</p>
+
+<p><strong>"This is a portable ComfyUI with its own bundled Python. Re-extract the portable package to repair it; the app cannot rebuild that environment."</strong> You pointed the app at a portable ComfyUI. Re-extract that package, or let the app install its own.</p>
+
+<p><strong>"Looks like the ComfyUI Desktop App binary folder ((path)). Lazarus needs the ComfyUI Working Directory (with main.py, models/, custom_nodes/)"</strong> followed by where to find it (by default <code>~\Documents\ComfyUI</code>, or the folder shown under the Desktop App's own settings as ComfyUI Working Directory). Paste that working directory into the Path field, not the program folder.</p>
+
+<p><strong>"The folder (path) has no requirements.txt, so it is not a complete ComfyUI checkout and its dependencies cannot be installed. Rename or delete that folder and run the install again."</strong> The path is not a ComfyUI. Fix the path or let the app install a fresh one.</p>
+
+<p><strong>"Remote ComfyUI"</strong> with the note to manage the Python process on the server itself. The Host field points at another machine, so Start, Stop and Repair are yours to do there.</p>
+
+<h2 id="trainer">Trainer errors</h2>
+
+<p>The Character Studio trainer (chapter 7) has its own environment and its own sentences. Every one of them ends with the fix and names the button to press afterwards, "Set up trainer in Character Studio".</p>
+
+<p><strong>"The drive holding the trainer folder ((path)) has N GB free and the trainer setup needs about 10 GB before anything is downloaded (PyTorch alone is 2.5 GB and installs with both copies on disk). Free up room on that drive, then press Set up trainer in Character Studio."</strong> Free the space.</p>
+
+<p><strong>"The download broke off during (step). Waiting 15 seconds and trying again (1 of 2)..."</strong> Not an error yet; the setup retries twice on a network failure.</p>
+
+<p><strong>"The trainer environment was built with Python (version), which the trainer cannot use (it needs 3.10, 3.11 or 3.12). Rebuilding it with Python (version), your training images and base models are left alone."</strong> The app fixes this by itself. Wait.</p>
+
+<p><strong>"The Python in the trainer environment is one the trainer cannot use (it needs 3.10, 3.11 or 3.12). Press Set up trainer in Character Studio: the setup looks for a matching Python on this machine on its own, installs 3.12 on Windows when there is none, and rebuilds the environment with it."</strong> Press the button.</p>
+
+<p><strong>"This PyTorch build has no kernels for your GPU (compute capability 12.x, the build stops at 9.x). An RTX 50 card on the old cu121 build does exactly this."</strong> The setup reinstalls PyTorch from the right channel on its own; if it says the automatic repair did not fix it, press "Set up trainer".</p>
+
+<p><strong>"This card has N GB of memory and the local training recipe needs 12 GB."</strong> Close applications using the card and try again. If the card has less than 12 GB, use a machine that meets the local trainer requirements.</p>
+
+<p><strong>"Training a character needs a PyTorch build that can drive your AMD card"</strong> (Windows with an unsupported AMD card, followed by the details). Use an NVIDIA card or supported Linux ROCm setup for local training.</p>
+
+<p><strong>"AMD GPU detected, but no official ROCm wheel carries kernels for this card"</strong> (Linux, RX 5000 and most RX 6000 cards). Use a supported card or the processor backend.</p>
+
+<p><strong>"The Z-Image training base files are missing (z_image_bf16 / qwen_3_4b / ae). Get them from the Model Manager, then train again."</strong> Press "Download base files" in the Character Studio.</p>
+
+<p><strong>"Need at least 4 staged photos to train."</strong> Add photos.</p>
+
+<p><strong>"The trainer package (musubi_tuner) is not installed in the trainer environment."</strong> Press "Set up trainer".</p>
+
+<p><strong>"The installer was not allowed to write into the Python folder. Close every open Python, Jupyter or IDE debugger, and if that changes nothing, install Python for your own user instead of for all users, then press Set up trainer in Character Studio."</strong> Do what it says.</p>
+
+<p><strong>"This Python refuses installs outside a virtual environment and the venv module is missing. Install it from your package manager (python3-venv on Debian and Ubuntu, python-virtualenv on Arch, python3-virtualenv on Fedora), then press Set up trainer in Character Studio."</strong> (Linux) Install the package.</p>
+
+<h2 id="linux">Linux notes</h2>
+
+<ul>
+<li>The window stays black on some Wayland desktops: chapter 2 has the environment variables the app sets on a Wayland session and how to switch them off.</li>
+<li>"Open folder" buttons need <code>xdg-utils</code> installed; without it nothing opens.</li>
+<li>The AppImage clears <code>PYTHONHOME</code> and <code>PYTHONPATH</code> for the Python it starts, so a ComfyUI install from the AppImage works on a system Python.</li>
+<li>The engine needs <code>libvulkan.so.1</code> and <code>libgomp.so.1</code>; the .deb and .rpm depend on them, the AppImage tells you if one is missing.</li>
+<li>An install a package manager owns (or a hand-unpacked package) updates itself into <code>~/.local/share/lazarus/</code> as chapter 2 describes.</li>
+<li>Where the files live is in chapter 2.</li>
+</ul>
+
+<h2 id="reset">Reset</h2>
+
+<p>At the bottom of every settings tab sit two buttons. "Reset General to defaults" (with the tab's name) puts that tab back; "Reset all settings" resets everything. Both need a second click: the button changes to "Click again to reset General" or "Click again to reset everything" and waits four seconds. The note under them reads "Personas, memories, conversations, workflows and MCP servers are kept." There is no button that deletes your chats or models; delete models under Models, Installed, and chats from their row in the sidebar, or remove the folders from chapter 2 after uninstalling.</p>
+
+<hr>
+<p class="small">Previous chapter: <a href="/guide/remote-providers/">remote provider</a>. Next chapter: <a href="/guide/faq-and-glossary/">FAQ and glossary</a>. Back to the <a href="/guide/">handbook overview</a>.</p>
+</article>
+<footer>
+  <div class="footer-row footer-meta"><span>&copy; 2026 &middot; Lazarus &middot; AGPL-3.0</span></div>
+  <div class="footer-row footer-links">
+    <a href="/blog/">Blog</a>
+    <a href="/guide/">Guide</a>
+    <a href="/remote-access/">Remote access</a>
+    <a href="/discord" target="_blank" rel="noopener">Discord</a>
+    <a href="/guide/code/">GitHub</a>
+    <a href="/guide/faq-and-glossary/">Discussions</a>
+    <a href="/guide/settings-and-troubleshooting/">Issues</a>
+    <a href="https://reddit.com/user/GroundbreakingMall54">Reddit</a>
+  </div>
+</footer>
+</body>
+</html>

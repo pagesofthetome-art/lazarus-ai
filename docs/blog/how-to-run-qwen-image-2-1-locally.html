@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Run Qwen-Image 2.1 Locally: One Model That Draws and Edits</title>
+<meta name="description" content="Run Qwen-Image 2.1 on your own graphics card with Lazarus 3.0.1: the three files and their sizes, the ComfyUI version it needs, the Image lane, the maskless Edit lane, and the research license that rules out commercial work.">
+<meta name="keywords" content="qwen-image 2.1 local, run qwen image locally, qwen image edit comfyui, local image editing no mask, qwen research license, comfyui 0.37.0">
+<meta property="og:title" content="How to Run Qwen-Image 2.1 Locally: One Model That Draws and Edits">
+<meta property="og:description" content="The three files, the ComfyUI version, the Image lane, the maskless Edit lane, and the research license, for Qwen-Image 2.1 on your own card in Lazarus 3.0.1.">
+<meta property="og:image" content="/social-preview.png">
+<meta property="og:url" content="/blog/how-to-run-qwen-image-2-1-locally.html">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2026-09-22">
+<meta property="article:author" content="Lazarus contributors">
+<meta property="article:tag" content="Qwen-Image">
+<meta property="article:tag" content="AI Image Generation">
+<meta property="article:tag" content="ComfyUI">
+<meta property="article:tag" content="Local AI">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="How to Run Qwen-Image 2.1 Locally: One Model That Draws and Edits">
+<meta name="twitter:description" content="Three files, one picker entry, and no mask to paint. What it takes to run Qwen-Image 2.1 on your own card, license included.">
+<meta name="twitter:image" content="/social-preview.png">
+<link rel="canonical" href="/blog/how-to-run-qwen-image-2-1-locally.html">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" href="../favicon.png">
+<!-- Privacy: No external fonts loaded. Using system fonts. -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"How to Run Qwen-Image 2.1 Locally: One Model That Draws and Edits","description":"A step by step guide to running Qwen-Image 2.1 on your own graphics card with Lazarus 3.0.1, covering the three model files and their sizes, the ComfyUI version it needs, the Image lane, the maskless Edit lane, and the Qwen Research License.","image":"/social-preview.png","datePublished":"2026-09-22","dateModified":"2026-09-22","inLanguage":"en","author":{"@type":"Person","name":"Lazarus contributors","url":"/guide/"},"publisher":{"@type":"Organization","name":"Lazarus","url":"/"},"mainEntityOfPage":{"@type":"WebPage","@id":"/blog/how-to-run-qwen-image-2-1-locally.html"},"keywords":"qwen-image 2.1 local, run qwen image locally, qwen image edit comfyui, local image editing no mask, qwen research license, comfyui 0.37.0"}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I run Qwen-Image 2.1 locally?","acceptedAnswer":{"@type":"Answer","text":"Yes, on Windows or Linux with Lazarus 3.0.1 and ComfyUI 0.37.0 or newer. The Model Manager bundle called Qwen-Image 2.1 (Generate and Edit) pulls three files totalling 16.1 GB into the right ComfyUI folders, and the model then appears in the Image lane picker and the Edit lane picker like any other local image model. As a guide to memory, ai.rs puts the int8 pipeline at around 16 GiB in total, so a 24 GB card holds all three parts at once. There is no macOS build of the desktop app."}},{"@type":"Question","name":"How much VRAM does Qwen-Image 2.1 need?","acceptedAnswer":{"@type":"Answer","text":"As a guide rather than a measurement of ours, ai.rs puts the int8 pipeline at roughly 16 GiB in total: about 6.8 GiB for the image model, 8.7 GiB for the text encoder and 0.6 GiB for the VAE. A 24 GB card keeps all three resident. On a 16 GB card the usual move is to keep the text encoder in system RAM. The full bf16 weights are a different story at 33 to 40 GB. Lazarus has published no VRAM measurement of its own for this model."}},{"@type":"Question","name":"Do I need a mask to edit with Qwen-Image 2.1?","acceptedAnswer":{"@type":"Answer","text":"No, and you cannot use one. In the Edit lane you give Qwen-Image 2.1 one reference image and a prompt, and the mask path is deliberately closed for this model. The output follows the reference image, and the resolution follows the canvas you picked."}},{"@type":"Question","name":"Why does Lazarus say I need ComfyUI 0.37.0?","acceptedAnswer":{"@type":"Answer","text":"Because the encode node the model runs on, TextEncodeQwenImage21, arrived in ComfyUI 0.37.0. If it is missing, the app says exactly this: Qwen-Image 2.1 needs ComfyUI 0.37.0 or newer. Update ComfyUI in Settings. The update button is under Settings, AI Backends, ComfyUI."}},{"@type":"Question","name":"Can I use Qwen-Image 2.1 commercially?","acceptedAnswer":{"@type":"Answer","text":"Not under the weights as published. Qwen-Image 2.1 carries the Qwen Research License, which covers research and evaluation and does not grant commercial use without a separate license from Alibaba Qwen. If you need Apache 2.0 terms, Qwen-Image 2512 and Qwen-Image-Edit 2511 remain under Apache 2.0."}},{"@type":"Question","name":"Is there a Lightning or Turbo LoRA for Qwen-Image 2.1?","acceptedAnswer":{"@type":"Answer","text":"Not as of 21 September 2026. The older Qwen-Image Lightning LoRAs were built for the 20B architecture and do not fit the 7B image model in 2.1. The LoRA stack in Lazarus stays open for every local image model, so a future file would simply appear in it, but there is nothing to load today."}}]}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazarus.css">
+<script defer src="/assets/lazarus.js"></script>
+</head>
+<body>
+<nav class="lu-nav">
+  <a class="lu-nav-brand" href="/" aria-label="Lazarus">
+    <span class="lu-mono" data-mono="nav" data-size="40" aria-hidden="true"></span>
+    <span class="lu-nav-word">Lazarus</span>
+  </a>
+  <div class="lu-nav-links" id="lu-nav-links">
+    <a class="lu-nav-link" href="/">Home</a>
+    <a class="lu-nav-link" href="/blog/">Blog</a>
+    <a class="lu-nav-link" href="/guide/">Guide</a>
+    <a class="lu-nav-link" href="/remote-access/">Remote</a>
+  </div>
+  <div class="lu-nav-right">
+    <a class="lu-nav-icon" href="/guide/code/" title="GitHub" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg><span class="lu-nav-badge">1700+&#8202;⭐</span></a>
+    <a class="lu-nav-icon discord" href="/discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.45 3c-.2.36-.44.85-.6 1.23a18.3 18.3 0 0 0-5.7 0c-.16-.38-.4-.87-.6-1.23a19.7 19.7 0 0 0-4.87 1.37C.55 8.9-.32 13.3.11 17.63a19.9 19.9 0 0 0 6 3.03c.48-.66.9-1.36 1.27-2.1-.7-.26-1.36-.58-1.99-.96.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.24 0c.16.13.32.26.49.38-.63.38-1.3.7-2 .96.37.74.8 1.44 1.27 2.1a19.8 19.8 0 0 0 6-3.03c.5-5.03-.85-9.39-3.55-13.26ZM8.02 15c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.95 2.42-2.15 2.42Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.94 2.42-2.15 2.42Z"/></svg><span class="lu-nav-badge">900+&#8202;<span style="font-size:0.715em">🟢</span></span></a>
+    <span class="lu-nav-sep"></span>
+    <div class="switch" id="theme-switch" role="button" aria-label="Toggle theme"></div>
+    <a class="lu-nav-dl" href="/guide/install/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download</a>
+    <button type="button" class="lu-nav-toggle" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<div class="container lu-doc">
+  <div class="breadcrumb"><a href="../">Lazarus</a> / <a href="./">Blog</a> / This Post</div>
+
+  <div class="post-meta">
+    <span class="post-tag">Tutorial</span>
+    <span>September 22, 2026</span>
+    <span>&middot;</span>
+    <span>6 min read</span>
+  </div>
+
+  <article>
+    <h1>How to Run Qwen-Image 2.1 Locally: One Model That Draws and Edits</h1>
+
+    <p>Until now, drawing a picture and editing one meant two sets of weights on your disk. Qwen-Image 2.1 does both jobs with the same files, and since <a href="/guide/code/">Lazarus</a> 3.0.1 it is a one click download in the Model Manager on Windows and Linux. This guide walks through the download, the ComfyUI version it insists on, the two lanes it appears in, and the license you should read before you plan any work around it.</p>
+
+    <h2>What Qwen-Image 2.1 is, in three sentences</h2>
+
+    <p>Qwen-Image 2.1 is the image model Alibaba Qwen published on 20 September 2026, and it is the first in the series that generates from a prompt and edits a reference image with one set of weights, with no separate edit model beside it. The image part is a 7B single stream DiT with 32 layers, the text encoder is Qwen3-VL-8B, and the VAE is a new 64 channel design that can carry an alpha channel. The predecessor, the August 2025 Qwen-Image, used a 20B image model and Qwen2.5-VL, so 2.1 is a smaller model rather than a larger one.</p>
+
+    <p>What 2.1 adds over everything before it: a native alpha channel, up to ten reference images in a single pass, local edits driven by a drawn marking instead of only a mask, a prefix KV cache that speeds up editing, and better typography. Native 2K rendering carried over from 2.0 in February 2026. Not all of that reaches the app yet, and the honest list of what does not is further down this page.</p>
+
+    <h2>What it wants from your machine</h2>
+
+    <p>We have not measured this model ourselves, so the numbers here are quoted, not claimed. As a guide, ai.rs puts the int8 pipeline at roughly 16 GiB in total: about 6.8 GiB for the image model, 8.7 GiB for the text encoder and 0.6 GiB for the VAE. A card with 24 GB holds all three parts resident at once. On a 16 GB card the usual move is to keep the text encoder in system RAM and let the card carry the rest. The full bf16 weights are another class of machine entirely at 33 to 40 GB.</p>
+
+    <p>Lazarus ships Windows and Linux builds only, and 3.0.1 is no exception. There is no Mac build of the desktop app.</p>
+
+    <h2>The three files</h2>
+
+    <p>The bundle is the int8 repack from Comfy-Org, three files that land in three different ComfyUI folders:</p>
+
+    <table>
+    <tr><th>File</th><th>Folder</th><th>Size</th></tr>
+    <tr><td><code>qwen_image_2.1_int8_convrot.safetensors</code></td><td><code>models/diffusion_models/</code></td><td>7.26 GB as Hugging Face lists it, 6.76 GiB measured</td></tr>
+    <tr><td><code>qwen3vl_8b_int8_convrot.safetensors</code></td><td><code>models/text_encoders/</code></td><td>9.35 GB listed, 8.71 GiB measured</td></tr>
+    <tr><td><code>qwen_image_2.1_vae_bf16.safetensors</code></td><td><code>models/vae/</code></td><td>676 MB listed, 0.63 GiB measured</td></tr>
+    </table>
+
+    <p>The Model Manager reports the bundle as 16.1 GB. Full bf16 versions of the first two files exist at 14.2 GB and 17.5 GB, and there is a w4a8 variant of the encoder at 6.31 GB; Lazarus uses neither, it installs the int8 set.</p>
+
+    <h2>Step 1: get 3.0.1</h2>
+
+    <p>Qwen-Image 2.1 arrived with Lazarus 3.0.1, which has been the Latest release since 22 September 2026. Download it from <a href="/guide/install/">GitHub Releases</a>, one installer for Windows and three packages for Linux. If you are already on a 3.0.x build, the signed update channel picks it up at the next launch. The <a href="/guide/install/">install chapter</a> of the handbook lists the file names if you want to check what you downloaded.</p>
+
+    <h2>Step 2: install the bundle in the Model Manager</h2>
+
+    <p>Open the Models tab and find the bundle named <strong>Qwen-Image 2.1 (Generate and Edit)</strong>. Its description names the license before you start: Qwen Research License, non-commercial use. One click downloads all three files into the right ComfyUI folders, and the app counts the bundle as installed once the running ComfyUI actually lists the files. That last detail matters: if ComfyUI is stopped, the rails cannot report what is on disk, so start it first.</p>
+
+    <h2>Step 3: make sure ComfyUI is 0.37.0 or newer</h2>
+
+    <p>Support for this model landed in ComfyUI 0.37.0, merged on 19 September 2026, and it brought a new encode node, <code>TextEncodeQwenImage21</code>. The old Qwen-Image edit nodes do not fit. If your ComfyUI is older, Lazarus says so in one sentence rather than failing halfway through a graph:</p>
+
+    <div class="callout info">
+    <div class="callout-title">The exact message</div>
+    Qwen-Image 2.1 needs ComfyUI 0.37.0 or newer. Update ComfyUI in Settings.
+    </div>
+
+    <p>Do what it says: Settings, AI Backends, ComfyUI, then "Update ComfyUI". The output panel under the buttons shows what happened. Once the new node is registered, the model becomes selectable.</p>
+
+    <h2>Step 4: generate in the Image lane</h2>
+
+    <p>Open Create. The Image lane is the default one. Pick Qwen-Image 2.1 in the model picker; there is no new button and no new tab for it, it sits in the same picker as every other local image model. Write a prompt in the composer, add a negative prompt if you want one, and press Create.</p>
+
+    <p>The defaults follow the official template: 25 steps, CFG 1, the euler sampler, the simple scheduler, 1024x1024. CFG below 1 is not usable with this model, so if you go exploring under "Advanced settings", leave that dial alone or raise it rather than lower it. The advanced panel is the same one the other lanes use: Steps, CFG, Width, Height, Seed and Batch size.</p>
+
+    <h2>Step 5: edit in the Edit lane</h2>
+
+    <p>Switch to the Edit lane, pick Qwen-Image 2.1 in the picker there, drop in <strong>one</strong> reference image, and describe the change you want. There is no mask to paint. The mask path is deliberately closed for this model, so the output follows the reference image and the prompt, and the resolution follows the canvas you picked.</p>
+
+    <p>If you are used to painting a red area in this lane with an SDXL checkpoint, that habit does not transfer here. It is a different way of working, not a broken one: you say what should change in words instead of drawing where.</p>
+
+    <h2>The license, stated plainly</h2>
+
+    <div class="callout info">
+    <div class="callout-title">Read this before you plan work around it</div>
+    Qwen-Image 2.1 is published under the Qwen Research License, not Apache 2.0. It covers research and evaluation. Commercial use is not granted without a separate license from Alibaba Qwen. If you need Apache 2.0 terms, Qwen-Image 2512 and Qwen-Image-Edit 2511 are still under Apache 2.0 and still available.
+    </div>
+
+    <p>This is the one point worth being blunt about, because the rest of the series trained people to expect Apache. The bundle description in the Model Manager carries the same sentence, so nobody downloads 16 GB and finds out afterwards.</p>
+
+    <h2>What is not in this release</h2>
+
+    <p>Lazarus 3.0.1 does not expose everything the model can do. Stated as it stands today, with no promises attached:</p>
+
+    <ul>
+      <li><strong>Multiple reference images.</strong> The model takes up to ten in one pass. The Edit lane takes one. Not in this release.</li>
+      <li><strong>RGBA output.</strong> The new VAE carries an alpha channel. The app does not write one out. Not in this release.</li>
+      <li><strong>Masks with this model.</strong> Closed on purpose, as described above.</li>
+      <li><strong>A prompt enhancer and the KV cache node.</strong> Neither is wired up. Not in this release.</li>
+      <li><strong>A speed LoRA.</strong> There is no Lightning or Turbo LoRA for 2.1 as of 21 September 2026, and the old ones do not fit the new architecture. The LoRA stack stays open for every local image model, so there is simply nothing to put in it.</li>
+    </ul>
+
+    <p>And one thing we are not going to put a number on: how long a render takes. Nobody here has timed this model on a card, so any second count you read here would be someone else's. ai.rs reports 5.93 seconds on an RTX 5090, which is their figure on their hardware, not ours.</p>
+
+    <h2>Download</h2>
+
+    <p>Lazarus 3.0.1 is free and AGPL-3.0, on <a href="/guide/install/">GitHub Releases</a>. The <a href="/guide/create/">Create chapter</a> of the handbook covers the lanes this model joins, and the <a href="/qwen-image-2-1/">Qwen-Image 2.1 page</a> collects everything we have written about it.</p>
+
+    <h2>Related</h2>
+
+    <ul>
+      <li><a href="qwen-image-2-1-explained.html">Qwen-Image 2.1 explained</a>, the architecture, the timeline and the license change</li>
+      <li><a href="lazarus-v3-0-1-release.html">v3.0.1 release notes</a>, the release this model arrived in</li>
+      <li><a href="easiest-local-ai-image-generator.html">The easiest local AI image generator</a>, the Create tab from the beginning</li>
+      <li><a href="image-to-image-local-ai.html">Image to image with local AI</a>, the lane that now has a maskless option</li>
+    </ul>
+
+    <hr>
+
+    <p><em>Lazarus 3.0.1. AGPL-3.0 licensed. Built by <a href="/guide/">Lazarus contributors</a>. Bug reports and feature requests on <a href="/guide/settings-and-troubleshooting/">GitHub Issues</a> or in the <a href="/discord">Discord</a>.</em></p>
+  </article>
+
+  <div class="post-footer">
+    <p>One model that draws and edits, on your own card</p>
+    <a href="/guide/install/" class="cta-btn" target="_blank">
+      Download 3.0.1
+    </a>
+  </div>
+</div>
+<footer>
+  <div class="footer-row footer-meta"><span>&copy; 2026 &middot; Lazarus &middot; AGPL-3.0</span></div>
+  <div class="footer-row footer-links">
+    <a href="/blog/">Blog</a>
+    <a href="/guide/">Guide</a>
+    <a href="/remote-access/">Remote access</a>
+    <a href="/discord" target="_blank" rel="noopener">Discord</a>
+    <a href="/guide/code/">GitHub</a>
+    <a href="/guide/faq-and-glossary/">Discussions</a>
+    <a href="/guide/settings-and-troubleshooting/">Issues</a>
+    <a href="https://reddit.com/user/GroundbreakingMall54">Reddit</a>
+  </div>
+</footer>
+</body>
+</html>

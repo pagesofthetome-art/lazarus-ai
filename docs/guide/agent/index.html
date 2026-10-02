@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Mode in Lazarus: Tools, Workspace Folder, Approvals, Stop</title>
+<meta name="description" content="How agent mode works in Lazarus: the tools, the workspace folder and the sandbox, permissions and approvals, Stop, background agents and loops.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="canonical" href="/guide/agent/">
+<meta property="og:title" content="Agent Mode in Lazarus: Tools, Workspace Folder, Approvals, Stop">
+<meta property="og:description" content="How agent mode works in Lazarus: the tools, the workspace folder and the sandbox, permissions and approvals, Stop, background agents and loops.">
+<meta property="og:url" content="/guide/agent/">
+<meta property="og:type" content="article">
+<meta property="og:image" content="/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Agent Mode in Lazarus: Tools, Workspace Folder, Approvals, Stop","description":"How agent mode works in Lazarus: the tools, the workspace folder and the sandbox, permissions and approvals, Stop, background agents and loops.","url":"/guide/agent/","dateModified":"2026-09-11","inLanguage":"en","author":{"@type":"Person","name":"Lazarus contributors","url":"/guide/"},"publisher":{"@type":"Organization","name":"Lazarus","url":"/"},"mainEntityOfPage":{"@type":"WebPage","@id":"/guide/agent/"},"isPartOf":{"@type":"WebPage","name":"Lazarus Handbook: Install, Chat, Agent, Code, Create, Remote Providers","url":"/guide/"},"about":{"@type":"SoftwareApplication","name":"Lazarus","operatingSystem":"Windows, Linux","applicationCategory":"UtilitiesApplication"}}
+</script>
+<link rel="icon" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazarus.css">
+<script defer src="/assets/lazarus.js"></script>
+</head>
+<body>
+<nav class="lu-nav">
+  <a class="lu-nav-brand" href="/" aria-label="Lazarus">
+    <span class="lu-mono" data-mono="nav" data-size="40" aria-hidden="true"></span>
+    <span class="lu-nav-word">Lazarus</span>
+  </a>
+  <div class="lu-nav-links" id="lu-nav-links">
+    <a class="lu-nav-link" href="/">Home</a>
+    <a class="lu-nav-link" href="/blog/">Blog</a>
+    <a class="lu-nav-link" href="/guide/">Guide</a>
+    <a class="lu-nav-link" href="/remote-access/">Remote</a>
+  </div>
+  <div class="lu-nav-right">
+    <a class="lu-nav-icon" href="/guide/code/" title="GitHub" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg><span class="lu-nav-badge">1700+&#8202;⭐</span></a>
+    <a class="lu-nav-icon discord" href="/discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.45 3c-.2.36-.44.85-.6 1.23a18.3 18.3 0 0 0-5.7 0c-.16-.38-.4-.87-.6-1.23a19.7 19.7 0 0 0-4.87 1.37C.55 8.9-.32 13.3.11 17.63a19.9 19.9 0 0 0 6 3.03c.48-.66.9-1.36 1.27-2.1-.7-.26-1.36-.58-1.99-.96.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.24 0c.16.13.32.26.49.38-.63.38-1.3.7-2 .96.37.74.8 1.44 1.27 2.1a19.8 19.8 0 0 0 6-3.03c.5-5.03-.85-9.39-3.55-13.26ZM8.02 15c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.95 2.42-2.15 2.42Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.94 2.42-2.15 2.42Z"/></svg><span class="lu-nav-badge">900+&#8202;<span style="font-size:0.715em">🟢</span></span></a>
+    <span class="lu-nav-sep"></span>
+    <div class="switch" id="theme-switch" role="button" aria-label="Toggle theme"></div>
+    <a class="lu-nav-dl" href="/guide/install/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download</a>
+    <button type="button" class="lu-nav-toggle" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<article class="lu-doc" data-handbook-chapter="agent">
+<div class="breadcrumb"><a href="/">Home</a> &rsaquo; <a href="/guide/">Handbook</a> &rsaquo; Agent</div>
+<h1>Agent mode</h1>
+<p class="subtitle">The agent can search the web, read and write files in a folder you picked, run commands and start programs. This chapter covers its tools, the workspace folder, approvals, Stop, background agents and loops.</p>
+<nav class="toc">
+<div class="toc-title">In this chapter</div>
+<a href="#what">What the agent is</a>
+<a href="#start">Start an agent chat</a>
+<a href="#workspace">The workspace folder and the sandbox</a>
+<a href="#tools">The tools</a>
+<a href="#approvals">Permissions and approvals</a>
+<a href="#stop">Stop, background agents and loops</a>
+<a href="#mcp">MCP servers and workflows</a>
+<a href="#wrong">When it goes wrong</a>
+</nav>
+
+<h2 id="what">What the agent is</h2>
+
+<p>In a plain chat the model can only write. In Agent mode it gets tools: it can search the web and fetch pages, read and write files in a folder you picked, run shell commands, take a screenshot, generate images and video through the Create lanes, run a saved workflow, and hand parts of a task to sub-agents. The model decides which tool to call; the app runs it, shows you what it did, and hands the result back to the model until the task is done.</p>
+
+<p>Not every model can do this. A model needs to have been trained for tool calling, and the picker's "Agent" button is disabled with the tooltip "This model is not agent-compatible" for one that was not. The Models tab marks tool-capable models in its legend.</p>
+
+<h2 id="start">Start an agent chat</h2>
+
+<div class="step">
+<span class="step-num">1</span>
+<span class="step-title">Switch on Agent before the first message</span>
+<div class="step-body">
+<p>In a new, empty chat, click the "Agent" toggle in the strip above the message box. If you click it in a chat that already has messages, a box titled "New Chat Required" appears: "Agent Mode needs to be active from the start of a conversation to work properly. Start a new chat with Agent Mode enabled." Its button "New Agent Chat" does that for you.</p>
+</div>
+</div>
+
+<div class="step">
+<span class="step-num">2</span>
+<span class="step-title">Tell it where to work</span>
+<div class="step-body">
+<p>A dialog titled "Where should the agent work?" opens. It has two choices. "Sandbox" is "Separate folder under ~/agent-workspace/, protected by the file tool path jail." and is the right choice for a first try. "Pick a folder…" lets you choose a real project folder: "Choose a real directory. The agent edits files in there directly, like the Coding Agent." You can add more folders with "Add another repo"; the first one is marked "Primary" and the others have a "Remove" button.</p>
+<p>The checkbox "Remember as default. Future chats open here without asking." saves the choice. Once saved, the dialog shows "Every new agent chat opens in (path) without asking." with a "Forget it" link. "Save" confirms, "Cancel" leaves Agent mode off.</p>
+<p>The dialog carries one sentence you should read before your first real task: "Workspace protection is a folder path jail, not a container or virtual machine. Commands run on this computer. Review tool requests before allowing them."</p>
+</div>
+</div>
+
+<div class="step">
+<span class="step-num">3</span>
+<span class="step-title">Give it a task and watch</span>
+<div class="step-body">
+<p>Type the task as you would to a person, with the outcome you want. For anything that takes more than a few tool calls the agent keeps a to-do list, shown live in the chat, and works through it. Every tool call appears as a card in the chat with its input and its result. The strip above the message box shows a badge with the workspace folder; its x has the tooltip "Leave this workspace. The agent asks again before it works anywhere."</p>
+</div>
+</div>
+
+<h2 id="workspace">The workspace folder and the sandbox</h2>
+
+<p>The file tools can only see the workspace folder and what is under it. That is the path jail: a path that resolves outside the folder is refused, including through symbolic links. The shell tool runs commands on your computer as your user, in that folder, and there is no container, no virtual machine and no network filter around it. So the protection is against the agent wandering into your documents by accident, not against a command you approved.</p>
+
+<p>The sandbox is a folder under <code>~/agent-workspace</code>, one per chat. Nothing there is special except that it starts empty, so a mistake cannot cost you a file you cared about.</p>
+
+<p>Not every folder can be a workspace. The picker refuses a drive or filesystem root, your home folder and a mount container, and system or credential directories, with "That folder cannot be the workspace: (reason). The folder was not taken. Pick a project folder, not a drive root, a home directory or a system folder." A path that did not come through the app's own folder picker is refused as well: "Not an allowed workspace folder (only a folder you chose in Lazarus's folder picker can be a workspace, pick it again to allow it): (path)". That last rule exists because a model can invent a path; only a folder you clicked on counts.</p>
+
+<h2 id="tools">The tools</h2>
+
+<p>The agent carries these built in tools. Their names are what you see on the cards in the chat.</p>
+
+<table>
+<tr><th>Tool</th><th>What it does</th></tr>
+<tr><td>todo_write</td><td>Keeps the agent's own to-do list for the task.</td></tr>
+<tr><td>web_search, web_fetch</td><td>Searches the web and fetches a page. The search provider is set under Settings, Agent, Search Provider: Auto (SearXNG, then DuckDuckGo), Brave Search or Tavily; the last two have a key field ("Brave Search API Key", "Tavily API Key") next to them.</td></tr>
+<tr><td>file_read, file_write, file_edit, file_list, file_search</td><td>Read, write, edit, list and search files inside the workspace.</td></tr>
+<tr><td>shell_execute</td><td>Runs a command in the workspace folder.</td></tr>
+<tr><td>screenshot</td><td>Captures the primary display and forwards the image to the model. A model that cannot read images gets only the size and file name.</td></tr>
+<tr><td>image_generate, video_generate</td><td>Renders through the local Create lanes.</td></tr>
+<tr><td>run_workflow</td><td>Runs a workflow saved under Settings, Agent, Agent Workflows.</td></tr>
+<tr><td>delegate_task, check_tasks, message_agent</td><td>Starts a sub-agent for a part of the task, checks on it, sends it a message.</td></tr>
+<tr><td>pr_resume</td><td>Given a GitHub pull request address, fetches its title, body, comments and diff through the gh command line tool, so the agent can continue a review.</td></tr>
+</table>
+
+<p>Sub-agents are bounded so a runaway task cannot spend the night: at most four run at once, they nest two levels deep, and each gets 10 tool calls and 5 steps unless you change "Sub-agent tool calls" and "Sub-agent steps" under Settings, Agent, Sub-agents ("0 = use the defaults").</p>
+
+<h2 id="approvals">Permissions and approvals</h2>
+
+<p>Every tool belongs to a category, and every category has a permission level under Settings, Agent, Agent Permissions: Blocked, Ask First or Auto. The defaults are Web Access and System Info on Auto, and Filesystem, Image Generation, Video Generation, Workflows, Terminal / Shell and Desktop Control on Ask First. "Reset to defaults" restores that table.</p>
+
+<p>With Ask First, a dialog appears before the tool runs, showing the tool and its input, with "Approve" (Enter) and "Reject" (Esc). Read the input, especially for shell_execute: the command runs on your computer. The "Tools" button above the message box opens a per chat override with a row for each category (Web, System, Files, Shell, Screenshot, Image, Video, Workflows), so you can put one chat on Auto without changing the defaults.</p>
+
+<p>A short tutorial appears the first time you use the agent; "Reset tutorial" under Agent Permissions brings it back.</p>
+
+<h2 id="stop">Stop, background agents and loops</h2>
+
+<p>"Stop generation" on the send button stops the current model turn and the tool it was waiting for. Sub-agents that were already started keep running by design, so they can finish a delegated part of the work; the panel headed "Agents · N" at the side of the chat lists them, and "Stop every running agent" or "Stop this agent" ends them. Check that panel after a Stop if you need every task to end.</p>
+
+<p>A loop repeats the whole task until the agent declares it done or a cap is reached. The bar reads "loop", "pass N of cap" and "next in Ns" between passes; its "stop" ends the run and the pending pass. The cap is "Maximum /loop passes" under Settings, Agent, Coding Agent (0 = unlimited). A goal, shown in a bar labelled "goal", is the sentence the loop checks itself against.</p>
+
+<h2 id="mcp">MCP servers and workflows</h2>
+
+<p>MCP is a standard that lets you plug an outside tool server into the agent. Settings, Agent, MCP Servers adds one with a name and a command; the field is labelled "Command (only npx or uvx)", because the app starts servers only through those two launchers. The server's tools then appear next to the built in ones.</p>
+
+<p>Agent Workflows, under the same settings tab, are saved sequences the agent can run with run_workflow.</p>
+
+<h2 id="wrong">When it goes wrong</h2>
+
+<p><strong>The "Agent" button is greyed out.</strong> Tooltip "This model is not agent-compatible". Pick a model that the Models tab marks with the tools icon, or select a configured provider model that supports tools.</p>
+
+<p><strong>"Cannot use "(path)" as the workspace: (reason). The folder was not taken. Choose one with "Pick a folder…" instead."</strong> The agent, a remembered default or a typed path pointed at a folder the rules refuse. Use the picker button and choose a project folder.</p>
+
+<p><strong>The agent calls a tool, the dialog appears, and nothing else happens.</strong> It is waiting for you. Press Enter to approve or Esc to reject. If you would rather not be asked in this chat, set the category to Auto under "Tools".</p>
+
+<p><strong>The agent loops on the same tool call.</strong> A small model, or a context window that is too small for the tool catalogue. The tool definitions alone take several thousand tokens of the context before the task begins, which is why Agent mode asks for up to 32,768 tokens; a model whose window is much smaller has little room left. Stop the run, pick a larger model or a larger context, and start a new agent chat.</p>
+
+
+<p><strong>A screenshot comes back as a size and a file name only.</strong> The model cannot see images. Use a vision model for tasks that need the screen.</p>
+
+<hr>
+<p class="small">Previous chapter: <a href="/guide/chat/">Chat</a>. Next chapter: <a href="/guide/code/">Code tab</a>. Back to the <a href="/guide/">handbook overview</a>.</p>
+</article>
+<footer>
+  <div class="footer-row footer-meta"><span>&copy; 2026 &middot; Lazarus &middot; AGPL-3.0</span></div>
+  <div class="footer-row footer-links">
+    <a href="/blog/">Blog</a>
+    <a href="/guide/">Guide</a>
+    <a href="/remote-access/">Remote access</a>
+    <a href="/discord" target="_blank" rel="noopener">Discord</a>
+    <a href="/guide/code/">GitHub</a>
+    <a href="/guide/faq-and-glossary/">Discussions</a>
+    <a href="/guide/settings-and-troubleshooting/">Issues</a>
+    <a href="https://reddit.com/user/GroundbreakingMall54">Reddit</a>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>First Start: The Lazarus Setup Wizard Step by Step</title>
+<meta name="description" content="The first start of Lazarus step by step: choose the Lazarus Engine, set up image and video, pick a starter model, install the embedding model for document chat.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="canonical" href="/guide/first-start/">
+<meta property="og:title" content="First Start: The Lazarus Setup Wizard Step by Step">
+<meta property="og:description" content="The first start of Lazarus step by step: choose the Lazarus Engine, set up image and video, pick a starter model, install the embedding model for document chat.">
+<meta property="og:url" content="/guide/first-start/">
+<meta property="og:type" content="article">
+<meta property="og:image" content="/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"First Start: The Lazarus Setup Wizard Step by Step","description":"The first start of Lazarus step by step: choose the Lazarus Engine, set up image and video, pick a starter model, install the embedding model for document chat.","url":"/guide/first-start/","dateModified":"2026-09-11","inLanguage":"en","author":{"@type":"Person","name":"Lazarus contributors","url":"/guide/"},"publisher":{"@type":"Organization","name":"Lazarus","url":"/"},"mainEntityOfPage":{"@type":"WebPage","@id":"/guide/first-start/"},"isPartOf":{"@type":"WebPage","name":"Lazarus Handbook: Install, Chat, Agent, Code, Create, Remote Providers","url":"/guide/"},"about":{"@type":"SoftwareApplication","name":"Lazarus","operatingSystem":"Windows, Linux","applicationCategory":"UtilitiesApplication"}}
+</script>
+<link rel="icon" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazarus.css">
+<script defer src="/assets/lazarus.js"></script>
+</head>
+<body>
+<nav class="lu-nav">
+  <a class="lu-nav-brand" href="/" aria-label="Lazarus">
+    <span class="lu-mono" data-mono="nav" data-size="40" aria-hidden="true"></span>
+    <span class="lu-nav-word">Lazarus</span>
+  </a>
+  <div class="lu-nav-links" id="lu-nav-links">
+    <a class="lu-nav-link" href="/">Home</a>
+    <a class="lu-nav-link" href="/blog/">Blog</a>
+    <a class="lu-nav-link" href="/guide/">Guide</a>
+    <a class="lu-nav-link" href="/remote-access/">Remote</a>
+  </div>
+  <div class="lu-nav-right">
+    <a class="lu-nav-icon" href="/guide/code/" title="GitHub" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg><span class="lu-nav-badge">1700+&#8202;⭐</span></a>
+    <a class="lu-nav-icon discord" href="/discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.45 3c-.2.36-.44.85-.6 1.23a18.3 18.3 0 0 0-5.7 0c-.16-.38-.4-.87-.6-1.23a19.7 19.7 0 0 0-4.87 1.37C.55 8.9-.32 13.3.11 17.63a19.9 19.9 0 0 0 6 3.03c.48-.66.9-1.36 1.27-2.1-.7-.26-1.36-.58-1.99-.96.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.24 0c.16.13.32.26.49.38-.63.38-1.3.7-2 .96.37.74.8 1.44 1.27 2.1a19.8 19.8 0 0 0 6-3.03c.5-5.03-.85-9.39-3.55-13.26ZM8.02 15c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.95 2.42-2.15 2.42Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.94 2.42-2.15 2.42Z"/></svg><span class="lu-nav-badge">900+&#8202;<span style="font-size:0.715em">🟢</span></span></a>
+    <span class="lu-nav-sep"></span>
+    <div class="switch" id="theme-switch" role="button" aria-label="Toggle theme"></div>
+    <a class="lu-nav-dl" href="/guide/install/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download</a>
+    <button type="button" class="lu-nav-toggle" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<article class="lu-doc" data-handbook-chapter="first-start">
+<div class="breadcrumb"><a href="/">Home</a> &rsaquo; <a href="/guide/">Handbook</a> &rsaquo; First start</div>
+<h1>First start: the setup wizard</h1>
+<p class="subtitle">The wizard runs once, in its own small window. Four steps: the engine, image and video, a first model, and documents. Every button label below is the one on screen.</p>
+<nav class="toc">
+<div class="toc-title">In this chapter</div>
+<a href="#window">The wizard window</a>
+<a href="#engine">Step 1 of 4: Engine</a>
+<a href="#image-video">Step 2 of 4: Image and video</a>
+<a href="#model">Step 3 of 4: Model</a>
+<a href="#documents">Step 4 of 4: Documents</a>
+<a href="#done">Setup complete</a>
+<a href="#wrong">When it goes wrong</a>
+</nav>
+
+<h2 id="window">The wizard window</h2>
+
+<p>The first time the app starts, it opens a small window of its own instead of the main window. The window is not resizable and has only a minimize and a close button. Above the content a row of dots and a caption such as "Step 2 of 4 · Image &amp; video" tells you where you are. The four steps are Engine, Image &amp; video, Model and Documents. A welcome screen comes before them and a confirmation after them, but neither asks anything of you.</p>
+
+<p>The welcome screen reads "Lazarus" and one sentence: "Private, local AI chat that works right away. No extra software to install. No servers, no tracking, everything stays on your machine." Click "Get Started". The app immediately scans your machine for engines that are already running, which is the first step.</p>
+
+<p>You can run the wizard again at any time from Settings, General, Onboarding, with the button "Re-run onboarding". It reloads the app and starts from the welcome screen.</p>
+
+<h2 id="engine">Step 1 of 4: Engine</h2>
+
+<p>An engine is the program that runs a language model. The app ships one, the Lazarus Engine, and can also use one you already have. While the scan runs you see "Scanning for local backends..." and "Checking 12 backends on their default ports." That takes a few seconds.</p>
+
+<div class="step">
+<span class="step-num">1</span>
+<span class="step-title">Take the Lazarus Engine</span>
+<div class="step-body">
+<p>When the scan is done the screen says "Ready to chat" and "Lazarus runs its own engine on your machine. Nothing to install. Pick a starter model next." One card is already selected: "Lazarus Engine", with the line "Runs on your machine · nothing to install". Click "Continue". This is the right choice for almost everyone, and it is the path the rest of this handbook assumes.</p>
+</div>
+</div>
+
+<div class="step">
+<span class="step-num">2</span>
+<span class="step-title">Or use an engine you already have</span>
+<div class="step-body">
+<p>Below the Continue button is a folded line, "Use another engine (Ollama, LM Studio…)". Open it only if you already run one of those.</p>
+<p>If the scan found something, the heading reads "1 backend detected" (or the number found) and, for one hit, "Ollama is running. Select it to connect." Each hit is a card with its name and the address it listens on, for example "localhost:11434". Select one and click "Use this engine". "Re-Scan" runs the scan again, for example after you started the server.</p>
+<p>If the scan found nothing, the heading reads "No local backend detected" and the text offers to install Ollama with the button "Install Ollama". A second button, "Or install LM Studio (GUI app, ~570 MB)", installs LM Studio instead. If LM Studio is on the machine but its server is off, the heading reads "LM Studio detected" and the button reads "Start LM Studio server". "Other backends" folds out a list of ten more engines with links to their sites; the app does not install those, it only connects to them once they run. "Skip for now" leaves this step without choosing anything.</p>
+<p>The scan checks these engines on their default ports: Ollama (11434), LM Studio (1234), Jan (1337), GPT4All (4891), KoboldCpp (5001), llama.cpp (8080), vLLM (8000), LocalAI (8080), text-generation-webui (5000), TabbyAPI (5000), Aphrodite (2242) and SGLang (30000).</p>
+</div>
+</div>
+
+<h2 id="image-video">Step 2 of 4: Image and video</h2>
+
+<p>Images and video are made by ComfyUI, a separate program that the app installs and manages for you. This step reads "Image &amp; Video Generation" and "Generate images and videos right from the app. We'll set everything up for you." It is optional: you can skip it and install ComfyUI later from Settings, AI Backends, ComfyUI (Image &amp; Video), or from the setup card that appears the first time you open a Create lane.</p>
+
+<div class="step">
+<span class="step-num">1</span>
+<span class="step-title">Let the app look for ComfyUI</span>
+<div class="step-body">
+<p>The line "Looking for ComfyUI..." appears while the app searches the usual places. If it finds a working install, a green card says "ComfyUI detected" with the folder underneath, and the button reads "Continue".</p>
+<p>If it finds more than one install, it asks: "Multiple ComfyUI installs detected" and "Pick the one you want Lazarus to use. We'll remember your choice, and you can change it later in Settings → ComfyUI." Each option shows the folder, whether it is "ready" or "needs setup", and where it was found. The link "None of these, let me install a fresh one" starts a new install instead.</p>
+<p>If it finds a folder that was left half finished, the text says "Found a previous ComfyUI install at (folder) but it's missing PyTorch, looks like a previous install was interrupted. Click below to finish it."</p>
+</div>
+</div>
+
+<div class="step">
+<span class="step-num">2</span>
+<span class="step-title">Install ComfyUI, or point the app at yours</span>
+<div class="step-body">
+<p>With no install found you get two buttons. "Install ComfyUI (Recommended)" downloads and sets everything up. On Windows the app first checks for Python; if there is none, a card reads "Installing Python 3.12..." with the note "ComfyUI needs Python to run pip. We're installing it via winget, about 30 MB and 30 to 60 s on a typical connection." Then "Installing ComfyUI..." runs with a progress bar, the download speed, an estimated time, and a "Cancel" button. The install lands in your home folder unless you set another path in Settings later. When it is done the card reads "ComfyUI is ready" and the app starts ComfyUI once to prove it.</p>
+<p>"I already have ComfyUI" opens a text field with the placeholder "C:\ComfyUI". Paste the folder that holds ComfyUI's main.py and click "Connect".</p>
+<p>"Re-Scan" repeats the search. "Skip for now" moves on without ComfyUI.</p>
+</div>
+</div>
+
+<h2 id="model">Step 3 of 4: Model</h2>
+
+<p>A model is the file the engine runs. This step reads "Pick a starter model" and "One small model to get you running. You can browse and install more from the Models tab once you're in."</p>
+
+<div class="step">
+<span class="step-num">1</span>
+<span class="step-title">Install the starter</span>
+<div class="step-body">
+<p>There is one card: "Qwen 2.5 7B (Starter)", marked "Recommended", with the description "7B chat model, Q4_K_M. Allow additional memory for context and the operating system. Download time and response speed depend on your hardware." and the line "4.4 GiB · VRAM: about 6 GB for GPU offload, context-dependent". Click the card so it shows a tick, then click "Install 1 model". The card shows "Downloading Qwen 2.5 7B (Starter)..." with the bytes so far and a percentage. The wizard waits until the whole file is on disk, then starts the Lazarus Engine on it, so your first message goes to a model that is really there.</p>
+<p>If your graphics card has less memory than the model wants, a grey line under the description says "Full GPU offload may not fit. Use CPU/offload settings or skip local setup." The download still works. When the engine starts, it decides how many of the model's layers go on the card and writes that decision and its reason into the log file; chapter 9 explains the GPU Layers setting that overrides it.</p>
+</div>
+</div>
+
+<div class="step">
+<span class="step-num">2</span>
+<span class="step-title">Or pick a model you already have</span>
+<div class="step-body">
+<p>If the engine you chose in step 1 already has chat models, the heading reads "Pick your chat model" instead, with the note "Choose the model Lazarus should open with. You can switch anytime from the picker next to the message box." Your models are listed first under "Models you already have", in the order your engine reports them and without any ranking. Below them, "Or install another one" leads to the starter card. Once you have picked one, the button reads "Continue"; otherwise it reads "Skip for now".</p>
+</div>
+</div>
+
+<div class="callout info">
+<div class="callout-title">Why the starter is a 7B model</div>
+The app has a house rule: nothing under 7 billion parameters for chat. Smaller models are fast, but they drift into nonsense and cannot drive tools reliably. So the wizard offers one 7B starter, and in the Models tab every model under 7B carries the warning "Below 7B: for local loading tests and experiments only. Not recommended for chat or agent work. Choose a model with at least 7B parameters."
+</div>
+
+<div class="callout info">
+<div class="callout-title">What the coloured dot on a model means</div>
+In the Models tab every model tile has a small dot that compares the model's size with your graphics card's memory. Green, "Runs on your PC": the model fits fully in your GPU memory. Blue, "Tight fit": it barely fits, parts may spill into RAM and slow it down. Orange, "Runs on CPU, slower": it is bigger than your GPU memory, so most of it runs on the processor and RAM. A grey dot means the hardware was not detected yet. The dot is a hint and never blocks a download.
+</div>
+
+<h2 id="documents">Step 4 of 4: Documents</h2>
+
+<p>This step reads "Document Chat (optional)" and "Drop a PDF, Word doc, or text file into chat and the model can answer questions about it. Needs a small embedding model." An embedding model turns text into numbers so the app can find the passages of a document that match your question. It never writes an answer itself.</p>
+
+<div class="step">
+<span class="step-num">1</span>
+<span class="step-title">Install nomic-embed-text, or skip</span>
+<div class="step-body">
+<p>The card is "nomic-embed-text" with the note "Standard embedding model from Nomic AI. Used purely on-device to chunk and retrieve your documents, never sent anywhere." On the Lazarus Engine it is an 84 MB download and the button reads "Install nomic-embed-text (84 MB)"; on Ollama it is 274 MB. When it is done the card reads "Installed. Document Chat is ready." and the button reads "Continue". If the app already finds an embedding model on your machine, it says "Embedding model already installed, Document Chat is ready." and skips the download.</p>
+<p>"Skip for now" leaves document chat for later. The Documents panel in the chat offers the same download whenever you first drop a file.</p>
+</div>
+</div>
+
+<h2 id="done">Setup complete</h2>
+
+<p>The last screen reads "You're all set!" and one of four lines: how many models were installed and "You're ready to go."; "The Lazarus Engine is ready. Install a model anytime from the Models tab."; "Connected to (your engine). You're ready to go."; or "You can configure backends and install models anytime from Settings and the Models tab." Click "Get Started". The button changes to "Opening Lazarus…", the wizard window closes and the main window appears. The release notes sheet does not open after a fresh install; it opens once after each later update.</p>
+
+<h2 id="wrong">When it goes wrong</h2>
+
+<p><strong>"Installing Ollama did not finish."</strong> or <strong>"Installing LM Studio did not finish."</strong> The last line of the installer's own output is shown under the sentence. Check your connection and disk space, then click the install button again. Nothing needs to be uninstalled first.</p>
+
+<p><strong>"The LM Studio server did not start. Open LM Studio and start its local server from the Developer tab, then continue here."</strong> LM Studio's server is a switch inside LM Studio. Turn it on there and click "Re-Scan".</p>
+
+<p><strong>"Installing Python did not finish."</strong> (Windows) The app uses winget to fetch Python 3.12. If winget is missing or blocked on your machine, install Python 3.12 from python.org yourself, then click "Install ComfyUI (Recommended)" again.</p>
+
+<p><strong>"Git is not installed."</strong> (Linux) ComfyUI is downloaded with git, and a fresh cloud or minimal desktop image often does not have it yet. The message names the exact command for your distribution, for example <code>sudo apt install git</code> on Debian and Ubuntu, <code>sudo dnf install git</code> on Fedora and RHEL, <code>sudo pacman -S git</code> on Arch, or <code>sudo zypper install git</code> on openSUSE. Run it, then click "Install ComfyUI (Recommended)" again.</p>
+
+<p><strong>"Installing ComfyUI did not finish."</strong> The last installer line is shown. A red line beginning with a warning triangle during the install means the drive is short of space; the install needs several gigabytes free. Free some space and click the button again; files that finished are kept.</p>
+
+<p><strong>"Install cancelled."</strong> You pressed Cancel. The install options return and you can start again or skip.</p>
+
+<p><strong>"ComfyUI is installed but did not start. You can start it from Settings → ComfyUI later; the rest of the setup is unaffected."</strong> The install is complete. Finish the wizard, then open Settings, AI Backends, ComfyUI (Image &amp; Video) and press "Start"; if it still fails, "Show output" there prints what ComfyUI said, and chapter 9 lists the usual causes.</p>
+
+<p><strong>"The path was saved, but ComfyUI did not start from it. Check that the folder holds a complete ComfyUI install, then start it from Settings → ComfyUI."</strong> The folder you typed exists but is not a whole ComfyUI. Point the app at the folder that contains main.py, or use "Install ComfyUI (Recommended)".</p>
+
+<p><strong>"Cannot reach Ollama (localhost:11434). Open the Ollama app or run `ollama serve`, then retry."</strong> You chose Ollama as the engine and it is not running. Start it and click "Install 1 model" again.</p>
+
+<p><strong>"Could not create the Lazarus Engine model folder. Check app permissions and retry."</strong> The app could not create its models folder (chapter 9 lists where that is). A folder permission or a full drive is the usual cause.</p>
+
+<p><strong>"Model downloaded, but the Lazarus Engine did not find (file) in its model folder."</strong> or <strong>"Model downloaded, but the Lazarus Engine failed to start: (reason)"</strong> The download worked and the engine did not. Finish the wizard, then open the Models tab: the model is there under Installed with a "Use" button. The reason after the colon is one of the engine sentences chapter 9 explains.</p>
+
+<p><strong>"Download failed for Qwen 2.5 7B (Starter): (reason)"</strong> The download broke off. Finish the wizard and start the download again from the Models tab; the part that arrived is kept and the download resumes.</p>
+
+<p><strong>"Embedding setup failed: (reason)"</strong> or <strong>"Pull failed: (reason)"</strong> Skip the step; the Documents panel in the chat offers the same download later.</p>
+
+<p><strong>"Lazarus could not save that setup is complete: (reason)"</strong> The wizard finished but could not write its marker file. Click "Get Started" again; the settings are already saved and a second click only rewrites the file.</p>
+
+<hr>
+<p class="small">Previous chapter: <a href="/guide/install/">Install</a>. Next chapter: <a href="/guide/chat/">Chat</a>. Back to the <a href="/guide/">handbook overview</a>.</p>
+</article>
+<footer>
+  <div class="footer-row footer-meta"><span>&copy; 2026 &middot; Lazarus &middot; AGPL-3.0</span></div>
+  <div class="footer-row footer-links">
+    <a href="/blog/">Blog</a>
+    <a href="/guide/">Guide</a>
+    <a href="/remote-access/">Remote access</a>
+    <a href="/discord" target="_blank" rel="noopener">Discord</a>
+    <a href="/guide/code/">GitHub</a>
+    <a href="/guide/faq-and-glossary/">Discussions</a>
+    <a href="/guide/settings-and-troubleshooting/">Issues</a>
+    <a href="https://reddit.com/user/GroundbreakingMall54">Reddit</a>
+  </div>
+</footer>
+</body>
+</html>

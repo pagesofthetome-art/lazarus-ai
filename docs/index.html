@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <title>Lazarus — Your local AI workspace</title>
+  <meta name="description" content="Lazarus is an open-source desktop workspace for local AI chat, documents, coding, images, video and LoRA workflows.">
+  <link rel="icon" href="/favicon.png">
+  <style>
+    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #111827; color: #e5e7eb; }
+    body { margin: 0; }
+    main { max-width: 900px; margin: 0 auto; padding: 5rem 1.5rem; }
+    header { display: flex; align-items: center; gap: .8rem; margin-bottom: 5rem; }
+    header strong { font-size: 1.25rem; letter-spacing: .02em; }
+    h1 { max-width: 760px; margin: 0; font-size: clamp(2.8rem, 8vw, 5.5rem); line-height: .98; letter-spacing: -.055em; }
+    p { max-width: 650px; color: #cbd5e1; font-size: 1.15rem; line-height: 1.7; }
+    nav { display: flex; flex-wrap: wrap; gap: .8rem; margin: 2rem 0 5rem; }
+    a { color: #c4b5fd; }
+    nav a { padding: .8rem 1.05rem; border: 1px solid #4b5563; border-radius: .7rem; text-decoration: none; }
+    nav a:first-child { color: #111827; background: #c4b5fd; border-color: #c4b5fd; font-weight: 700; }
+    section { border-top: 1px solid #374151; padding: 2rem 0; }
+    h2 { margin: 0 0 .5rem; font-size: 1.3rem; }
+    ul { max-width: 650px; color: #cbd5e1; line-height: 1.9; }
+    footer { border-top: 1px solid #374151; padding-top: 1.5rem; color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <main>
+    <header><strong>Lazarus</strong></header>
+    <h1>Your AI workspace, running on your terms.</h1>
+    <p>Lazarus brings local models, document search, coding tools and creative workflows into one open-source desktop app. Local models and files stay on your device unless you choose a remote provider or connected tool.</p>
+    <nav aria-label="Main links">
+      <a href="/guide/install/">Install Lazarus</a>
+      <a href="/guide/">Read the guide</a>
+      <a href="/blog/">Explore the blog</a>
+    </nav>
+    <section>
+      <h2>Local AI tools in one workspace</h2>
+      <ul>
+        <li>Chat and coding with models managed through local backends.</li>
+        <li>Search your documents and keep memory on your device.</li>
+        <li>Create images, video and audio with local runtimes and models.</li>
+        <li>Manage LoRAs and check compatibility with installed models.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Choose where requests go</h2>
+      <p>Lazarus has no first-party hosted inference service, account, model catalog or memory sync. If you add an API key or compatible remote endpoint, Lazarus sends requests to the provider you configured.</p>
+      <p><a href="/guide/remote-providers/">Configure a remote provider</a> · <a href="/guide/settings-and-troubleshooting/">Settings and troubleshooting</a></p>
+    </section>
+    <footer>Lazarus is open source under AGPL-3.0.</footer>
+  </main>
+</body>
+</html>

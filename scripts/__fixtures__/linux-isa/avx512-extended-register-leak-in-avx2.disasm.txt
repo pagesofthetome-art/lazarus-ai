@@ -1,0 +1,7 @@
+0000000000401140 <alderlake_style_fn_with_extended_register_leak>:
+  401140:	55                   	push   %rbp
+  401141:	48 89 e5             	mov    %rsp,%rbp
+  401144:	c4 e2 7d 58 c1       	vpbroadcastd %xmm1,%ymm0
+  401148:	62 71 7c 08 58 f2     	vaddps %ymm16,%ymm17,%ymm18
+  40114e:	c5 fc 77             	vzeroupper
+  401151:	c3                   	ret

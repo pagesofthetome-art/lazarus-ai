@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Generate AI Videos Locally on a 12 GB GPU (Wan 2.2)</title>
+<meta name="description" content="Step-by-step local video generation: Wan 2.1/2.2 and HunyuanVideo on a 10–12 GB GPU, free and uncensored. Model picks, setup, prompts and VRAM fixes.">
+<meta name="keywords" content="ai video generation local, wan 2.1 tutorial, hunyuan video local, local ai video, generate ai videos free, comfyui video generation">
+<meta property="og:title" content="How to Generate AI Videos Locally with Wan 2.1 and HunyuanVideo">
+<meta property="og:description" content="Generate AI videos locally with Wan 2.1 and HunyuanVideo. No cloud API, no subscriptions, no content filters.">
+<meta property="og:image" content="/social-preview.png">
+<meta property="og:url" content="/blog/how-to-generate-ai-videos-locally.html">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2026-04-02">
+<meta property="article:author" content="Lazarus contributors">
+<meta property="article:tag" content="AI Video">
+<meta property="article:tag" content="Wan 2.1">
+<meta property="article:tag" content="HunyuanVideo">
+<meta property="article:tag" content="ComfyUI">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="How to Generate AI Videos Locally with Wan 2.1 and HunyuanVideo">
+<meta name="twitter:description" content="Generate AI videos on your own hardware. Full local setup guide with Wan 2.1 and HunyuanVideo.">
+<meta name="twitter:image" content="/social-preview.png">
+<link rel="canonical" href="/blog/how-to-generate-ai-videos-locally.html">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" href="../favicon.png">
+<!-- Privacy: No external fonts loaded. Using system fonts. -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article","headline":"How to Generate AI Videos Locally with Wan 2.1 and HunyuanVideo","description":"Generate AI videos on your own hardware with Wan 2.1 and HunyuanVideo. Full local setup guide — no cloud API, no subscriptions, no content filters.","image":"/social-preview.png","datePublished":"2026-04-02","dateModified":"2026-04-02","author":{"@type":"Person","name":"Lazarus contributors","url":"/guide/"},"publisher":{"@type":"Organization","name":"Lazarus","url":"/"},"mainEntityOfPage":{"@type":"WebPage","@id":"/blog/how-to-generate-ai-videos-locally.html"},"keywords":"ai video generation local, wan 2.1 tutorial, hunyuan video local, local ai video, generate ai videos free, comfyui video generation"}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazarus.css">
+<script defer src="/assets/lazarus.js"></script>
+</head>
+<body>
+<nav class="lu-nav">
+  <a class="lu-nav-brand" href="/" aria-label="Lazarus">
+    <span class="lu-mono" data-mono="nav" data-size="40" aria-hidden="true"></span>
+    <span class="lu-nav-word">Lazarus</span>
+  </a>
+  <div class="lu-nav-links" id="lu-nav-links">
+    <a class="lu-nav-link" href="/">Home</a>
+    <a class="lu-nav-link" href="/blog/">Blog</a>
+    <a class="lu-nav-link" href="/guide/">Guide</a>
+    <a class="lu-nav-link" href="/remote-access/">Remote</a>
+  </div>
+  <div class="lu-nav-right">
+    <a class="lu-nav-icon" href="/guide/code/" title="GitHub" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg><span class="lu-nav-badge">1700+&#8202;⭐</span></a>
+    <a class="lu-nav-icon discord" href="/discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.45 3c-.2.36-.44.85-.6 1.23a18.3 18.3 0 0 0-5.7 0c-.16-.38-.4-.87-.6-1.23a19.7 19.7 0 0 0-4.87 1.37C.55 8.9-.32 13.3.11 17.63a19.9 19.9 0 0 0 6 3.03c.48-.66.9-1.36 1.27-2.1-.7-.26-1.36-.58-1.99-.96.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.24 0c.16.13.32.26.49.38-.63.38-1.3.7-2 .96.37.74.8 1.44 1.27 2.1a19.8 19.8 0 0 0 6-3.03c.5-5.03-.85-9.39-3.55-13.26ZM8.02 15c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.95 2.42-2.15 2.42Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.94 2.42-2.15 2.42Z"/></svg><span class="lu-nav-badge">900+&#8202;<span style="font-size:0.715em">🟢</span></span></a>
+    <span class="lu-nav-sep"></span>
+    <div class="switch" id="theme-switch" role="button" aria-label="Toggle theme"></div>
+    <a class="lu-nav-dl" href="/guide/install/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download</a>
+    <button type="button" class="lu-nav-toggle" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<article class="lu-doc">
+<h1>How to Generate AI Videos Locally</h1>
+<div class="meta">Published April 2, 2026 &middot; Lazarus contributors &middot; 9 min read</div>
+
+<p>Local AI video generation crossed the usability threshold in 2025. Models like Wan 2.1 and HunyuanVideo can produce coherent video clips on consumer hardware, and you do not need a cloud subscription or API key to use them. This guide covers the complete setup: hardware requirements, model selection, installation, and practical tips for getting good results.</p>
+
+<h2>The Current State of Local Video Generation</h2>
+
+<p>AI video generation is roughly where image generation was two years ago. The outputs are impressive but not perfect. You will see occasional artifacts, limb distortions, and temporal inconsistencies. That said, the quality has improved dramatically. Short clips (2-5 seconds) at 480p-720p are now reliably coherent, and the models keep getting better.</p>
+
+<p>Two model families dominate local video generation in 2026:</p>
+
+<ul>
+<li><strong>Wan 2.1</strong> by Alibaba -- Available in 1.3B and 14B parameter sizes. The most accessible option for consumer GPUs.</li>
+<li><strong>HunyuanVideo 1.5</strong> by Tencent -- The quality leader. Produces more cinematic results but requires more VRAM and generation time.</li>
+</ul>
+
+<h2>Hardware Requirements</h2>
+
+<p>Video generation is the most demanding local AI task. It requires significantly more VRAM and time than image generation because the model must produce multiple coherent frames.</p>
+
+<table>
+<tr><th>Model</th><th>Min VRAM</th><th>Recommended VRAM</th><th>Time per Clip</th></tr>
+<tr><td>Wan 2.1 1.3B</td><td>8 GB</td><td>10 GB</td><td>30-60 seconds</td></tr>
+<tr><td>Wan 2.1 14B FP8</td><td>14 GB</td><td>16 GB</td><td>2-5 minutes</td></tr>
+<tr><td>HunyuanVideo 1.5 FP8</td><td>14 GB</td><td>16 GB</td><td>3-8 minutes</td></tr>
+</table>
+
+<p>System RAM matters too. Budget at least 32 GB of system RAM for video generation. The models need working memory beyond what sits on the GPU, and running out of RAM will either crash the process or force slow disk swapping.</p>
+
+<p>Storage: Wan 2.1 14B requires approximately 15 GB of model files. HunyuanVideo requires roughly 20 GB. Plan for 40+ GB of free disk space to accommodate models and generated output.</p>
+
+<h2>Wan 2.1 1.3B vs 14B vs HunyuanVideo</h2>
+
+<table>
+<tr><th>Feature</th><th>Wan 1.3B</th><th>Wan 14B FP8</th><th>HunyuanVideo FP8</th></tr>
+<tr><td>Output Resolution</td><td>480p</td><td>720p</td><td>720p</td></tr>
+<tr><td>Motion Coherence</td><td>Good</td><td>Very Good</td><td>Excellent</td></tr>
+<tr><td>Prompt Following</td><td>Basic</td><td>Good</td><td>Very Good</td></tr>
+<tr><td>Camera Motion</td><td>Limited</td><td>Moderate</td><td>Strong</td></tr>
+<tr><td>VRAM Required</td><td>8 GB</td><td>16 GB</td><td>16 GB</td></tr>
+<tr><td>Speed</td><td>Fast</td><td>Moderate</td><td>Slow</td></tr>
+<tr><td>Model Files</td><td>3 files</td><td>3 files</td><td>4 files</td></tr>
+</table>
+
+<div class="verdict">
+<h3>Which Model Should You Start With?</h3>
+<p>If you have 8-10 GB VRAM, <strong>Wan 2.1 1.3B</strong> is your only option and it is a good one. Quick generation times let you iterate on prompts rapidly. If you have 16+ GB VRAM, start with <strong>Wan 2.1 14B</strong> for the best balance of quality and speed, then try <strong>HunyuanVideo</strong> when you want maximum quality and are willing to wait longer.</p>
+</div>
+
+<h2>Step 1: Set Up the Backend</h2>
+
+<p>All three video models run through ComfyUI, which handles the actual inference. <a href="/guide/code/">Lazarus</a> provides the frontend and automates workflow construction so you never need to touch ComfyUI's node editor.</p>
+
+<pre><code>git clone YOUR_LAZARUS_REPOSITORY_URL
+cd Lazarus
+npm install
+npm run dev</code></pre>
+
+<p>The app auto-detects ComfyUI on your system. If ComfyUI is not installed, download the portable release from the <a href="https://github.com/comfyanonymous/ComfyUI">ComfyUI GitHub page</a>. Lazarus scans common installation paths automatically, or you can set the path manually in Settings.</p>
+
+<h2>Step 2: Download Video Models</h2>
+
+<p>Open the <strong>Model Manager</strong> tab in Lazarus. Under the Video section, you will find pre-configured bundles for all three models. Click <strong>Install All</strong> on your chosen bundle.</p>
+
+<p>Each bundle downloads the correct set of files:</p>
+
+<h3>Wan 2.1 (1.3B or 14B) -- 3 files</h3>
+<ul>
+<li><strong>Model weights</strong> -- The core video generation model</li>
+<li><strong>VAE</strong> -- Video encoder/decoder for frame reconstruction</li>
+<li><strong>UMT5</strong> -- Text encoder for prompt understanding</li>
+</ul>
+
+<h3>HunyuanVideo 1.5 -- 4 files</h3>
+<ul>
+<li><strong>Model weights</strong> -- The core video generation model</li>
+<li><strong>VAE</strong> -- HunyuanVideo-specific VAE (not interchangeable with Wan)</li>
+<li><strong>Qwen2.5</strong> -- Primary text encoder</li>
+<li><strong>CLIP_L</strong> -- Secondary text encoder</li>
+</ul>
+
+<p>The distinction matters: Wan and HunyuanVideo use completely different VAE and text encoder architectures. They cannot share these components. Lazarus handles matching automatically -- it identifies the model type and loads the correct supporting files.</p>
+
+<h2>Step 3: Generate Your First Video</h2>
+
+<p>Switch to the <strong>Create</strong> tab. Select your video model from the model dropdown. Write a prompt describing the scene you want, then click Generate.</p>
+
+<p>Behind the scenes, the app:</p>
+
+<ul>
+<li>Classifies the selected model (Wan vs HunyuanVideo)</li>
+<li>Locates the matching VAE and text encoders</li>
+<li>Builds the appropriate ComfyUI workflow</li>
+<li>Submits the workflow and polls until the video is complete</li>
+<li>Displays the result in the gallery with generation time</li>
+</ul>
+
+<p>For your first generation, keep the prompt simple. Something like "a cat walking through a garden, sunny day, gentle breeze" will test whether the pipeline works before you invest time in complex prompts.</p>
+
+<h2>Prompt Tips for Video Generation</h2>
+
+<p>Video prompts work differently than image prompts. You need to describe motion, not just a static scene.</p>
+
+<h3>Describe the Action</h3>
+<p>Be explicit about what moves and how. "A woman walks toward the camera" is better than "a woman standing outside." The model needs motion cues to generate coherent temporal sequences.</p>
+
+<h3>Specify Camera Behavior</h3>
+<p>Camera descriptions help significantly, especially with HunyuanVideo: "slow pan left across a mountain range," "tracking shot following a car on a highway," or "static wide shot of a cityscape at sunset."</p>
+
+<h3>Keep It Short and Clear</h3>
+<p>Unlike image generation where long descriptive prompts can help, video models perform better with concise, focused descriptions. One clear action in one clear setting produces more coherent results than a paragraph of details.</p>
+
+<h3>Example Prompts</h3>
+<pre><code>A golden retriever running through shallow ocean waves at sunset, slow motion, cinematic
+
+Aerial drone shot slowly descending over a dense forest, morning fog between the trees
+
+Close-up of coffee being poured into a white ceramic cup, steam rising, soft lighting</code></pre>
+
+<h2>Troubleshooting VRAM Issues</h2>
+
+<div class="verdict">
+<h3>CUDA Out of Memory</h3>
+<p>Video generation consumes VRAM in bursts. If you are near the limit, reduce the output resolution or frame count. Close all other GPU applications including browser hardware acceleration (disable it in browser settings). For Wan 14B, ensure you are using the FP8 quantized version, not the full precision weights.</p>
+</div>
+
+<div class="verdict">
+<h3>Generation Takes Extremely Long</h3>
+<p>Verify that ComfyUI is using your GPU and not falling back to CPU. Check the ComfyUI terminal output at startup -- it should list your CUDA device. CPU-based video generation is not practical; a single clip could take hours.</p>
+</div>
+
+<div class="verdict">
+<h3>Output Has Artifacts or Flickering</h3>
+<p>This is common with the 1.3B model and shorter frame counts. Increasing the step count (try 30-40 for Wan) improves temporal coherence at the cost of speed. If artifacts persist, the prompt may be too complex for the model's capacity -- simplify it.</p>
+</div>
+
+<div class="verdict">
+<h3>Wrong VAE or Text Encoder Error</h3>
+<p>This occurs when the app cannot find the matching support files for your video model. Open the Model Manager and verify all files in the bundle are downloaded. Wan requires UMT5; HunyuanVideo requires Qwen2.5. They are not interchangeable.</p>
+</div>
+
+<h2>What to Expect Going Forward</h2>
+
+<p>Local video generation is improving rapidly. New models are released every few months with better motion coherence, longer clip durations, and lower VRAM requirements. The workflow in Lazarus remains the same regardless of which model you use -- select, prompt, generate. As new video models become available, they will be integrated through the same ComfyUI backend and dynamic workflow builder.</p>
+
+<p>If you are new to local AI entirely, start with <a href="comfyui-beginners-guide.html">our ComfyUI beginners guide</a> to understand the foundation, then come back here once you are comfortable with image generation.</p>
+
+<div class="cta">
+<h2>Try Lazarus</h2>
+<p>Free, open source, AGPL-3.0 licensed. One command to get started.</p>
+<a href="/guide/code/" class="btn">View on GitHub</a>
+</div>
+</article>
+<footer>
+  <div class="footer-row footer-meta"><span>&copy; 2026 &middot; Lazarus &middot; AGPL-3.0</span></div>
+  <div class="footer-row footer-links">
+    <a href="/blog/">Blog</a>
+    <a href="/guide/">Guide</a>
+    <a href="/remote-access/">Remote access</a>
+    <a href="/discord" target="_blank" rel="noopener">Discord</a>
+    <a href="/guide/code/">GitHub</a>
+    <a href="/guide/faq-and-glossary/">Discussions</a>
+    <a href="/guide/settings-and-troubleshooting/">Issues</a>
+    <a href="https://reddit.com/user/GroundbreakingMall54">Reddit</a>
+  </div>
+</footer>
+</body>
+</html>

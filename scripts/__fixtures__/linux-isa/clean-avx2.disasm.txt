@@ -1,0 +1,7 @@
+00000000004010a0 <haswell_style_fn>:
+  4010a0:	55                   	push   %rbp
+  4010a1:	48 89 e5             	mov    %rsp,%rbp
+  4010a4:	c4 e2 7d 58 c1       	vpbroadcastd %xmm1,%ymm0
+  4010a9:	c4 e2 ed b8 c1       	vfmadd231ps %ymm1,%ymm2,%ymm0
+  4010ae:	c5 fc 77             	vzeroupper
+  4010b1:	c3                   	ret

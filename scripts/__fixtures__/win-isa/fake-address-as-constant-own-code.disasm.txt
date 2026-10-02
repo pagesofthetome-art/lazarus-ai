@@ -1,0 +1,13 @@
+Dump of file fixture: Opus's fake-green pattern F (review-waechter-windows.md
+N1). The isa flag's ADDRESS is used only as a bare immediate constant
+("mov rax,<isa>h", no brackets, never dereferenced), followed by an
+unrelated je and then the hit. The old dominance check matched the isa
+address as a plain substring of the instruction text, with no requirement
+that it actually be dereferenced; this fixture must come out UNPROTECTED,
+because the flag's VALUE was never read at all.
+
+  0000000180070000: 48 B8 98 98 09 80 01 00 00 00  mov         rax,0000000180099898h
+  0000000180070010: 48 85 C0                       test        rax,rax
+  0000000180070014: 74 1A                          je          0000000180070030
+  0000000180070020: C5 F9 6E D8                    vmovd       xmm3,eax
+  0000000180070030: C3                             ret

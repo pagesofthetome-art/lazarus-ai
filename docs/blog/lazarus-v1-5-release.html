@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lazarus v1.5: Dynamic Workflows and CivitAI</title>
+<meta name="description" content="v1.5.3 release notes: dynamic workflow builder, CivitAI model marketplace, privacy hardening, Tauri v2 desktop app, and local Whisper STT.">
+<meta name="keywords" content="Lazarus v1.5 release, local AI app desktop, Lazarus update, comfyui workflow builder, civitai model download, tauri desktop app, local whisper STT, privacy local AI">
+<meta property="og:title" content="Lazarus v1.5 Release: Dynamic Workflows, CivitAI Marketplace & Desktop App">
+<meta property="og:description" content="The biggest update yet: dynamic workflow builder, CivitAI marketplace, Tauri v2 desktop app, privacy hardening, and 6 ready-to-go model bundles.">
+<meta property="og:image" content="/social-preview.png">
+<meta property="og:url" content="/blog/lazarus-v1-5-release.html">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2026-04-02">
+<meta property="article:author" content="Lazarus contributors">
+<meta property="article:tag" content="Release">
+<meta property="article:tag" content="Local AI">
+<meta property="article:tag" content="Desktop App">
+<meta property="article:tag" content="ComfyUI">
+<meta property="article:tag" content="Privacy">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Lazarus v1.5 Release: Dynamic Workflows, CivitAI Marketplace & Desktop App">
+<meta name="twitter:description" content="The biggest update yet for the only local AI app that does chat, images, and video in one UI.">
+<meta name="twitter:image" content="/social-preview.png">
+<link rel="canonical" href="/blog/lazarus-v1-5-release.html">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" href="../favicon.png">
+<!-- Privacy: No external fonts loaded. Using system fonts. -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","headline":"Lazarus v1.5 Release: Dynamic Workflows, CivitAI Marketplace & Desktop App","description":"Lazarus v1.5.3 brings a dynamic workflow builder, CivitAI model marketplace, privacy hardening, Tauri v2 desktop app, 6 model bundles, local Whisper STT, and more.","image":"/social-preview.png","datePublished":"2026-04-02","dateModified":"2026-04-02","author":{"@type":"Person","name":"Lazarus contributors","url":"/guide/"},"publisher":{"@type":"Organization","name":"Lazarus","url":"/"},"mainEntityOfPage":{"@type":"WebPage","@id":"/blog/lazarus-v1-5-release.html"},"keywords":"Lazarus v1.5 release, local AI app desktop, comfyui workflow builder, civitai model marketplace, tauri desktop app, local whisper STT"}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazarus.css">
+<script defer src="/assets/lazarus.js"></script>
+</head>
+<body>
+
+<nav class="lu-nav">
+  <a class="lu-nav-brand" href="/" aria-label="Lazarus">
+    <span class="lu-mono" data-mono="nav" data-size="40" aria-hidden="true"></span>
+    <span class="lu-nav-word">Lazarus</span>
+  </a>
+  <div class="lu-nav-links" id="lu-nav-links">
+    <a class="lu-nav-link" href="/">Home</a>
+    <a class="lu-nav-link" href="/blog/">Blog</a>
+    <a class="lu-nav-link" href="/guide/">Guide</a>
+    <a class="lu-nav-link" href="/remote-access/">Remote</a>
+  </div>
+  <div class="lu-nav-right">
+    <a class="lu-nav-icon" href="/guide/code/" title="GitHub" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg><span class="lu-nav-badge">1700+&#8202;⭐</span></a>
+    <a class="lu-nav-icon discord" href="/discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.45 3c-.2.36-.44.85-.6 1.23a18.3 18.3 0 0 0-5.7 0c-.16-.38-.4-.87-.6-1.23a19.7 19.7 0 0 0-4.87 1.37C.55 8.9-.32 13.3.11 17.63a19.9 19.9 0 0 0 6 3.03c.48-.66.9-1.36 1.27-2.1-.7-.26-1.36-.58-1.99-.96.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.24 0c.16.13.32.26.49.38-.63.38-1.3.7-2 .96.37.74.8 1.44 1.27 2.1a19.8 19.8 0 0 0 6-3.03c.5-5.03-.85-9.39-3.55-13.26ZM8.02 15c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.95 2.42-2.15 2.42Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.94 2.42-2.15 2.42Z"/></svg><span class="lu-nav-badge">900+&#8202;<span style="font-size:0.715em">🟢</span></span></a>
+    <span class="lu-nav-sep"></span>
+    <div class="switch" id="theme-switch" role="button" aria-label="Toggle theme"></div>
+    <a class="lu-nav-dl" href="/guide/install/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download</a>
+    <button type="button" class="lu-nav-toggle" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<div class="container lu-doc">
+  <div class="breadcrumb"><a href="../">Lazarus</a> / <a href="./">Blog</a> / This Post</div>
+
+  <div class="post-meta">
+    <span class="post-tag">Release</span>
+    <span>April 2, 2026</span>
+    <span>&middot;</span>
+    <span>12 min read</span>
+  </div>
+
+  <article>
+    <h1>Lazarus v1.5 Release: Dynamic Workflows, CivitAI Marketplace &amp; Standalone Desktop App</h1>
+
+    <p>Today we're shipping the biggest update in the history of <a href="/">Lazarus</a>, versions 1.5.0 through 1.5.3, collectively bringing seven major features that transform this from a capable <strong>local AI app</strong> into a complete creative workstation. If you've been following the project since the early days of chat + image + video in one UI, this is the update where everything clicks into place.</p>
+
+    <p>The <strong>Lazarus v1.5 release</strong> introduces a dynamic workflow builder that queries 600+ ComfyUI nodes in real time, an integrated CivitAI model marketplace, a standalone Tauri v2 desktop <code>.exe</code> with its own CORS proxy and download manager, full privacy hardening with zero external dependencies, six ready-to-go model bundles, local Whisper speech-to-text, and a collection of UI polish improvements that make daily use smoother.</p>
+
+    <p>Let's walk through every major feature.</p>
+
+    <h2>Dynamic Workflow Builder</h2>
+
+    <p>This is the headline feature of v1.5.0 and the one that took the longest to build. The <strong>dynamic workflow builder</strong> fundamentally changes how Lazarus talks to ComfyUI.</p>
+
+    <p>Previously, the app shipped with a set of hardcoded workflow templates: one for SDXL text-to-image, one for FLUX, one for Wan 2.1 video, and so on. If you wanted to use a different sampler, add ControlNet, or chain together multiple models, you were out of luck without opening ComfyUI's node editor directly.</p>
+
+    <p><strong>That's gone.</strong> The new workflow builder queries your running ComfyUI instance at startup, discovers all installed nodes (typically 600+ in a standard install with ComfyUI-Manager), and auto-constructs the correct pipeline based on what you're trying to do. Pick a checkpoint, pick a resolution, type a prompt, and the app figures out the right node graph automatically.</p>
+
+    <h3>How It Works Under the Hood</h3>
+
+    <p>When ComfyUI boots, it exposes an <code>/object_info</code> endpoint that returns metadata for every registered node: inputs, outputs, types, defaults. The workflow builder parses this schema and builds a dependency graph. When you hit generate, it walks the graph from your selected output node backward, resolving each dependency and injecting your parameters (prompt, negative prompt, seed, steps, CFG, dimensions) into the appropriate node slots.</p>
+
+    <p>This means the app automatically supports:</p>
+    <ul>
+      <li><strong>Any checkpoint format</strong>: SD 1.5, SDXL, FLUX, Wan 2.1, future architectures</li>
+      <li><strong>Any custom node</strong>: ControlNet, IP-Adapter, upscalers, face restoration</li>
+      <li><strong>Any sampler or scheduler</strong>: pulled dynamically from ComfyUI's registry</li>
+      <li><strong>LoRA stacking</strong>: load multiple LoRAs with individual weight controls</li>
+    </ul>
+
+    <p>No more workflow JSON files. No more "this model isn't supported yet" messages. If ComfyUI can run it, Lazarus can drive it.</p>
+
+    <h2>CivitAI Model Marketplace</h2>
+
+    <p>Finding and downloading models has always been the most annoying part of local AI. You hunt through CivitAI's website, copy a download link, figure out which directory it goes in, rename it, restart ComfyUI. Version 1.5.1 eliminates all of that.</p>
+
+    <p>The new <strong>CivitAI model marketplace</strong> is built directly into the app. Open the Models tab, search for any checkpoint, LoRA, embedding, or VAE on CivitAI, preview the thumbnail (privacy-proxied, more on that below), and hit download. The model lands in the correct ComfyUI subdirectory automatically. No manual file management.</p>
+
+    <h3>Privacy-First Thumbnails</h3>
+
+    <p>Here's where it gets interesting from a privacy standpoint. CivitAI serves model preview images from their CDN. Loading those images directly would leak your IP address and browsing patterns to CivitAI's servers. In the <strong>Lazarus v1.5 release</strong>, all CivitAI thumbnails are proxied through the app's local backend. The user's browser never contacts CivitAI directly: the Tauri sidecar (or the dev server in browser mode) fetches the image and serves it from localhost. Your IP stays private.</p>
+
+    <p>This is a small detail that no other <strong>local AI app desktop</strong> client gets right. Most tools either skip CivitAI integration entirely or load external resources without a second thought.</p>
+
+    <h2>Privacy Hardening</h2>
+
+    <p>The CivitAI proxy is part of a broader privacy overhaul in v1.5.2. We went through every line of code and eliminated external dependencies:</p>
+
+    <ul>
+      <li><strong>No CDN resources</strong>: every CSS, JS, and font file is bundled locally. No calls to cdnjs, unpkg, or any third-party CDN.</li>
+      <li><strong>No Google Fonts</strong>: the app uses system font stacks exclusively. No requests to fonts.googleapis.com or fonts.gstatic.com. Ever.</li>
+      <li><strong>Zero telemetry</strong>: no analytics, no crash reporting, no usage tracking. The app makes exactly zero network requests that aren't initiated by you (model downloads, ComfyUI communication, Ollama API calls).</li>
+      <li><strong>Proxied external images</strong>: CivitAI thumbnails, model previews, and any external image reference goes through the local proxy.</li>
+      <li><strong>CSP headers</strong>: Content Security Policy headers restrict all resource loading to localhost origins.</li>
+    </ul>
+
+    <p>This isn't theoretical privacy. Run Wireshark while using the app: you'll see connections to <code>127.0.0.1</code> and your Ollama/ComfyUI ports. Nothing else. If you've read our guide on <a href="run-uncensored-ai-locally.html">how to run uncensored AI locally</a>, you know privacy is foundational to the project. This release makes that guarantee airtight.</p>
+
+    <h2>Tauri v2 Standalone Desktop App</h2>
+
+    <p>Until now, Lazarus ran as a Vite dev server that opened in your browser. That works, and it's still supported, but v1.5.0 adds a proper standalone <strong>local AI app desktop</strong> executable built with <strong>Tauri v2</strong>.</p>
+
+    <p>The tech stack: <strong>React 19 + TypeScript + Tailwind CSS 4 + Vite 8</strong> for the frontend, <strong>Tauri 2 (Rust)</strong> for the native shell. The result is a single <code>.exe</code> on Windows (with a Linux build also available) that weighs under 15 MB installed. Compare that to Electron-based alternatives that start at 150+ MB.</p>
+
+    <h3>Built-in CORS Proxy</h3>
+
+    <p>The Tauri backend includes a Rust-powered CORS proxy. This solves one of the most persistent headaches in local AI development: ComfyUI and Ollama don't set CORS headers by default, so browser-based frontends either need you to launch backends with special flags or use a separate proxy tool. The Tauri app handles this transparently: all API requests route through the Rust sidecar, which adds the correct headers.</p>
+
+    <h3>Download Manager with Pause/Resume</h3>
+
+    <p>Model files are large. A FLUX checkpoint is 12 GB. Wan 2.1 is 10 GB. If your connection drops halfway through, you shouldn't have to start over. The Tauri app includes a download manager with <strong>pause and resume</strong> support using HTTP range requests. It also shows real-time progress, speed, and ETA. Downloads run in a background thread so the UI stays responsive.</p>
+
+    <h2>6 Complete Model Bundles</h2>
+
+    <p>New users shouldn't have to research which models to download or worry about missing dependencies. Version 1.5.1 introduces six curated <strong>model bundles</strong>, three for image generation and three for video generation, each containing everything needed for a specific workflow.</p>
+
+    <h3>Image Bundles</h3>
+    <table>
+      <thead><tr><th>Bundle</th><th>Includes</th><th>VRAM</th><th>Best For</th></tr></thead>
+      <tbody>
+        <tr><td>FLUX Schnell</td><td>FLUX.1 Schnell + T5 encoder + CLIP + VAE</td><td>10 GB</td><td>Fastest high-quality generation</td></tr>
+        <tr><td>Juggernaut XL</td><td>Juggernaut XL V9 + SDXL VAE + refiner</td><td>8 GB</td><td>Photorealistic portraits and scenes</td></tr>
+        <tr><td>Pony Diffusion</td><td>Pony V6 + SDXL VAE + style LoRAs</td><td>8 GB</td><td>Stylized and anime content</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Video Bundles</h3>
+    <table>
+      <thead><tr><th>Bundle</th><th>Includes</th><th>VRAM</th><th>Best For</th></tr></thead>
+      <tbody>
+        <tr><td>Wan 2.1 T2V</td><td>Wan 2.1 text-to-video + T5 + CLIP + VAE</td><td>10 GB</td><td>Text prompt to video</td></tr>
+        <tr><td>Wan 2.1 I2V</td><td>Wan 2.1 image-to-video + CLIP Vision + VAE</td><td>10 GB</td><td>Animate a still image</td></tr>
+        <tr><td>AnimateDiff</td><td>AnimateDiff v3 + motion module + SDXL base</td><td>8 GB</td><td>Short animated loops</td></tr>
+      </tbody>
+    </table>
+
+    <p>Each bundle is a one-click install from the Models tab. The app downloads all required files, places them in the correct directories, and pre-validates that the workflow will execute before you generate anything. No "missing model" errors on your first attempt.</p>
+
+    <h2>Local Whisper Speech-to-Text</h2>
+
+    <p>Version 1.5.2 adds <strong>local Whisper STT</strong> (speech-to-text) directly in the chat interface. Click the microphone icon, speak your prompt, and it transcribes locally using a Whisper model running on your machine. No audio sent to any server.</p>
+
+    <p>The implementation uses whisper.cpp under the hood with the <code>base.en</code> model by default (smaller and faster for English). You can swap in the larger <code>medium</code> or <code>large-v3</code> models if you need better accuracy or multilingual support. Transcription runs on your GPU if CUDA is available, otherwise falls back to CPU.</p>
+
+    <p>This is a natural fit for the project's privacy-first philosophy. Cloud speech-to-text services (Google, OpenAI Whisper API, Azure) are convenient but mean your voice data hits external servers. Local Whisper keeps everything on your hardware.</p>
+
+    <h2>UI Polish &amp; Quality of Life</h2>
+
+    <p>The v1.5.x series also includes a stack of UI improvements that don't get their own headline but make a real difference in daily use:</p>
+
+    <h3>VRAM Unload</h3>
+    <p>A new button in the generation panel lets you <strong>unload models from VRAM</strong> with one click. This is essential if you're switching between chat and image generation on a GPU with limited memory. Previously you'd need to restart ComfyUI or use the API directly. Now it's a button.</p>
+
+    <h3>Execution Timer</h3>
+    <p>Every generation now shows an <strong>execution timer</strong>: both elapsed time during generation and total time on completion. Useful for benchmarking different models, samplers, and step counts. The timer persists in the generation history so you can compare runs later.</p>
+
+    <h3>Additional Improvements</h3>
+    <ul>
+      <li>Redesigned model selector with search, filtering by type, and file size display</li>
+      <li>Improved dark mode contrast ratios for better accessibility</li>
+      <li>Keyboard shortcuts for common actions (Ctrl+Enter to send, Escape to cancel generation)</li>
+      <li>Generation queue: batch multiple prompts and let them run sequentially</li>
+      <li>Image gallery with fullscreen view, metadata overlay, and one-click copy of generation parameters</li>
+    </ul>
+
+    <h2>What's New vs. Competitors</h2>
+
+    <p>Here's how the <strong>Lazarus v1.5 release</strong> stacks up against other popular <strong>local AI app desktop</strong> tools as of April 2026:</p>
+
+    <table>
+      <thead><tr><th>Feature</th><th>Lazarus v1.5</th><th>Open WebUI</th><th>LM Studio</th><th>Jan.ai</th><th>GPT4All</th></tr></thead>
+      <tbody>
+        <tr><td>Chat</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Image generation</td><td>&#10003;</td><td>&#10007;</td><td>&#10007;</td><td>&#10007;</td><td>&#10007;</td></tr>
+        <tr><td>Video generation</td><td>&#10003;</td><td>&#10007;</td><td>&#10007;</td><td>&#10007;</td><td>&#10007;</td></tr>
+        <tr><td>Dynamic workflow builder</td><td>&#10003;</td><td>&#10007;</td><td>&#10007;</td><td>&#10007;</td><td>&#10007;</td></tr>
+        <tr><td>CivitAI marketplace</td><td>&#10003;</td><td>&#10007;</td><td>&#10007;</td><td>&#10007;</td><td>&#10007;</td></tr>
+        <tr><td>Local Whisper STT</td><td>&#10003;</td><td>&#10003;</td><td>&#10007;</td><td>&#10007;</td><td>&#10007;</td></tr>
+        <tr><td>Zero telemetry</td><td>&#10003;</td><td>&#10003;</td><td>&#10007;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>No external CDN/fonts</td><td>&#10003;</td><td>&#10007;</td><td>&#10007;</td><td>&#10007;</td><td>&#10003;</td></tr>
+        <tr><td>Standalone desktop app</td><td>&#10003; (Tauri)</td><td>&#10007; (Docker)</td><td>&#10003; (Electron)</td><td>&#10003; (Electron)</td><td>&#10003; (Qt)</td></tr>
+        <tr><td>Download manager (pause/resume)</td><td>&#10003;</td><td>&#10007;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Model bundles</td><td>&#10003; (6 bundles)</td><td>&#10007;</td><td>&#10007;</td><td>&#10007;</td><td>&#10007;</td></tr>
+        <tr><td>VRAM management</td><td>&#10003;</td><td>&#10007;</td><td>&#10003;</td><td>&#10007;</td><td>&#10007;</td></tr>
+        <tr><td>Open source</td><td>AGPL-3.0</td><td>MIT</td><td>Proprietary</td><td>AGPL</td><td>MIT</td></tr>
+        <tr><td>App size</td><td>&lt; 15 MB</td><td>Docker image</td><td>~200 MB</td><td>~180 MB</td><td>~120 MB</td></tr>
+      </tbody>
+    </table>
+
+    <p>The pattern is clear. Other tools do one thing well: chat. Lazarus is the only <strong>local AI app desktop</strong> that combines chat, image generation, video generation, and a model marketplace into a single interface, all while maintaining strict privacy guarantees. For a deeper dive into individual comparisons, check out our posts on <a href="lazarus-vs-open-webui.html">Lazarus vs Open WebUI</a>, <a href="lazarus-vs-lm-studio.html">vs LM Studio</a>, <a href="lazarus-vs-jan.html">vs Jan.ai</a>, and <a href="lazarus-vs-gpt4all.html">vs GPT4All</a>.</p>
+
+    <h2>Upgrade Guide</h2>
+
+    <p>If you're already running Lazarus, upgrading is straightforward:</p>
+
+    <pre><code>cd Lazarus
+git pull
+npm install
+npm run dev</code></pre>
+
+    <p>For the standalone desktop app, download the latest <code>.exe</code> for Windows or <code>.AppImage</code> for Linux from the <a href="/guide/install/">releases page</a>. There is no Mac build and there never was one; on a Mac the hosted studio runs in the browser at <a href="https://remote provider">remote provider</a>. Your existing models, chat history, and settings carry over automatically: they're stored in your OS's app data directory, not inside the app bundle.</p>
+
+    <p>New users can follow the full setup guide in our <a href="run-uncensored-ai-locally.html">how to run uncensored AI locally</a> article, or just clone and run:</p>
+
+    <pre><code>git clone YOUR_LAZARUS_REPOSITORY_URL
+cd Lazarus
+# Windows: setup.bat | macOS/Linux: ./setup.sh</code></pre>
+
+    <h2>What's Next</h2>
+
+    <p>The v1.5.x cycle focused on making the generation pipeline dynamic and the app self-contained. The next milestone targets:</p>
+
+    <ul>
+      <li><strong>RAG (Retrieval-Augmented Generation)</strong>: chat with your local documents</li>
+      <li><strong>Image-to-image and inpainting</strong>: edit existing images with AI, driven by the dynamic workflow builder</li>
+      <li><strong>Multi-GPU support</strong>: split generation workloads across multiple GPUs</li>
+      <li><strong>Plugin system</strong>: extend the app with community-built modules</li>
+    </ul>
+
+    <p>Follow the <a href="/guide/code/">GitHub repo</a> for updates, or join the <a href="/guide/faq-and-glossary/">Discussions</a> to share feedback and feature requests.</p>
+
+    <h2>FAQ</h2>
+
+    <h3>What versions are included in this release?</h3>
+    <p>This post covers versions 1.5.0 through 1.5.3. The dynamic workflow builder and Tauri app landed in v1.5.0. CivitAI marketplace and model bundles came in v1.5.1. Privacy hardening and local Whisper STT arrived in v1.5.2. UI polish fixes and stability improvements rounded things out in v1.5.3.</p>
+
+    <h3>Do I need to use the Tauri desktop app or can I still use the browser version?</h3>
+    <p>Both are fully supported. The browser version (<code>npm run dev</code>) works exactly as before. The Tauri app adds native features like the built-in CORS proxy and download manager with pause/resume, but all core functionality (chat, image gen, video gen, workflow builder) works in both modes.</p>
+
+    <h3>Does the dynamic workflow builder require any extra setup?</h3>
+    <p>No. If ComfyUI is running and reachable, the builder queries it automatically on startup. It works with a stock ComfyUI install and gets even more powerful if you install additional nodes through ComfyUI-Manager. No configuration required.</p>
+
+    <h3>How does the CivitAI integration affect my privacy?</h3>
+    <p>All CivitAI API requests and thumbnail fetches are proxied through the app's local backend. Your browser never contacts CivitAI servers directly. Your IP address is not exposed to CivitAI when browsing models inside the app. The only direct connection to CivitAI happens when you initiate a model download, which is unavoidable since the files are hosted on their servers.</p>
+
+    <h3>Can I use the model bundles if I already have some models downloaded?</h3>
+    <p>Yes. The bundle installer checks for existing files before downloading. If you already have the FLUX.1 Schnell checkpoint, for example, the FLUX bundle will skip that file and only download the missing components (encoder, VAE, etc.).</p>
+
+    <h3>What Whisper model should I use for speech-to-text?</h3>
+    <p>The default <code>base.en</code> model is fine for English-only use: it's fast and accurate enough for dictating prompts. If you need multilingual transcription or higher accuracy for technical terms, switch to <code>medium</code> or <code>large-v3</code> in settings. The larger models need more VRAM and take longer to transcribe but produce noticeably better results.</p>
+
+    <h3>How big is the Tauri desktop app?</h3>
+    <p>Under 15 MB installed on Windows. That's the full application with the Rust backend, CORS proxy, and download manager included. Compare that to Electron-based alternatives like LM Studio (~200 MB) or Jan (~180 MB). Tauri compiles to native code and doesn't bundle a separate Chromium instance.</p>
+
+    <h3>Is this update free?</h3>
+    <p>Yes. Lazarus is AGPL-3.0 licensed and completely free. No paid tiers, no pro features behind a paywall, no subscriptions. The full source code is on <a href="/guide/code/">GitHub</a>.</p>
+
+    <hr>
+
+    <p><em>Lazarus v1.5.3 is available now. AGPL-3.0 licensed and free to use. Built by <a href="/guide/">Lazarus contributors</a>.</em></p>
+  </article>
+
+  <div class="post-footer">
+    <p>Ready to try the biggest update yet?</p>
+    <a href="/guide/install/" class="cta-btn" target="_blank">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      Download v1.5.3
+    </a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-row footer-meta"><span>&copy; 2026 &middot; Lazarus &middot; AGPL-3.0</span></div>
+  <div class="footer-row footer-links">
+    <a href="/blog/">Blog</a>
+    <a href="/guide/">Guide</a>
+    <a href="/remote-access/">Remote access</a>
+    <a href="/discord" target="_blank" rel="noopener">Discord</a>
+    <a href="/guide/code/">GitHub</a>
+    <a href="/guide/faq-and-glossary/">Discussions</a>
+    <a href="/guide/settings-and-troubleshooting/">Issues</a>
+    <a href="https://reddit.com/user/GroundbreakingMall54">Reddit</a>
+  </div>
+</footer>
+</body>
+</html>

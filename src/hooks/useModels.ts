@@ -1,0 +1,737 @@
+import { useCallback, useEffect, useMemo } from 'react'
+import { listModels, pullModel as pullModelApi, pullModelTauri, deleteModel as deleteModelApi } from '../api/ollama'
+import { isTauri, isMacOS, backendCall } from '../api/backend'
+import {
+  inventoryOwesRetry, refetchWhenComfyReady, type ComfyReadyStatus,
+} from '../lib/comfy-ready-retry'
+import {
+  getInstalledImageModels as getComfyImageModels,
+  getInstalledVideoModels as getComfyVideoModels,
+  checkComfyConnection,
+  readModelDiskSizes,
+} from '../api/comfyui'
+import { parseNDJSONStream } from '../api/stream'
+import { log } from '../lib/logger'
+import { providerModelRow } from '../lib/provider-model-row'
+import { runEngineResume, engineResumeIsOwed, spendEngineResume } from '../lib/engine-resume-policy'
+import { engineStartIsWorthRetrying } from '../lib/engine-start-failure'
+import { commandIsUnavailable } from '../lib/engine-command-availability'
+import { dropDuplicateLazarusEngineRows, dropStandbyRowsServedByLazarusEngine, LAZARUS_ENGINE_GROUP, zeileZumEinklappen } from '../lib/lazarus-engine-rows'
+import { isLmStudioEntry, isBuiltinEngineEntry, type InstalledModelLike } from '../lib/lmstudio-match'
+import {
+  ensureLazarusEngineIsChatProvider, announceLazarusEngineSwitch, LAZARUS_ENGINE_FILE_GONE,
+  clearEngineErrorAfterSuccess,
+  announceLazarusEngineSwapBusy, announceLazarusEngineStartFailure,
+  standbyChatBackend, listStandbyBackendModels, handBackChatProviderForRow,
+  announceChatProviderSwitch, announceChatModelReplaced,
+} from '../api/lazarus-engine-switch'
+import { tryAcquireLazarusEngineSwap, releaseLazarusEngineSwap } from '../api/lazarus-engine-swap-lock'
+import { useModelStore } from '../stores/modelStore'
+import { errorText } from '../types/json-guards'
+import { useProviderStore } from '../stores/providerStore'
+import { getEnabledProviders, prefixModelName, getProviderIdFromModel } from '../api/providers'
+import {
+  listBundledModels, bundledToAIModels, activateBuiltinModel, isManagedBuiltinActive,
+  bundledEngineStatus, bundledEmbedStatus, startBundledEmbed,
+  isEmbeddingGgufName as isEmbeddingModel,
+} from '../api/engine'
+import type { BundledModel } from '../api/engine'
+import type { PullProgress, AIModel, ModelCategory, ImageModel, VideoModel, CloudModel, ComfyModelSource } from '../types/models'
+
+
+// Boot-resume for the managed built-in engine (2.5.7): the llama-server
+// children are reaped on app quit and nothing on the Rust side respawns them,
+// so after a relaunch the persisted active model points at a dead
+// 127.0.0.1:8127 (and RAG at a dead 8128) until the user re-picks the model.
+// Runs at most once per ANLASS (fetchModels fires repeatedly), and only
+// starts a server that reports running:false. Der Schuss selbst liegt in
+// lib/engine-resume-policy, weil der Cloud-Schalter ihn wieder faellig macht.
+
+// GH #118: the boot resume used to be a single shot, and a failure was
+// swallowed without a word. The one moment it runs is the worst moment to ask
+// a machine for a GPU: right after login, with the antivirus scanning the
+// fresh install and the graphics driver still settling. A start that loses
+// that race left the user with a dead 127.0.0.1 port and no second attempt
+// until they re-picked the model by hand. Bounded on purpose, because the
+// other failure (a model this box genuinely cannot load) must not turn into an
+// endless restart loop. The policy lives in lib/engine-resume-policy.
+const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+
+async function resumeBuiltinEngines(bundled: BundledModel[]) {
+  // The embeddings server is a different process on a different port with a
+  // different model, so it starts NOW and not behind up to three chat-engine
+  // attempts. Waiting its turn is how a slow chat start used to take
+  // Document-Chat down with it (review S3).
+  const embedResumed = resumeEmbedServer(bundled)
+  // Der letzte Wurf, damit ein aufgegebener Wiederanlauf denselben Satz sagen
+  // kann wie jeder andere Fehlstart. Vorher stand er nur im Logbuch, und der
+  // Nutzer sass vor einem Chat, der ohne ein Wort nicht antwortete.
+  let letzterFehler: unknown = null
+  const outcome = await runEngineResume({
+    status: () => bundledEngineStatus(),
+    eligible: () => {
+      const { activeModel } = useModelStore.getState()
+      return (
+        !!activeModel &&
+        getProviderIdFromModel(activeModel) === 'openai' &&
+        bundled.some((m) => prefixModelName('openai', m.name) === activeModel)
+      )
+    },
+    activate: () => activateBuiltinModel(useModelStore.getState().activeModel as string),
+    // Only a start that DIED is worth repeating. A health-budget timeout means
+    // the engine is still loading, and repeating it spends the whole budget
+    // again (up to ten minutes on a big GGUF) plus another ComfyUI cache drop
+    // and another Ollama eviction (review S3).
+    worthRetrying: engineStartIsWorthRetrying,
+    sleep: wait,
+    onError: (attempt, err) => {
+      letzterFehler = err
+      log.warn('[useModels] Lazarus Engine resume failed', { attempt, err })
+    },
+  })
+  log.info('[useModels] Lazarus Engine resume', outcome)
+  // Aufgegeben heisst: die App hat es versucht, der Motor laeuft nicht, und
+  // niemand hat es angestossen. Genau dann gehoert der Satz auf die stehende
+  // Zeile ueber dem Eingabefeld, wortgleich mit dem Fehlstart aus dem Waehler
+  // (api/lazarus-engine-switch), samt dem Satz, den llama-server selbst geschickt
+  // hat.
+  if (outcome.outcome === 'gave-up' && letzterFehler) {
+    const gewaehlt = useModelStore.getState().activeModel
+    if (gewaehlt) announceLazarusEngineStartFailure(gewaehlt, letzterFehler, false)
+  }
+  await embedResumed
+}
+
+/** One arm at a time. fetchModels runs from several mounted components, and a
+ *  cold start would otherwise start a wait per caller. */
+let comfyRetryRunning = false
+
+/**
+ * Meldung 2 of the R5 re-measure (2026-08-30): opening the Model Manager while
+ * ComfyUI was still coming up left the counter on `Installed 0` for good,
+ * beside cards that carried green Installed ticks. The first pass asked an
+ * engine that could not answer, wrote the empty answer down as the count, and
+ * nothing ever asked again. Only a manual Refresh repaired it.
+ *
+ * The counter stays on "counting" for as long as this runs, because that is
+ * the truth: nothing has been counted. beginInventoryRefresh is what says so,
+ * and it is held until the wait settles one way or the other.
+ */
+function armComfyInventoryRetry(refetch: () => Promise<void>): void {
+  if (comfyRetryRunning) return
+  if (isMacOS()) return
+  comfyRetryRunning = true
+  useModelStore.getState().beginInventoryRefresh()
+  void refetchWhenComfyReady({
+    status: async () => {
+      try {
+        return await backendCall<ComfyReadyStatus>('comfyui_status')
+      } catch {
+        return null
+      }
+    },
+    refetch: async () => { await refetch() },
+  })
+    .then((outcome) => { log.info('[useModels] ComfyUI inventory second pass', { outcome }) })
+    .catch((err) => { log.warn('[useModels] ComfyUI inventory second pass failed', { err }) })
+    .finally(() => {
+      comfyRetryRunning = false
+      useModelStore.getState().endInventoryRefresh()
+    })
+}
+
+/** Test seam. The arm is module state on purpose (one per app, not one per
+ *  mounted component), so a test needs a way back to a clean slate. */
+export function __resetComfyInventoryRetryForTests(): void {
+  comfyRetryRunning = false
+}
+
+// The bundled embeddings server serves RAG/memory for ANY local backend that
+// downloaded the embed GGUF in onboarding (LM Studio/openai-compat too), so
+// its resume must not depend on the chat engine being the managed builtin.
+//
+// Laeuft seit dem 04.09.2026 in JEDER Runde und nicht mehr nur einmal je
+// Sitzung, deshalb der Riegel: `fetchModels` wird von mehreren eingehaengten
+// Bauteilen zugleich gerufen, und zwei Durchlaeufe, die beide "laeuft nicht"
+// lesen, bevor einer gestartet hat, wuerden zwei Server auf einen Port
+// schicken. Der Riegel steht nur waehrend des Wartens und raeumt sich selbst.
+let embedResumeLaeuft = false
+
+async function resumeEmbedServer(bundled: BundledModel[]) {
+  if (embedResumeLaeuft) return
+  embedResumeLaeuft = true
+  try {
+    const embed = bundled.find((m) => isEmbeddingModel(m.name))
+    if (embed) {
+      const embedStatus = await bundledEmbedStatus()
+      if (!embedStatus.running) await startBundledEmbed(embed.path)
+    }
+  } catch { /* embeddings server unavailable, non-critical */ }
+  finally { embedResumeLaeuft = false }
+}
+
+export function useModels() {
+  const {
+    models: allModels, activeModel, activePulls, categoryFilter,
+    inventoryLoaded, inventoryRefreshes,
+    setModels, setActiveModel, startPull, updatePullProgress,
+    pausePull, completePull, dismissPull, setCategoryFilter,
+  } = useModelStore()
+
+  // Old persisted hosted catalog rows are excluded from every picker.
+  const models = useMemo(
+    () => allModels.filter((m) => m.provider !== 'lu-cloud'),
+    [allModels],
+  )
+
+  const isPulling = Object.keys(activePulls).length > 0
+
+  // Refresh trigger: any code path that just installed a model (onboarding,
+  // DiscoverModels, the Ollama in-app installer) dispatches this event so
+  // every mounted consumer of useModels re-fetches without needing a manual
+  // RefreshCw click.
+  useEffect(() => {
+    const handler = () => { fetchModels().catch(() => {}) }
+    window.addEventListener('lu-models-refresh', handler)
+    // A finished ComfyUI image/video download fires 'comfyui-model-downloaded' —
+    // from the download-store poller on completion AND from installBundleComplete
+    // after it rescans ComfyUI. useModels must refetch on it too, or a freshly
+    // downloaded model stays missing from the Installed tab + the chat/create
+    // pickers until a manual reload (d37d7bf5 + neejuh, 2026-06-24, v2.5.5).
+    // 'lu-models-refresh' alone did NOT cover this: installBundleComplete can bail
+    // before any dispatch when ComfyUI is not fully up, while the file still
+    // downloads and only the poller's event fires (verified live 2026-06-25).
+    window.addEventListener('comfyui-model-downloaded', handler)
+    return () => {
+      window.removeEventListener('lu-models-refresh', handler)
+      window.removeEventListener('comfyui-model-downloaded', handler)
+    }
+    // fetchModels is reassigned below on every render but always wraps the
+    // same setModels — depending on it would just churn listeners.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const fetchModels = useCallback(async () => {
+    // Announced before the first await, cleared in the finally below. A
+    // counter reading 0 while this is up has not counted anything yet and
+    // says so instead of stating a number (Befund 2, abnahme counter-check
+    // 2026-08-29: the Models page opened on "Installed 0" beside three
+    // Installed cards, and was right again five seconds later).
+    useModelStore.getState().beginInventoryRefresh()
+    try {
+      const allModels: AIModel[] = []
+      // Built-in engine (2.5.7): when the managed OpenAI-compat backend is the
+      // active provider, its model list is the downloaded GGUFs (via the Tauri
+      // `list_bundled_models` command), NOT `/v1/models` (which reports only the
+      // single loaded model). Skip the openai client's listModels for it.
+      const managedBuiltin = isManagedBuiltinActive()
+      const providers = getEnabledProviders().filter(
+        (p) => !(managedBuiltin && p.id === 'openai'),
+      )
+      const providerResults = await Promise.allSettled(
+        providers.map(async (provider) => {
+          const providerModels = await provider.listModels()
+          return providerModels.map((pm): AIModel => {
+            if (pm.provider === 'ollama') {
+              return {
+                name: pm.id, model: pm.id, size: 0, digest: '', modified_at: '',
+                details: { parent_model: '', format: '', family: '', families: [], parameter_size: '', quantization_level: '' },
+                type: 'text' as const, provider: 'ollama', providerName: 'Ollama',
+                // This literal rebuilds the model field by field and used to
+                // stop one field short, while the branch right below it passes
+                // supportsTools straight through. So Ollama's own per-model
+                // tool answer died here, every model arrived with `undefined`,
+                // the picker read that as "not false" and drew a wrench on a
+                // completion-only model, and resolveToolSupport fell through to
+                // the family-name list. Caught on the installed build
+                // 2026-08-06, after two fixes further upstream changed nothing,
+                // because `hasOllamaModels` is true by the time the api/ollama
+                // path below would have run.
+                contextLength: pm.contextLength, supportsTools: pm.supportsTools,
+              }
+            }
+            // ONE place decides what a configured-provider row carries (lib/provider-model-row).
+            // The Ollama branch above is the standing warning: a literal that
+            // rebuilds the model and stops one field short is how a server
+            // answer dies quietly halfway to the composer.
+            return providerModelRow(pm) satisfies CloudModel
+          })
+        })
+      )
+      for (const result of providerResults) {
+        if (result.status === 'fulfilled') {
+          // Filter out embedding models (e.g. nomic-embed-text) — not usable for chat
+          allModels.push(...result.value.filter(m => !isEmbeddingModel(m.name)))
+        }
+      }
+      // A16 (A14-3a): the backend our engine displaced keeps its models on
+      // screen while it is on standby.
+      //
+      // The openai slot holds one backend at a time, so while the Lazarus Engine
+      // has it, `/v1/models` is asked of the engine and LM Studio drops out of
+      // the list even though its server is still running on 1234. The trip out
+      // was one click on a tile; the trip back was Settings, AI Backends,
+      // Providers, Enable, and nothing on the picker said so. Its rows are
+      // listed here under their own name, and picking one hands the slot back
+      // (see `handBackChatProviderForRow`).
+      //
+      // Only reached when a local backend really was displaced, so on the
+      // ordinary machine with nothing on standby this costs no request at all.
+      //
+      // Fetched here and appended further down, AFTER the Lazarus Engine rows.
+      // A16 counter-check 02.09.: pushed straight into `allModels`, these rows
+      // counted as "already listed" when the Lazarus Engine rows were de-duplicated
+      // against them, so the row that is serving the chat was dropped in
+      // favour of the row that is only waiting beside the slot. Precedence
+      // belongs to whoever holds the slot (lib/lazarus-engine-rows), and while our
+      // engine holds it that is us, so the standby list is the side that gives
+      // way (`dropStandbyRowsServedByLazarusEngine`).
+      // Was in dieser Runde eingeklappt wurde, gleich in welcher Richtung.
+      // Beide Richtungen koennen nie zugleich greifen: unsere Zeilen fallen
+      // nur, wenn LM Studio den Steckplatz haelt, die wartenden Zeilen nur,
+      // wenn unsere Engine ihn haelt.
+      let eingeklappt: { backend: string; count: number; servedBy: string } | null = null
+      let standbyRows: CloudModel[] = []
+      const standby = managedBuiltin ? standbyChatBackend() : null
+      if (standby) {
+        try {
+          const waiting = await listStandbyBackendModels(standby)
+          standbyRows = waiting
+            .map((pm) => providerModelRow(pm) satisfies CloudModel)
+            .filter((m) => !isEmbeddingModel(m.name))
+        } catch {
+          // Its server went away in the meantime. No rows, exactly as before.
+        }
+      }
+
+      // Lazarus Engine model list (the downloaded GGUFs and the user's own folder).
+      //
+      // A14 (2.6.8): asked whether or not the Lazarus Engine is the active chat
+      // backend. It used to be asked only while it was, so on David's Mac with
+      // Ollama in front, the GGUF in his own model folder existed on disk,
+      // Model Storage promised in writing that the folder is read, and the
+      // file appeared nowhere. The command answering at all IS the presence
+      // check for the engine: it is a Tauri command with no bridge route, so
+      // the web and remote-bridge builds, which have no sidecar to start,
+      // still get nothing and are unchanged.
+      //
+      // A14 review 6 and its follow-up: the once-per-session flag is spent on
+      // an ANSWER, not on an attempt and not on a success.
+      //
+      //  - answered with a list  the resume runs, once, and never again.
+      //  - answered "no such command"  this build has no sidecar, so the shot
+      //    is spent too and the web, bridge and broken-install cases stop
+      //    re-attempting the whole resume on every refresh forever.
+      //  - no answer at all (timeout, dead transport)  nothing was learned,
+      //    so nothing is spent. This is the launch race: the command layer
+      //    coming up behind the window. Spending the shot there left the
+      //    engine the user had running yesterday dead for the session.
+      //
+      let bundledRaw: BundledModel[] | null = null
+      let backendAnswered = false
+      try {
+        bundledRaw = await listBundledModels()
+        backendAnswered = true
+      } catch (e) {
+        backendAnswered = commandIsUnavailable(e)
+      }
+      // Who spends the shot. `fetchModels` runs from several mounted
+      // components at once, and the flag used to be READ before the await and
+      // WRITTEN after it, so two overlapping first passes both read "first
+      // pass" and both fired the resume: two llama-server starts on one port,
+      // on the machine with the least room to spare.
+      //
+      // A14 third review answered that with a claim taken before the await,
+      // and the fourth review found the hole in it. Pass A takes the claim and
+      // then gets no answer; pass B is handed the full list while A is still
+      // waiting, but B does not hold the claim, so B does nothing; A gives the
+      // claim back. Nobody resumes, although the answer was on the screen the
+      // whole time, and the engine the user had running yesterday stays dead
+      // until some later refresh happens to come along.
+      //
+      // Both halves live AFTER the await now, in one synchronous block with no
+      // await between the read and the write, which is as atomic as it gets on
+      // a single-threaded runtime. So the first pass to ANSWER spends the shot
+      // and does the resume, whether or not it was the first to ask, and the
+      // pass that answers second sees the flag already up. The contract from
+      // Runde 3 is unchanged and is what these two lines say: an answer spends
+      // the shot exactly once (a refusal is an answer, and it spends it
+      // without a resume because there is no list to resume from), while no
+      // answer at all teaches nothing and spends nothing.
+      //
+      const mayResume = backendAnswered && engineResumeIsOwed()
+      if (mayResume) spendEngineResume()
+      if (bundledRaw) {
+        const bundled = bundledToAIModels(bundledRaw).filter(m => !isEmbeddingModel(m.name))
+        // One file, one row: with the folder pointed at ~/.lmstudio/models,
+        // LM Studio lists the model over its own API and the folder walk finds
+        // the same file. The row that is already serving the chat wins.
+        //
+        // Und was dabei wegfaellt, wird gezaehlt und gesagt, genau wie in der
+        // Gegenrichtung weiter unten. Gegenprobe G1, 04.09.2026: sobald
+        // LM Studio den Steckplatz haelt, verschwand `Qwen3-4B-Q4_K_M`, eine
+        // echte installierte Datei des Kunden von 2,3 GB, aus dem Waehler und
+        // von der Models-Seite, ohne ein Wort.
+        const eigeneBleiben = dropDuplicateLazarusEngineRows(bundled, allModels)
+        eingeklappt = zeileZumEinklappen(
+          bundled.length - eigeneBleiben.length,
+          LAZARUS_ENGINE_GROUP,
+          allModels.find(isLmStudioEntry)?.providerName ?? null,
+        )
+        allModels.push(...eigeneBleiben)
+        // Die Chat-Engine wird hoechstens EINMAL je Sitzung von hier aus
+        // wiederbelebt, und nur wenn sie den Steckplatz haelt: sie in jeder
+        // Runde neu zu starten hiesse, gegen einen Nutzer anzurennen, der sie
+        // absichtlich angehalten hat. `resumeBuiltinEngines` bringt den
+        // Einbettungsserver dabei mit.
+        //
+        // Der Einbettungsserver allein steht NICHT unter diesem Schuss.
+        // Persona P2, 04.09.2026: nach einem Providerwechsel zu LM Studio und
+        // zurueck war der Server auf Port 8128 weg und kam nicht wieder, weil
+        // der Schuss laengst verbraucht war. Die Chat-Engine heilt sich beim
+        // naechsten Abschicken einer Nachricht, der Einbettungsserver hat
+        // keinen solchen Anlass, und ohne ihn arbeitet Document Chat stumm
+        // nicht mehr. Der Aufruf fragt erst nach dem Zustand und startet nur,
+        // was nicht laeuft, kostet also nichts, wenn alles steht.
+        if (mayResume && managedBuiltin) void resumeBuiltinEngines(bundledRaw)
+        else void resumeEmbedServer(bundledRaw)
+      }
+      // The standby backend's rows, minus the ones our engine is already
+      // serving from the same file. Appended after the Lazarus Engine rows on
+      // purpose: see the note where `standbyRows` is filled.
+      if (standbyRows.length > 0) {
+        const bleiben = dropStandbyRowsServedByLazarusEngine(standbyRows, allModels)
+        allModels.push(...bleiben)
+        // Was eingeklappt wurde, wird gezaehlt und gesagt. Persona P5 hat am
+        // 03./04.09.2026 gemessen, dass LM Studio 7 Modelle meldet und der
+        // Waehler 4 zeigt: die drei fehlenden sind Dateien, die unsere Engine
+        // gerade selbst bedient. Richtig eingeklappt, nur eben stumm, und
+        // fuer den Nutzer sehen drei seiner Modelle verschwunden aus.
+        eingeklappt = zeileZumEinklappen(
+          standbyRows.length - bleiben.length,
+          standby?.name ?? null,
+          LAZARUS_ENGINE_GROUP,
+        ) ?? eingeklappt
+      }
+      useModelStore.getState().setFoldedRows(eingeklappt)
+      const ollamaEnabled = useProviderStore.getState().providers.ollama.enabled
+      const hasOllamaModels = allModels.some(m => m.provider === 'ollama')
+      if (ollamaEnabled && !hasOllamaModels) {
+        try {
+          const ollamaModels = await listModels()
+          allModels.push(...ollamaModels
+            .filter(m => !isEmbeddingModel(m.name))
+            .map(m => ({ ...m, provider: 'ollama' as const, providerName: 'Ollama' })))
+        } catch { /* Ollama might not be running */ }
+      }
+
+      let comfyModels: AIModel[] = []
+      // Did the ComfyUI lanes produce an answer at all this pass. Not whether
+      // the answer had anything in it: an engine that is up and holds no
+      // models is a counted zero, an engine that could not be reached has
+      // counted nothing. Drives the second pass at the bottom of this
+      // function (Meldung 2, R5 re-measure 2026-08-30).
+      // True on the Mac and in the web build, where there is nothing to ask.
+      let comfyAnswered = true
+      // Hard rule: Mac local media is MLX-only — ComfyUI never auto-starts
+      // there (process.rs::auto_start_comfyui), so skip the probe outright
+      // instead of a doomed connection check on every model-list refresh.
+      const comfyOk = !isMacOS() && (await checkComfyConnection())
+      if (!isMacOS() && !comfyOk) comfyAnswered = false
+      if (comfyOk) {
+        // Settled, not all: a folder ComfyUI cannot read costs that one lane,
+        // never the whole list. The old code lost both to a single throw.
+        // BOTH sides ask an inventory reader, not a picker reader. The
+        // inventory has to agree with the bundle cards: a bundle whose card
+        // says Installed must be in this count and in the Installed list.
+        // The four ComfyUI\models loaders alone cannot do that. Video needed
+        // the AnimateDiff pack, which keeps its motion modules under
+        // custom_nodes (counter-check 2026-08-29: two cards Installed, rail
+        // counter 3, neither bundle in the list). Image needed the addon
+        // folders: the abnahme counter-check the same day found Pixel Art XL
+        // in loras\ and the SDXL VAE in vae\ with Installed cards, present on
+        // the disk, and in no list and no counter anywhere.
+        const [imageResult, videoResult] = await Promise.allSettled([
+          getComfyImageModels(),
+          getComfyVideoModels(),
+        ])
+        if (imageResult.status === 'rejected') {
+          log.warn('[useModels] ComfyUI image discovery failed', { err: imageResult.reason })
+        }
+        if (videoResult.status === 'rejected') {
+          log.warn('[useModels] ComfyUI video discovery failed', { err: videoResult.reason })
+        }
+        const imageModels = imageResult.status === 'fulfilled' ? imageResult.value : []
+        const videoModels = videoResult.status === 'fulfilled' ? videoResult.value : []
+        // Both lanes down is not an inventory, it is an engine that answered
+        // the handshake and then nothing else.
+        if (imageResult.status === 'rejected' && videoResult.status === 'rejected') {
+          comfyAnswered = false
+        }
+
+        // No second partial filter here. The inventory readers above are the
+        // one reader for this list and they already decided what is on the
+        // disk; asking the catalogue a second time is what hid
+        // llava_llama3_fp8_scaled.safetensors (2.4 GB on the box, 8.5 GB in
+        // our catalogue) from every surface in the app while its three folder
+        // neighbours showed up (R5 re-measure, 2026-08-30). A catalogue size
+        // is a claim about the file we ship, not about the file the user has.
+        const format = (name: string) =>
+          name.toLowerCase().endsWith('.gguf') ? 'gguf' : 'safetensors'
+        // What each file weighs, asked once for both lanes. Every ComfyUI
+        // entry used to carry size 0, and the card hides a zero size, so the
+        // Installed list answered "what is this costing me" with silence.
+        const sizes = await readModelDiskSizes([...imageModels, ...videoModels])
+        // `source` rides along. It is the only thing that tells a LoRA from a
+        // checkpoint once the row is an AIModel (both are files under
+        // ComfyUI/models and both come out of this lane as type 'image'), and
+        // dropping it here is what put the LoRAs nameless between the
+        // checkpoints in the Image tab, clickable as if one were a main model.
+        const toModel = <T extends 'image' | 'video'>(
+          m: { name: string; type: string; source: ComfyModelSource },
+          type: T,
+        ) => ({
+          name: m.name, model: m.name, size: sizes.get(m.name) ?? 0, format: format(m.name),
+          architecture: m.type, type, providerName: 'ComfyUI' as const, source: m.source,
+        })
+        comfyModels = [
+          ...imageModels.map((m) => toModel(m, 'image') as ImageModel),
+          ...videoModels.map((m) => toModel(m, 'video') as VideoModel),
+        ]
+      }
+      // Wer die frische Liste hereingibt, sieht als Einziger das Vorher und
+      // das Nachher.
+      //
+      // `setModels` verwirft eine Wahl, deren Name in der neuen Liste nicht
+      // mehr steht, und nimmt in derselben set() den ersten Chat-Eintrag. Bis
+      // irgendein Effekt danach nachsieht, steht im Store schon der Ersatz,
+      // also kann die Modusregel in AppShell diesen Fall nicht mehr bemerken
+      // und ihre Zeile nie ausloesen. Gegenprobe G1, 04.09.2026: Provider
+      // LM Studio in den Einstellungen wieder herausgenommen, waehrend ein
+      // LM-Studio-Modell gewaehlt war, und die Wahl sprang stumm auf den
+      // ersten Eintrag, zweimal auf eine kaputte GGUF-Datei.
+      //
+      // Ein Moduswechsel kommt hier nicht heraus: der Local/Cloud-Schalter
+      // nimmt der Liste im Store nichts weg, und ohne fehlenden Namen tauscht
+      // `setModels` nichts. Die Zeile erscheint also nur, wenn sich die Liste
+      // unter dem Nutzer bewegt hat.
+      const gewaehltVorher = useModelStore.getState().activeModel
+      setModels([...allModels, ...comfyModels])
+      const gewaehltDanach = useModelStore.getState().activeModel
+      if (gewaehltVorher && gewaehltDanach && gewaehltDanach !== gewaehltVorher) {
+        announceChatModelReplaced(gewaehltVorher, gewaehltDanach)
+      }
+      // (Die Unterdrueckung fuer no-use-before-define stand hier; die Regel
+      // ist in keiner der geerbten Configs an, sie hat nie etwas gemeldet.
+      // Function-Hoisting macht den Vorwaertsbezug ohnehin gueltig.)
+      if (inventoryOwesRetry(comfyAnswered)) armComfyInventoryRetry(fetchModels)
+    } catch (err) {
+      log.warn('[useModels] Model list refresh failed', { err })
+    } finally {
+      useModelStore.getState().endInventoryRefresh()
+    }
+  }, [setModels])
+
+  const pullModel = useCallback(
+    async (name: string) => {
+      const existing = activePulls[name]
+      // If already active and not paused, don't restart
+      if (existing && !existing.paused && !existing.complete) return
+
+      const controller = new AbortController()
+      startPull(name, controller)
+
+      if (isTauri()) {
+        const { promise, cancel } = pullModelTauri(name, (progress) => {
+          updatePullProgress(name, progress)
+        })
+        controller.signal.addEventListener('abort', cancel)
+        try {
+          await promise
+          completePull(name)
+          try { await fetchModels() } catch { /* model list refresh failed — non-critical */ }
+          // Auto-activate the freshly downloaded chat model so the chat actually
+          // switches to it instead of silently staying on the old default
+          // (forte_exe 2026-06-14: downloaded models didn't appear selected and
+          // the chat kept reverting). Chat models only — image/video live in the
+          // Create view. Matched by exact list name so a mismatch just no-ops.
+          {
+            const freshly = useModelStore.getState().models.find((m) => m.name === name)
+            if (freshly && freshly.type !== 'image' && freshly.type !== 'video') setActiveModel(name)
+          }
+          // Auto-dismiss after 5s
+          setTimeout(() => dismissPull(name), 5000)
+        } catch (err) {
+          // Bug Z/a v2.5.0 — leonsk29 GH #48. Pre-v2.5.0 this catch was
+          // silent ("card stays visible"), which combined with the Rust-
+          // side Ok(()) on stream-ended-without-success made Lazarus flip the
+          // badge to "Completed" even when Ollama returned a 400 or the
+          // stream cut off after just the manifest. Now we surface the
+          // real error string as the card's last status, so the user can
+          // see *why* the pull failed (e.g. "Repo not GGUF compatible").
+          // The cancellation case is still distinguished from real errors.
+          const msg = (err as Error)?.message || String(err)
+          if (!/cancelled/i.test(msg) && controller.signal.aborted !== true) {
+            updatePullProgress(name, { status: `Failed: ${msg}` })
+          }
+        }
+        return
+      }
+
+      // Dev mode: streaming fetch
+      try {
+        const response = await pullModelApi(name, controller.signal)
+        let streamError: string | null = null
+        for await (const chunk of parseNDJSONStream<PullProgress>(response)) {
+          updatePullProgress(name, chunk)
+          // Surface an error the NDJSON stream reports mid-pull instead of
+          // falsely flipping the card to "complete" (adhney; mirrors the
+          // Tauri-path Bug Z/a handling above).
+          if (chunk.error) { streamError = chunk.error; break }
+        }
+        if (streamError) {
+          updatePullProgress(name, { status: `Error: ${streamError}` })
+        } else {
+          completePull(name)
+          try { await fetchModels() } catch { /* non-critical */ }
+          // Auto-activate the freshly downloaded chat model (see note above).
+          {
+            const freshly = useModelStore.getState().models.find((m) => m.name === name)
+            if (freshly && freshly.type !== 'image' && freshly.type !== 'video') setActiveModel(name)
+          }
+          setTimeout(() => dismissPull(name), 5000)
+        }
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          updatePullProgress(name, { status: `Error: ${errorText(err) || 'the download stopped'}` })
+        }
+        // On abort (pause): card stays with "Paused" status
+      }
+    },
+    [activePulls, fetchModels, startPull, updatePullProgress, completePull, dismissPull, setActiveModel]
+  )
+
+  const isPullingModel = useCallback(
+    (name: string) => {
+      const pull = activePulls[name]
+      return !!pull && !pull.paused && !pull.complete
+    },
+    [activePulls]
+  )
+
+  const removeModel = useCallback(
+    async (name: string) => {
+      await deleteModelApi(name)
+      await fetchModels()
+    },
+    [fetchModels]
+  )
+
+  const getFilteredModels = (filter: ModelCategory = categoryFilter) => {
+    if (filter === 'all') return models
+    return models.filter((m: AIModel) => m.type === filter)
+  }
+
+  // Selecting a Lazarus Engine model must also swap the loaded GGUF: the managed
+  // engine serves one model per process, so activation means swap_bundled_model.
+  // Other providers just set the active model as before.
+  //
+  // A14 second review: this did half the job and the half it skipped was the
+  // whole point. The guard was "is the openai slot already ours", so a click
+  // on a Lazarus Engine card under Installed while Ollama held the chat wrote
+  // openai::<gguf> into the store, unloaded the Ollama model to make room, and
+  // then started nothing and switched nothing. The user was left on a model
+  // that answered from nowhere. Same route as the picker and the Use button
+  // now: hand the slot over, say so, then start.
+  // A16: the answer is a promise now, so the caller can draw a Loading state
+  // for as long as the swap really runs. It resolves when the engine is up or
+  // has failed, and immediately on the paths that start nothing (a blocked
+  // click, a row that is not ours).
+  const activateModel = useCallback((name: string): Promise<void> => {
+    const row = useModelStore.getState().models.find((m) => m.name === name)
+    const isLuRow = isBuiltinEngineEntry(row as unknown as InstalledModelLike | undefined)
+    // Did THIS click move the chat backend. A failure afterwards has to keep
+    // saying so: the slot has already changed hands and the model the user was
+    // talking to has already been unloaded to make room.
+    let switched = false
+    // A16 (A14-3a): the other direction. A row belonging to the backend on
+    // standby gives the slot back to it, with the same sentence in the same
+    // row the outward switch uses. Done BEFORE the openai config is read below,
+    // so the engine branch sees a slot that is no longer ours and keeps its
+    // hands off a model it does not serve.
+    const handedBackTo = handBackChatProviderForRow(row as unknown as InstalledModelLike | undefined)
+    if (handedBackTo) announceChatProviderSwitch(handedBackTo, name)
+    if (isLuRow) {
+      // The bolt against two swap_bundled_model calls at one engine, where the
+      // second lands on a process the first is still restarting. It is taken
+      // HERE, before the slot is handed over, so a blocked click leaves the
+      // chat exactly where it was.
+      //
+      // A14 fourth review moved it out of this file. It used to be a variable
+      // up at the top of this module, which held the Installed card and
+      // nothing else, while the picker guarded the same engine with its own
+      // component state. Two doors, one llama-server, one bolt now
+      // (api/lazarus-engine-swap-lock).
+      //
+      // And it says so. The click used to return in silence, which reads as a
+      // dead button and gets clicked again.
+      if (!tryAcquireLazarusEngineSwap()) {
+        announceLazarusEngineSwapBusy()
+        return Promise.resolve()
+      }
+      switched = ensureLazarusEngineIsChatProvider()
+      if (switched) announceLazarusEngineSwitch()
+    }
+    // Was vorher bediente. Die Auswahl wird gesetzt, BEVOR die Engine laeuft,
+    // damit die Kachel sofort reagiert; scheitert der Start, muss sie wieder
+    // zurueck. Ohne das stand die Kachel eines kaputten Modells auf ACTIVE,
+    // verlor ihren Use-Knopf und auf dem Port lag nichts (Gegenprobe zu
+    // 29f22a1a am 03.09.2026, Befund 2). Die Rust-Seite holt im selben Fall
+    // die vorherige Engine zurueck, also ist genau dieses Modell auch das,
+    // was danach wirklich wieder bedient.
+    const vorherAktiv = useModelStore.getState().activeModel
+    setActiveModel(name)
+    const cfg = useProviderStore.getState().providers.openai
+    if (cfg.enabled && cfg.managed && getProviderIdFromModel(name) === 'openai') {
+      // A14 third review: this used to be `.catch(() => {})`. A dead
+      // llama-server then left the slot handed over, the Ollama model already
+      // unloaded to make room, and one cheerful line on screen saying the chat
+      // provider had moved. The picker names the real reason with the stderr
+      // tail Rust appends; the card says the same sentence now, from the same
+      // helper, in the status row that is drawn right above the list.
+      const sayItFailed = (reason: unknown) => {
+        if (vorherAktiv !== name) setActiveModel(vorherAktiv)
+        announceLazarusEngineStartFailure(name, reason, switched)
+      }
+      return activateBuiltinModel(name)
+        // False is not a shrug: the path could not be resolved even after a
+        // refresh, so the row stands for a file that is no longer there.
+        .then((swapped) => {
+          if (!swapped && isLuRow) sayItFailed(LAZARUS_ENGINE_FILE_GONE)
+          else clearEngineErrorAfterSuccess()
+        })
+        // Not a Lazarus row: some other model in the openai slot, and the engine
+        // has nothing to say about it. Unchanged, non-critical.
+        .catch((e) => { if (isLuRow) sayItFailed(e) })
+        .finally(() => { if (isLuRow) releaseLazarusEngineSwap() })
+    }
+    if (isLuRow) {
+      // Nothing was started, so nothing will release the bolt in a finally.
+      // Unreachable today (a Lazarus row that got this far has just been given the
+      // slot by ensureLazarusEngineIsChatProvider, and its name carries the openai
+      // prefix the check reads), and left here because an unreleased bolt
+      // costs the user his card until the 60 s limit runs out.
+      releaseLazarusEngineSwap()
+    }
+    return Promise.resolve()
+  }, [setActiveModel])
+
+  return {
+    models, activeModel, activePulls, isPulling, categoryFilter,
+    // What the counters need to tell "nothing installed" apart from "not
+    // counted yet". See lib/inventory-counter.ts.
+    inventoryLoaded, inventoryRefreshing: inventoryRefreshes > 0,
+    fetchModels, pullModel, pausePull, dismissPull,
+    removeModel, setActiveModel: activateModel, setCategoryFilter, getFilteredModels, isPullingModel,
+  }
+}

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Remote model providers | Lazarus Guide</title>
+  <meta name="description" content="Configure a model provider you choose in Lazarus and understand which requests leave your device.">
+  <link rel="canonical" href="/guide/remote-providers/">
+  <meta property="og:description" content="Configure a model provider you choose in Lazarus and understand which requests leave your device.">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"TechArticle","headline":"Configure a remote model provider","description":"Configure a model provider you choose in Lazarus and understand which requests leave your device.","url":"/guide/remote-providers/","inLanguage":"en","author":{"@type":"Organization","name":"Lazarus contributors","url":"/guide/"},"publisher":{"@type":"Organization","name":"Lazarus","url":"/"},"mainEntityOfPage":{"@type":"WebPage","@id":"/guide/remote-providers/"},"isPartOf":{"@type":"WebPage","name":"Lazarus Handbook","url":"/guide/"}}
+  </script>
+  <link rel="icon" href="/favicon.png">
+</head>
+<body>
+  <main>
+    <nav aria-label="Breadcrumb"><a href="/">Lazarus</a> / <a href="/guide/">Guide</a> / Remote providers</nav>
+    <article data-handbook-chapter="remote-providers">
+      <h1>Configure a remote model provider</h1>
+      <p>Lazarus can connect to providers you select, including OpenAI, Anthropic, OpenRouter and compatible API endpoints. Lazarus does not include a first-party hosted model catalog or inference account.</p>
+      <h2>Set up a provider</h2>
+      <ol>
+        <li>Open <strong>Settings → AI Backends</strong>.</li>
+        <li>Choose a provider or compatible endpoint, then enter its base URL and API key.</li>
+        <li>Enable the provider and refresh the model list.</li>
+        <li>Select one of its models in the chat or coding model picker.</li>
+      </ol>
+      <h2>Data destination</h2>
+      <p>When you select a remote model, Lazarus sends that provider the prompts and context needed for the request. This can include selected document excerpts, tool results and attached files. Review the provider, its privacy terms and your connected tools before sending sensitive information. Local models use the configured local backend instead.</p>
+      <h2>API keys</h2>
+      <p>Provider keys are stored locally. Lazarus uses the operating system credential store where supported and keeps keys separate from chat history. You can remove or replace a key in AI Backends settings.</p>
+      <p><a href="/guide/">Back to the handbook</a> · <a href="/guide/chat/">Read the chat guide</a> · <a href="/guide/settings-and-troubleshooting/">Settings and troubleshooting</a></p>
+    </article>
+  </main>
+</body>
+</html>

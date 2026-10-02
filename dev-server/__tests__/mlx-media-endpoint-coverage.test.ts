@@ -1,0 +1,188 @@
+/**
+ * K7 (GH #135, eloieloie): "Unknown backend command: install_mlx_diffusion"
+ * in `npm run dev` without Tauri. Root cause: the MLX image/video Rust
+ * module (`commands::media_cmds`) had no dev-server route, and unlike
+ * Remote Access (remote-stubs.ts) no frontend pre-guard either, so every
+ * `invokeMedia('...')` call in src/api/mlx-image.ts / mlx-video.ts is
+ * unconditionally reached the moment MlxMediaSettings renders on a Mac.
+ *
+ * This is the systematic check the fix is built on, kept as a live test so
+ * it holds going forward: it reads src-tauri/src/main.rs for every
+ * registered Tauri command, greps src/ for every literal command name
+ * actually passed to `backendCall(...)` / `invokeMedia(...)` (the same
+ * two-pass method used to find this gap), and asserts every one of those
+ * REACHABLE commands has an endpointMap entry in backend.ts. A future
+ * commands::media_cmds (or any other module's) command that gets called
+ * from the frontend but never wired into endpointMap fails this test
+ * instead of shipping silently.
+ *
+ * Deliberately NOT a check of all ~190 registered commands: most of them
+ * (window management, OAuth loopback, keychain, native file dialogs, ...)
+ * are legitimately Tauri-only and are never reached via backendCall/
+ * invokeMedia from the browser dev surface at all; asserting endpointMap
+ * coverage for those would mean inventing dev-mode behavior for features
+ * that were never broken in the first place. "Reachable" is measured, not
+ * assumed: the whole point of this posten was not to guess.
+ *
+ * Run: npx vitest run dev-server/__tests__/mlx-media-endpoint-coverage.test.ts
+ */
+import { describe, it, expect } from 'vitest'
+import { readFileSync, readdirSync, statSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const HERE = dirname(fileURLToPath(import.meta.url))
+const REPO_ROOT = join(HERE, '..', '..')
+
+/** Every command name registered in tauri::generate_handler![...]. */
+function rustCommands(): Set<string> {
+  const mainRs = readFileSync(join(REPO_ROOT, 'src-tauri', 'src', 'main.rs'), 'utf-8')
+  const m = mainRs.match(/\.invoke_handler\(tauri::generate_handler!\[([\s\S]*?)\n\s*\]\)/)
+  if (!m) throw new Error('Could not find tauri::generate_handler![...] block in main.rs. Has the invoke_handler setup moved?')
+  const names = new Set<string>()
+  for (let line of m[1].split('\n')) {
+    line = line.split('//')[0].trim().replace(/,$/, '')
+    if (!line) continue
+    const parts = line.split('::')
+    names.add(parts[parts.length - 1])
+  }
+  return names
+}
+
+/** Every command name literal passed to `backendCall(...)` or `invokeMedia(...)`
+ *  anywhere under src/ (excluding tests). Mirrors the systematic script used
+ *  to find the K7 gap: a source-level reachability measurement, not a guess. */
+function reachableCommands(): Set<string> {
+  const pattern = /(?:backendCall|invokeMedia)(?:<[^>]*>)?\(\s*['"]([a-zA-Z0-9_]+)['"]/g
+  const names = new Set<string>()
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir)) {
+      if (entry === '__tests__' || entry === 'node_modules') continue
+      const full = join(dir, entry)
+      const st = statSync(full)
+      if (st.isDirectory()) { walk(full); continue }
+      if (!(entry.endsWith('.ts') || entry.endsWith('.tsx'))) continue
+      const content = readFileSync(full, 'utf-8')
+      for (const match of content.matchAll(pattern)) names.add(match[1])
+    }
+  }
+  walk(join(REPO_ROOT, 'src'))
+  return names
+}
+
+/** endpointMap keys, read out of backend.ts rather than imported: the dev
+ *  branch of backendCall() only builds that object at call time, and this
+ *  test wants the literal keys, not a live network round trip. */
+function endpointMapKeys(): Set<string> {
+  const backendTs = readFileSync(join(REPO_ROOT, 'src', 'api', 'backend.ts'), 'utf-8')
+  const m = backendTs.match(/const endpointMap: Record<string, \{ path: string; method\?: string \}> = \{([\s\S]*?)\n\s*\};/)
+  if (!m) throw new Error('Could not find endpointMap in backend.ts. Has it moved or been renamed?')
+  const keys = new Set<string>()
+  for (const match of m[1].matchAll(/^\s*([a-zA-Z_][a-zA-Z0-9_]*):\s*\{/gm)) keys.add(match[1])
+  return keys
+}
+
+describe('endpointMap covers every backendCall/invokeMedia site the frontend can reach', () => {
+  const rust = rustCommands()
+  const reachable = reachableCommands()
+  const mapped = endpointMapKeys()
+
+  it('sanity: the three extractors actually found something', () => {
+    expect(rust.size).toBeGreaterThan(100)
+    expect(reachable.size).toBeGreaterThan(50)
+    expect(mapped.size).toBeGreaterThan(20)
+  })
+
+  it('the MLX/video commands from K7 (GH #135) are mapped', () => {
+    const mlxCommands = [
+      'mlx_status', 'mlx_start', 'mlx_unload', 'mlx_generate', 'mlx_image_models',
+      'mlx_image_install_model', 'mlx_image_install_status', 'mlx_image_delete_model',
+      'install_mlx_diffusion', 'install_mlx_diffusion_status', 'set_hf_token', 'hf_token_present',
+      'video_status', 'video_list_models', 'video_install_mlx', 'video_install_mlx_status',
+      'video_install_model', 'video_install_model_status', 'video_delete_model',
+      'video_generate', 'video_progress', 'video_cancel', 'read_media_file',
+    ]
+    for (const cmd of mlxCommands) {
+      expect(rust.has(cmd), `${cmd} should still be a registered Tauri command`).toBe(true)
+      expect(reachable.has(cmd), `${cmd} should still be called via backendCall/invokeMedia somewhere`).toBe(true)
+      expect(mapped.has(cmd), `${cmd} is reachable but missing from endpointMap`).toBe(true)
+    }
+  })
+
+  // K7 asked for a systematic check against ALL registered commands, which is
+  // exactly what reachableCommands()/rustCommands() do. But "the frontend
+  // has a literal call site" is not the same claim as "this is broken in dev
+  // mode": most of these are legitimately Tauri-only (keychain, native file
+  // dialogs, OAuth loopback, window management, background shell tasks) and
+  // many call sites are already gated behind an `isTauri()` check upstream
+  // that this text-level scan cannot see, so they were never reachable from
+  // `npm run dev` the way install_mlx_diffusion was. Fixing K7 meant
+  // confirming and closing the MLX/video gap (the module the bug report
+  // named, and its siblings, see the test above), not inventing dev-mode
+  // behavior for ~90 unrelated commands never reported broken.
+  //
+  // This list is the exact remaining measured gap as of this fix (K7,
+  // 2026-09-18), kept explicit, not silently ignored, so a maintainer can
+  // pick individual ones off it later (David/orchestrator to prioritize; a
+  // few look like real drift worth a closer look on their own, e.g.
+  // local_api_status/restart_remote_server/revoke_remote_memory landed in
+  // main.rs after remote-stubs.ts's list was last updated). The test still
+  // fails the moment ANY command outside this list, including a brand new
+  // one, is called from the frontend without an endpointMap entry.
+  const PRE_EXISTING_UNMAPPED_GAPS = new Set([
+    'backup_rag_chunks', 'backup_stores', 'bundled_embed_status', 'bundled_engine_status',
+    'cancel_character_training', 'cancel_comfyui_install', 'character_trainer_status',
+    'character_training_status', 'check_download_space', 'clear_download_entry',
+    'clear_training_set', 'comfy_upload_image', 'delete_bundled_model', 'delete_orphan_download',
+    'detect_gpus', 'disconnect_remote_device', 'download_voice',
+    // execute_code_cancel (R2-44): the execute_code counterpart to
+    // shell_execute_cancel below, same reasoning, same Tauri-only shape
+    // (Rust kills the process tree by callId, no HTTP route makes sense).
+    'execute_code_cancel',
+    // Chat attachments (OOM fix, 2026-09-26): files beside store_backup.json
+    // and native Save As / Open dialogs. Every call site sits behind isTauri()
+    // (lib/chat-attachments.ts, ChatAttachment.tsx, chat-export.ts,
+    // ChatBackupSettings.tsx); the browser build keeps its images in IndexedDB
+    // and exports through a blob download, so there is no dev route to add.
+    'export_chats_dialog', 'import_chats_dialog', 'read_chat_attachment',
+    'save_binary_file_dialog', 'save_chat_attachment_dialog', 'write_chat_attachment',
+    // Model header sniff (Discord 2026-09-28): reads safetensors headers in
+    // the local ComfyUI model folders. The only call site (applyHeaderSniff in
+    // api/comfyui.ts) sits behind isTauri() and keeps the name-based answer
+    // everywhere else, so there is no dev route to add.
+    'sniff_model_files',
+    // Gallery delete to the Recycle Bin (lib/gallery-trash.ts), behind
+    // isTauri(): the browser build has no filesystem to clean.
+    'trash_comfy_output',
+    // Where ComfyUI models land when ComfyUI runs on another machine (GH
+    // #143, api/discover.ts comfyModelTarget). A missing route answers
+    // "local", which is what the dev server always is.
+    'comfy_model_target',
+    'exit_app', 'file_read', 'find_orphan_downloads', 'fix_comfyui_cors', 'funnel_ping',
+    'get_comfy_gpu_status', 'get_current_time', 'import_local_model', 'install_character_trainer',
+    'install_lmstudio', 'install_lmstudio_status', 'install_method', 'install_python',
+    'install_python_status', 'installed_piper_voices', 'is_onboarding_done', 'kv_slot_action',
+    'list_agent_workspaces', 'list_bundled_models', 'list_importable_models', 'lmstudio_list_loaded',
+    'lmstudio_load_model', 'lmstudio_model_context', 'lmstudio_model_dir', 'lmstudio_server_status',
+    'lmstudio_unload_model', 'local_api_new_token', 'local_api_status', 'log_file_path', 'log_reveal',
+    'offload_local_models', 'pick_folder', 'python_check', 'repair_comfyui_env', 'repo_map',
+    'restart_remote_server', 'restore_rag_chunks', 'restore_stores', 'revoke_remote_memory',
+    'save_text_file_dialog', 'self_migrate_finish', 'self_migrate_stage', 'set_chat_workspace_override',
+    'set_comfy_gpu_mode', 'set_gpu_selection', 'set_onboarding_done', 'shell_execute_cancel',
+    'shell_task_kill', 'shell_task_list', 'shell_task_start', 'shell_task_status', 'stage_training_image',
+    'start_bundled_embed', 'start_bundled_engine', 'start_character_training', 'start_lmstudio_server',
+    'start_local_api', 'start_ollama', 'stop_bundled_embed', 'stop_bundled_engine', 'stop_local_api',
+    'swap_bundled_model', 'sync_custom_model_paths', 'synthesize', 'synthesize_external', 'system_health',
+    'tts_status', 'update_comfyui', 'validate_workspace_folder', 'web_fetch',
+  ])
+
+  it('every command literally called from the frontend has an endpointMap entry (or a documented pre-existing exemption)', () => {
+    const gaps = [...reachable].filter((cmd) => rust.has(cmd) && !mapped.has(cmd) && !PRE_EXISTING_UNMAPPED_GAPS.has(cmd)).sort()
+    expect(gaps, `New reachable-but-unmapped command(s): ${gaps.join(', ')}. Add each to endpointMap in src/api/backend.ts with a matching dev-server route (see mlx-media-stubs.ts / remote-stubs.ts for the desktop-only-stub pattern).`).toEqual([])
+  })
+
+  it('the pre-existing exemption list has no stale entries (command removed, or since mapped)', () => {
+    const stale = [...PRE_EXISTING_UNMAPPED_GAPS].filter((cmd) => !reachable.has(cmd) || !rust.has(cmd) || mapped.has(cmd)).sort()
+    expect(stale, `These no longer need the exemption, remove from PRE_EXISTING_UNMAPPED_GAPS: ${stale.join(', ')}`).toEqual([])
+  })
+})

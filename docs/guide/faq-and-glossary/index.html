@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lazarus FAQ and Glossary: Real Questions, Plain Answers</title>
+<meta name="description" content="Answers to common Lazarus questions and a glossary of the words the app uses: token, context window, quantization, GGUF, VRAM, LoRA, RAG, and sandbox.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="canonical" href="/guide/faq-and-glossary/">
+<meta property="og:title" content="Lazarus FAQ and Glossary: Real Questions, Plain Answers">
+<meta property="og:description" content="Answers to common Lazarus questions and a glossary of the words the app uses: token, context window, quantization, GGUF, VRAM, LoRA, RAG, and sandbox.">
+<meta property="og:url" content="/guide/faq-and-glossary/">
+<meta property="og:type" content="article">
+<meta property="og:image" content="/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Lazarus FAQ and Glossary: Real Questions, Plain Answers","description":"Answers to common Lazarus questions and a glossary of the words the app uses: token, context window, quantization, GGUF, VRAM, LoRA, RAG, and sandbox.","url":"/guide/faq-and-glossary/","dateModified":"2026-09-11","inLanguage":"en","author":{"@type":"Person","name":"Lazarus contributors","url":"/guide/"},"publisher":{"@type":"Organization","name":"Lazarus","url":"/"},"mainEntityOfPage":{"@type":"WebPage","@id":"/guide/faq-and-glossary/"},"isPartOf":{"@type":"WebPage","name":"Lazarus Handbook","url":"/guide/"},"about":{"@type":"SoftwareApplication","name":"Lazarus","operatingSystem":"Windows, Linux","applicationCategory":"UtilitiesApplication"}}
+</script>
+<link rel="icon" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazarus.css">
+<script defer src="/assets/lazarus.js"></script>
+</head>
+<body>
+<nav class="lu-nav">
+  <a class="lu-nav-brand" href="/" aria-label="Lazarus">
+    <span class="lu-mono" data-mono="nav" data-size="40" aria-hidden="true"></span>
+    <span class="lu-nav-word">Lazarus</span>
+  </a>
+  <div class="lu-nav-links" id="lu-nav-links">
+    <a class="lu-nav-link" href="/">Home</a>
+    <a class="lu-nav-link" href="/blog/">Blog</a>
+    <a class="lu-nav-link" href="/guide/">Guide</a>
+    <a class="lu-nav-link" href="/remote-access/">Remote</a>
+  </div>
+  <div class="lu-nav-right">
+    <a class="lu-nav-icon" href="/guide/code/" title="GitHub" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg><span class="lu-nav-badge">1700+&#8202;⭐</span></a>
+    <a class="lu-nav-icon discord" href="/discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.45 3c-.2.36-.44.85-.6 1.23a18.3 18.3 0 0 0-5.7 0c-.16-.38-.4-.87-.6-1.23a19.7 19.7 0 0 0-4.87 1.37C.55 8.9-.32 13.3.11 17.63a19.9 19.9 0 0 0 6 3.03c.48-.66.9-1.36 1.27-2.1-.7-.26-1.36-.58-1.99-.96.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.24 0c.16.13.32.26.49.38-.63.38-1.3.7-2 .96.37.74.8 1.44 1.27 2.1a19.8 19.8 0 0 0 6-3.03c.5-5.03-.85-9.39-3.55-13.26ZM8.02 15c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.95 2.42-2.15 2.42Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.94 2.42-2.15 2.42Z"/></svg><span class="lu-nav-badge">900+&#8202;<span style="font-size:0.715em">🟢</span></span></a>
+    <span class="lu-nav-sep"></span>
+    <div class="switch" id="theme-switch" role="button" aria-label="Toggle theme"></div>
+    <a class="lu-nav-dl" href="/guide/install/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download</a>
+    <button type="button" class="lu-nav-toggle" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<article class="lu-doc" data-handbook-chapter="faq-and-glossary">
+<div class="breadcrumb"><a href="/">Home</a> &rsaquo; <a href="/guide/">Handbook</a> &rsaquo; FAQ and glossary</div>
+<h1>FAQ and glossary</h1>
+<p class="subtitle">The questions that come up in the help channels, answered from the code, and a glossary of the words the app uses.</p>
+<nav class="toc">
+<div class="toc-title">In this chapter</div>
+<a href="#faq">Questions from the help channels</a>
+<a href="#glossary">Glossary</a>
+</nav>
+
+<h2 id="faq">Questions from the help channels</h2>
+
+<h3>Is it really free, and does anything leave my machine?</h3>
+<p>The desktop app is free under the AGPL-3.0 licence, with no account and no usage limit for local inference. Local prompts stay on your machine. Lazarus makes network requests for model downloads and update checks. If you configure a remote AI provider, prompts and attachments sent through it go to that provider under its terms. Lazarus does not operate its own remote inference service or require a Lazarus account.</p>
+
+<h3>What hardware do I need?</h3>
+<p>For local chat: a 7B model in the usual 4 bit quantisation is a 4 to 5 GB file and wants about 6 GB of card memory for a full GPU run; without a card it runs on the processor with 8 GB of RAM or more, slowly. For local images: a card with 6 to 8 GB of memory for the starter checkpoint. For local video: 6 to 8 GB for the lightest models, 12 GB or more for the Wan and Hunyuan models. For the local character trainer: 12 GB. The Models tab shows a coloured dot on every model that compares it with your card (chapter 3), and each Create setup card names its model and memory needs before download. If a model does not fit, choose a smaller one or use a machine with more memory.</p>
+
+<h3>Does it run on a Mac?</h3>
+<p>No. There is no Mac build; the release workflow builds Windows and Linux. You can use another local inference app on macOS, or configure a remote provider in a compatible client.</p>
+
+<h3>Does it work on an AMD card?</h3>
+<p>Three answers, because three parts are involved.</p>
+<ul>
+<li>Chat: the Lazarus Engine is built with Vulkan on Windows and Linux, so it runs on any card with a Vulkan driver, AMD included. On Windows the app reads AMD card memory from the HIP SDK; on Linux it reads it without ROCm.</li>
+<li>Images and video: ComfyUI needs a PyTorch build that supports the card. The app selects a supported CUDA, ROCm, or processor build for local generation. Hardware specific limits are shown during setup.</li>
+<li>Character training: NVIDIA, or Linux with a ROCm supported card. On unsupported hardware the trainer stops before downloading and explains the local requirements.</li>
+</ul>
+
+<h3>The model answers with garbage on my small card.</h3>
+<p>Two known causes. A model under 7B, which the app warns about and which the wizard no longer offers. Or a card with very little memory (a 2 GB card was reported) where the layer split between card and processor went wrong; version 3.0.0 measures the layer count against the card, but the report is still open because that card was never seen in house. Set "GPU layers" to 0 under Settings, AI Backends, Lazarus Engine (expert) to run on the processor; if the text is clean then, the card is the cause.</p>
+
+<h3>I have models in Ollama or LM Studio. Do I need to download them again?</h3>
+<p>No. The wizard and Settings, AI Backends, Providers connect to Ollama and LM Studio and their models appear in the picker. For GGUF files another tool stores, "Scan for local models" under Model Storage finds them and "Import" links them into the Lazarus Engine folder without a copy, as long as both are on the same drive.</p>
+
+<h3>Where are my models, and how do I delete one?</h3>
+<p>Lazarus Engine models are in <code>%APPDATA%\Lazarus\models</code> on Windows and <code>~/.local/share/Lazarus/models</code> on Linux, or in the folder you set under Model Storage. Delete a model under Models, Installed with "Delete"; the box "Delete Model" shows the file path and the sentence "This removes the model file from your disk and frees the space." Ollama's models are Ollama's own and are deleted with <code>ollama rm</code>.</p>
+
+<h3>I downloaded a video model with the Get button and it is not in the picker.</h3>
+<p>This was reported in September 2026 for FramePack F1 and Wan 2.1 on a ComfyUI backend, and moving the files into a different ComfyUI folder by hand fixed it for that user. The report is still open. Until it is closed: ComfyUI must be running for the Image and Video rails to fill ("Start ComfyUI to see your video models"), and the files belong in the ComfyUI folder the app points at (Settings, AI Backends, ComfyUI, Path), under <code>models/</code> in the subfolder the model type expects.</p>
+
+<h3>The installer is flagged by my antivirus. Is that safe?</h3>
+<p>Chapter 2 answers this at length. Short: the installer is not yet signed with a Microsoft certificate, the update channel is signed, and you can compare the SHA-256 with the one on the Releases page. Do not disable protection to install it; if the source and the checksum do not match, do not run it.</p>
+
+<h3>I closed the window and the GPU is still busy.</h3>
+<p>The X hides the app to the tray. After 30 seconds it unloads the local models, so the card is free. "Quit" in the tray menu ends the app at once.</p>
+
+<h3>Can I use it from my phone?</h3>
+<p>There is no native Android app in this project. A paired phone can drive the desktop app through the sidebar's "Remote" tab over your network or a Cloudflare tunnel. The four permission switches under Settings, Voice &amp; Remote, Remote Access are off until you turn them on.</p>
+
+<h3>Can other programs use my local models?</h3>
+<p>Yes. Settings, Voice &amp; Remote, Local API starts an OpenAI compatible server on port 8129 for every model on this machine. It needs a token, which every request must carry, and "Reachable on the network" decides whether other computers on your LAN may use it.</p>
+
+<h3>Can I point it at my own server?</h3>
+<p>Yes. "Add Provider" under Settings, AI Backends, Providers with the preset "Custom (OpenAI-compat)" takes any address that speaks the OpenAI API. The app asks llama.cpp, vLLM, KoboldCpp and LM Studio servers what context they run with and shows it in the context dropdown with the label "from server".</p>
+
+<h3>Personas I made on my phone are not on the PC.</h3>
+<p>Persona sync is one way in 3.0.0, from the desktop to the paired device. The report is open. Write personas on the desktop under Settings, Agent, Personas.</p>
+
+<h3>Is the agent sandbox a real sandbox?</h3>
+<p>It is a folder with a path jail, not a container. The dialog says so: "Workspace protection is a folder path jail, not a container or virtual machine. Commands run on this computer. Review tool requests before allowing them." The file tools cannot leave the folder; a shell command you approve can do anything your user can.</p>
+
+<h3>Is there a limit on how long I can chat?</h3>
+<p>There is no per-message charge for local inference. A conversation is limited by its context window; <code>/compact</code> folds older turns into a summary so the conversation can continue. If you use an external provider, that provider's own limits and pricing apply.</p>
+
+<h2 id="glossary">Glossary</h2>
+
+<table>
+<tr><th>Term</th><th>Meaning</th></tr>
+<tr><td>Agent</td><td>A chat in which the model can call tools (files, shell, web, screenshots, image and video) and works towards a task step by step. Chapter 5.</td></tr>
+<tr><td>Backend, provider, engine</td><td>The program or service that runs a model and answers requests. Lazarus Engine, Ollama, LM Studio and the other listed engines can run locally. Remote providers are endpoints you configure with your own credentials.</td></tr>
+<tr><td>Checkpoint</td><td>A complete image model file, such as the Juggernaut XL starter checkpoint. ComfyUI loads one per render.</td></tr>
+<tr><td>ComfyUI</td><td>The open source program that renders images, video and audio locally. The app installs, starts, repairs and updates it and builds its node graphs for you. Chapter 7.</td></tr>
+<tr><td>Context window</td><td>How much text the model holds at once, in tokens. Chapter 4 explains the dropdown, the three labels and the memory cost.</td></tr>
+<tr><td>CUDA, ROCm, Vulkan</td><td>Three ways software drives a graphics card. CUDA is NVIDIA's; ROCm is AMD's; Vulkan is a standard every vendor supports. The Lazarus Engine uses Vulkan. ComfyUI's PyTorch uses CUDA on NVIDIA and ROCm on AMD where a build exists.</td></tr>
+<tr><td>Embedding model</td><td>A small model that turns text into numbers so matching passages can be found. Document chat needs one (nomic-embed-text). It never writes an answer.</td></tr>
+<tr><td>GGUF</td><td>The file format of the models the Lazarus Engine, Ollama and LM Studio run. A GGUF file carries the model and its metadata in one file. A GGUF that does not start with the GGUF marker is a broken download.</td></tr>
+<tr><td>GPU layers, offload</td><td>A model is a stack of layers. The engine puts as many as fit on the card ("offload") and the rest on the processor. "GPU layers" under Lazarus Engine (expert) overrides the choice: -1 all, 0 none, N a number.</td></tr>
+<tr><td>KV cache</td><td>The memory where the model keeps the conversation while it works. It grows with the context length, which is why a large context needs a large card.</td></tr>
+<tr><td>LoRA</td><td>A small add-on file that teaches an image model one thing, such as a character or a style, without replacing the model. Goes into ComfyUI's <code>models/loras</code> folder. The Character Studio trains one.</td></tr>
+<tr><td>Lazarus Engine</td><td>The built in llama.cpp server the app ships, listening on 127.0.0.1:8127 (embeddings on 8128). It runs GGUF models.</td></tr>
+<tr><td>MCP</td><td>A standard for plugging an outside tool server into the agent. Settings, Agent, MCP Servers; the app starts them only through npx or uvx.</td></tr>
+<tr><td>Memory</td><td>A small store of facts about you that the app injects into every prompt. The Memory toggle above the message box shows it.</td></tr>
+<tr><td>Persona</td><td>A named system prompt. The default is "No Filter"; 25 are built in and you can add your own.</td></tr>
+<tr><td>Quantisation (Q4_K_M, IQ2_M, fp8)</td><td>Shrinking a model's numbers to fewer bits so the file is smaller and fits a smaller card, at a small cost in quality. Q4_K_M is the usual choice for chat models; fp8 appears on image and video models.</td></tr>
+<tr><td>RAG, document chat</td><td>Splitting your documents into pieces, finding the pieces that match a question with the embedding model, and handing them to the chat model. Chapter 4.</td></tr>
+<tr><td>Sampling: Temperature, Top P, Top K, Max tokens</td><td>The four dials that shape how the model picks each word. Chapter 4 has the table.</td></tr>
+<tr><td>Sandbox, workspace, path jail</td><td>The folder an agent may work in. The sandbox is a fresh folder under <code>~/agent-workspace</code>; a workspace is a project folder you picked. The path jail refuses file access outside it. Chapter 5.</td></tr>
+<tr><td>Seed</td><td>The number that starts a render's randomness. The same prompt, settings and seed give the same picture; -1 means a random seed each time.</td></tr>
+<tr><td>Steps, CFG, sampler</td><td>Render controls: how many refinement passes, how strongly the prompt steers, and which algorithm. The Quality presets set them; the advanced settings expose them.</td></tr>
+<tr><td>Sub-agent</td><td>An agent started by the agent for a part of a task, bounded by the caps under Settings, Agent, Sub-agents.</td></tr>
+<tr><td>Thinking, effort</td><td>A hidden draft a reasoning model writes before it answers, and the Low to Max control for how much of it. Chapter 4.</td></tr>
+<tr><td>Token</td><td>The unit models read and write in, roughly three quarters of an English word. Context windows, the Flash allowance and credit rates are counted in tokens.</td></tr>
+<tr><td>Trigger word</td><td>The word that summons a trained character in a prompt. It is also the character's file name.</td></tr>
+<tr><td>VRAM</td><td>The memory on the graphics card. The thing that decides which models run fully on the card.</td></tr>
+</table>
+
+<hr>
+<p class="small">Previous chapter: <a href="/guide/settings-and-troubleshooting/">Settings and troubleshooting</a>. Back to the <a href="/guide/">handbook overview</a>.</p>
+</article>
+<footer>
+  <div class="footer-row footer-meta"><span>&copy; 2026 &middot; Lazarus &middot; AGPL-3.0</span></div>
+  <div class="footer-row footer-links">
+    <a href="/blog/">Blog</a>
+    <a href="/guide/">Guide</a>
+    <a href="/remote-access/">Remote access</a>
+    <a href="/discord" target="_blank" rel="noopener">Discord</a>
+    <a href="/guide/code/">GitHub</a>
+    <a href="/guide/faq-and-glossary/">Discussions</a>
+    <a href="/guide/settings-and-troubleshooting/">Issues</a>
+    <a href="https://reddit.com/user/GroundbreakingMall54">Reddit</a>
+  </div>
+</footer>
+
+
+</body>
+</html>

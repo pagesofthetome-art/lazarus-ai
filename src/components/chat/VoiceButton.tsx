@@ -1,0 +1,170 @@
+import { useEffect, useRef } from "react"
+import { Mic, MicOff, Loader2 } from "lucide-react"
+import { useVoice } from "../../hooks/useVoice"
+import { useVoiceStore } from "../../stores/voiceStore"
+
+/**
+ * Why the microphone is greyed out, in the user's terms.
+ *
+ * The old wording was "Speech-to-text off. Enable it in Settings, Voice &
+ * Remote", which named a switch as the cause. The Gegenprobe on the Windows
+ * build (2026-08-30) took the faster_whisper package out of every Python it
+ * could find and got exactly that sentence, while the real cause was the
+ * missing package. There is no speech-to-text switch to flip either: the mic
+ * is gated on `sttAvailable`, a fresh probe of what is installed, and the
+ * persisted `sttEnabled` flag is read by nobody and offered nowhere in
+ * Settings. So the text now names the state the app actually found and points
+ * at the control that fixes it.
+ *
+ * The local transcription engine is the supported dictation path.
+ */
+export function micUnavailableHint(): string {
+  return "Speech-to-text is not installed. Install faster-whisper in Settings → Voice & Remote."
+}
+
+interface Props {
+  onTranscript: (text: string) => void
+  /** Live interim transcript while recording (streaming dictation). */
+  onInterim?: (text: string) => void
+  onRecordingChange?: (isRecording: boolean) => void
+  disabled?: boolean
+}
+
+export function VoiceButton({ onTranscript, onInterim, onRecordingChange, disabled }: Props) {
+  const { isRecording, isTranscribing, sttSupported, sttError, clearSttError, startRecording, stopRecording, recheckStt, maxRecordingMs } = useVoice()
+  // Auto-stop timer keeps recordings below the transcribe route's upload cap.
+  const autoStopRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const wasRecordingRef = useRef(false)
+
+  useEffect(() => {
+    // The startup probe (App.tsx) can run before the persistent Whisper server
+    // has finished loading its model. If STT still reads unavailable when the
+    // mic mounts, do one fresh probe so a late-ready server lights it up.
+    if (!sttSupported) void recheckStt()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Dictation failures (upload limits, dead mic) surface as a
+  // transient bubble over the mic instead of the take silently vanishing.
+  useEffect(() => {
+    if (!sttError) return
+    const t = setTimeout(() => clearSttError(), 6000)
+    return () => clearTimeout(t)
+  }, [sttError, clearSttError])
+
+  // Recording can end outside handleClick (close-to-tray teardown, unmount
+  // recovery) — mirror the transition to the composer so "Recording…" never
+  // sticks, and drop a pending auto-stop timer so it can't fire on a dead take.
+  useEffect(() => {
+    if (wasRecordingRef.current && !isRecording) {
+      if (autoStopRef.current) { clearTimeout(autoStopRef.current); autoStopRef.current = null }
+      onRecordingChange?.(false)
+    }
+    wasRecordingRef.current = isRecording
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRecording])
+
+  useEffect(() => () => { if (autoStopRef.current) clearTimeout(autoStopRef.current) }, [])
+
+  const finishRecording = async () => {
+    if (autoStopRef.current) { clearTimeout(autoStopRef.current); autoStopRef.current = null }
+    onRecordingChange?.(false)
+    const transcript = await stopRecording()
+    if (transcript.trim()) {
+      onTranscript(transcript.trim())
+    }
+  }
+
+  const handleClick = async () => {
+    if (disabled || isTranscribing) return
+
+    if (isRecording) {
+      await finishRecording()
+    } else {
+      onRecordingChange?.(true)
+      const ok = await startRecording((interim) => onInterim?.(interim))
+      // Roll back the composer's "Recording…" state when the mic never
+      // started (permission denied / no input device) — otherwise Enter-to-
+      // send stays blocked with no recovery path.
+      if (!ok) {
+        onRecordingChange?.(false)
+        return
+      }
+      if (maxRecordingMs) {
+        autoStopRef.current = setTimeout(() => {
+          autoStopRef.current = null
+          if (!useVoiceStore.getState().isRecording) return
+          useVoiceStore.getState().setSttError("Dictation limit reached, transcribing what was recorded so far")
+          void finishRecording()
+        }, maxRecordingMs)
+      }
+    }
+  }
+
+  if (!sttSupported) {
+    const hint = micUnavailableHint()
+    return (
+      <div className="relative group/mic shrink-0">
+        <button
+          disabled
+          className="lazarus-control lazarus-control--icon"
+          aria-label="Microphone unavailable"
+          title={hint}
+        >
+          <MicOff size={14} />
+        </button>
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 w-max max-w-[240px] bg-gray-800 dark:bg-gray-700 text-white t-micro leading-snug rounded text-center opacity-0 group-hover/mic:opacity-100 transition-opacity pointer-events-none">
+          {hint}
+        </div>
+      </div>
+    )
+  }
+
+  // Transcribing state — show spinner.
+  // Der Zustand kommt aus `aria-busy`, wie beim Modellwaehler, der waehrend
+  // eines Ladevorgangs dieselbe Akzentkante traegt. Vorher war das ein
+  // eigenes blaues Rezept (`bg-blue-500/20 border-blue-500/40
+  // text-blue-400`) — dieselbe Farbe, die auch der Fokusring fuehrt.
+  if (isTranscribing) {
+    return (
+      <button
+        disabled
+        aria-busy="true"
+        className="lazarus-control lazarus-control--icon"
+        aria-label="Transcribing audio"
+      >
+        <Loader2 size={14} className="animate-spin" />
+      </button>
+    )
+  }
+
+  return (
+    <div className="relative shrink-0">
+      <button
+        onClick={handleClick}
+        disabled={disabled}
+        // Das Mikrofon war bis hierher die einzige eigene Formsprache der
+        // Composer-Leiste (Audit Welle 3): `p-1.5 rounded-lg` ergab Radius
+        // 9,2px neben 8px ueberall sonst, und der Ein-Zustand war ein rotes
+        // Pill. Jetzt dasselbe Rezept wie Paperclip, Think, Stop und Send —
+        // der Ein-Zustand kommt aus `aria-pressed`, nicht aus einer zweiten
+        // Klassenkette. composer-grammar.test.ts zaehlt diese Datei mit.
+        className="lazarus-control lazarus-control--icon"
+        aria-pressed={isRecording}
+        data-voice-button
+        aria-label={isRecording ? "Stop recording" : "Start voice input"}
+      >
+        {isRecording && <span className="lazarus-control__pulse" aria-hidden="true" />}
+        <Mic size={14} />
+      </button>
+      {sttError && (
+        <div
+          role="alert"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 w-max max-w-[240px] bg-red-600/95 dark:bg-red-500/90 text-white t-micro leading-snug rounded text-center pointer-events-none z-10"
+        >
+          {sttError}
+        </div>
+      )}
+    </div>
+  )
+}

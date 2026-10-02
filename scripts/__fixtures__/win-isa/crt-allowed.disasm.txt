@@ -1,0 +1,9 @@
+Dump of file fixture: real pattern from review-k1-avx.md Fundstelle 1a
+(ggml-cpu-x64.dll, __std_find_trivial_impl). Deliberately carries NO
+__isa_available/__isa_enabled line at all, unlike protected-own-code.disasm.txt:
+this fixture exists to prove the CRT/STL allowlist (R3.1) accepts a
+msvcprt:vector_algorithms.obj hit on the object/function name alone, without
+needing (and without finding) a dominance-check jump, because the MSVC-STL's
+own dispatcher lives one call frame up, not inside this function.
+
+  0000000180091F2B: C5 F9 6E D8        vmovd       xmm3,eax

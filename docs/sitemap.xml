@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url><loc>/</loc><lastmod>2026-09-28</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>/guide/</loc><lastmod>2026-09-28</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>/blog/</loc><lastmod>2026-09-22</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>/remote-access/</loc><lastmod>2026-07-17</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/alternatives/</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/vs/lm-studio/</loc><lastmod>2026-07-28</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/vs/comfyui/</loc><lastmod>2026-07-28</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/vs/ollama/</loc><lastmod>2026-07-28</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/vs/jan/</loc><lastmod>2026-07-28</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/uncensored-ai/</loc><lastmod>2026-09-28</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>/guide/chat/</loc><lastmod>2026-09-22</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>/qwen-image-2-1/</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+
+  <url><loc>/blog/kimi-k3-online-guide.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>/blog/kimi-k3-vs-deepseek-v4.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/run-qwen-3-8-without-gpu.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>/blog/qwen-3-8-max-vs-a95b-explained.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/flux-2-online-without-gpu.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>/blog/flux-2-dev-vs-flux-dev-vs-schnell.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/lm-studio-alternative-for-mac.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>/blog/what-a-mac-can-run-locally-2026.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/uncensored-ai-chat-online-guide.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>/blog/what-no-filter-means-online.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/opencode-alternative-cost-benchmark.html</loc><lastmod>2026-08-23</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>/blog/opencode-alternative-guenstiger.html</loc><lastmod>2026-08-23</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>/blog/how-to-run-qwen-3-8-27b-locally.html</loc><lastmod>2026-08-14</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>/blog/qwen-3-8-max-explained.html</loc><lastmod>2026-08-14</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/how-to-run-qwen-3-8.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/can-you-run-qwen-3-8-locally.html</loc><lastmod>2026-08-14</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/qwen-3-8-vs-qwen-3-6.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/deepseek-v4-flash-0731-explained.html</loc><lastmod>2026-07-31</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/how-to-run-deepseek-v4-flash-locally.html</loc><lastmod>2026-07-31</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/deepseek-v4-flash-cloud.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/deepseek-v4-flash-hardware-requirements.html</loc><lastmod>2026-07-31</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/deepseek-v4-flash-abliterated.html</loc><lastmod>2026-08-05</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/how-to-run-deepseek-v4-pro.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/deepseek-v4-flash-vs-v4-pro.html</loc><lastmod>2026-07-31</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/run-llm-and-stable-diffusion-together.html</loc><lastmod>2026-07-28</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/character-lora-training-local.html</loc><lastmod>2026-07-28</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/local-ai-music-generation.html</loc><lastmod>2026-07-28</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/ai-lipsync-and-video-extend-local.html</loc><lastmod>2026-07-28</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/how-to-run-qwen-image-2-1-locally.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>/blog/qwen-image-2-1-explained.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/lazarus-v3-0-2-hotfix.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/lazarus-v3-0-1-release.html</loc><lastmod>2026-09-18</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/lazarus-2-5-9.html</loc><lastmod>2026-07-26</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/how-to-run-kimi-k3.html</loc><lastmod>2026-08-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/kimi-k3-explained.html</loc><lastmod>2026-08-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/can-you-run-kimi-k3-locally.html</loc><lastmod>2026-08-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/kimi-k3-vs-kimi-k2-6.html</loc><lastmod>2026-08-09</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/plug-and-play-local-ai.html</loc><lastmod>2026-07-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/local-ai-image-and-video-generator.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/unzensierte-ki-lokal.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority><xhtml:link rel="alternate" hreflang="en" href="/blog/run-uncensored-ai-locally.html"/><xhtml:link rel="alternate" hreflang="de" href="/blog/unzensierte-ki-lokal.html"/><xhtml:link rel="alternate" hreflang="x-default" href="/blog/run-uncensored-ai-locally.html"/></url>
+  <url><loc>/blog/how-to-run-ai-locally.html</loc><lastmod>2026-07-16</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/lm-studio-alternatives.html</loc><lastmod>2026-07-17</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/easiest-local-ai-image-generator.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/local-ai-on-your-phone.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/lazarus-v2-4-0-release.html</loc><lastmod>2026-04-27</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/how-to-run-qwen-3-6-locally.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/abliterated-models-guide.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/lazarus-vs-sillytavern.html</loc><lastmod>2026-07-28</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/best-local-ai-apps-2026.html</loc><lastmod>2026-07-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/lazarus-v2-3-1-release.html</loc><lastmod>2026-04-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/lazarus-v2-3-0-release.html</loc><lastmod>2026-04-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/lazarus-v2-2-2-release.html</loc><lastmod>2026-04-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/run-uncensored-ai-locally.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority><xhtml:link rel="alternate" hreflang="en" href="/blog/run-uncensored-ai-locally.html"/><xhtml:link rel="alternate" hreflang="de" href="/blog/unzensierte-ki-lokal.html"/><xhtml:link rel="alternate" hreflang="x-default" href="/blog/run-uncensored-ai-locally.html"/></url>
+  <url><loc>/blog/lazarus-vs-open-webui.html</loc><lastmod>2026-04-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/lazarus-vs-msty.html</loc><lastmod>2026-04-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/lazarus-vs-lm-studio.html</loc><lastmod>2026-04-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/lazarus-vs-koboldcpp.html</loc><lastmod>2026-04-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/lazarus-vs-jan.html</loc><lastmod>2026-04-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/lazarus-vs-gpt4all.html</loc><lastmod>2026-04-11</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/image-to-image-local-ai.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/gemma-4-local-guide.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/codex-cli-universal-model-support.html</loc><lastmod>2026-04-09</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/why-run-ai-locally.html</loc><lastmod>2026-04-08</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/lazarus-v1-5-release.html</loc><lastmod>2026-04-08</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/how-to-generate-ai-videos-locally.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/comfyui-beginners-guide.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/best-uncensored-ai-models-2026.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/how-to-run-flux-locally.html</loc><lastmod>2026-04-05</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/uncensored-ai-chat.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/uncensored-ai-video-locally.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/free-uncensored-gpt-alternatives.html</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>/blog/how-to-run-ling-3-0-flash-locally.html</loc><lastmod>2026-08-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/ling-3-0-flash-explained.html</loc><lastmod>2026-08-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>/blog/run-glm-5-3-locally.html</loc><lastmod>2026-09-02</lastmod><changefreq>weekly</changefreq><priority>0.9</priority><xhtml:link rel="alternate" hreflang="en" href="/blog/run-glm-5-3-locally.html"/><xhtml:link rel="alternate" hreflang="de" href="/blog/glm-5-3-lokal-nutzen.html"/><xhtml:link rel="alternate" hreflang="ru" href="/blog/glm-5-3-lokalno.html"/><xhtml:link rel="alternate" hreflang="x-default" href="/blog/run-glm-5-3-locally.html"/></url>
+  <url><loc>/blog/glm-5-3-lokal-nutzen.html</loc><lastmod>2026-09-02</lastmod><changefreq>weekly</changefreq><priority>0.9</priority><xhtml:link rel="alternate" hreflang="en" href="/blog/run-glm-5-3-locally.html"/><xhtml:link rel="alternate" hreflang="de" href="/blog/glm-5-3-lokal-nutzen.html"/><xhtml:link rel="alternate" hreflang="ru" href="/blog/glm-5-3-lokalno.html"/><xhtml:link rel="alternate" hreflang="x-default" href="/blog/run-glm-5-3-locally.html"/></url>
+  <url><loc>/blog/glm-5-3-lokalno.html</loc><lastmod>2026-09-02</lastmod><changefreq>weekly</changefreq><priority>0.9</priority><xhtml:link rel="alternate" hreflang="en" href="/blog/run-glm-5-3-locally.html"/><xhtml:link rel="alternate" hreflang="de" href="/blog/glm-5-3-lokal-nutzen.html"/><xhtml:link rel="alternate" hreflang="ru" href="/blog/glm-5-3-lokalno.html"/><xhtml:link rel="alternate" hreflang="x-default" href="/blog/run-glm-5-3-locally.html"/></url>
+  <url><loc>/blog/deepseek-v4-1-flash-explained.html</loc><lastmod>2026-09-10</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>/blog/run-deepseek-v4-1-flash-locally.html</loc><lastmod>2026-09-10</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+<url><loc>/guide/first-start/</loc><lastmod>2026-09-14</lastmod></url>
+<url><loc>/guide/install/</loc><lastmod>2026-09-28</lastmod></url>
+<url><loc>/guide/create/</loc><lastmod>2026-09-22</lastmod></url>
+<url><loc>/guide/create/</loc><lastmod>2026-09-28</lastmod></url>
+<url><loc>/guide/remote-providers/</loc><lastmod>2026-09-14</lastmod></url>
+<url><loc>/guide/settings-and-troubleshooting/</loc><lastmod>2026-09-14</lastmod></url>
+<url><loc>/guide/faq-and-glossary/</loc><lastmod>2026-09-14</lastmod></url>
+<url><loc>/guide/agent/</loc><lastmod>2026-09-14</lastmod></url>
+<url><loc>/guide/create/</loc><lastmod>2026-09-22</lastmod></url>
+<url><loc>/guide/remote-providers/</loc><lastmod>2026-09-22</lastmod></url>
+<url><loc>/guide/what-it-is/</loc><lastmod>2026-09-28</lastmod></url>
+<url><loc>/guide/code/</loc><lastmod>2026-09-14</lastmod></url>
+<url><loc>/guide/chat/</loc><lastmod>2026-09-14</lastmod></url>
+<url><loc>/guide/remote-providers/</loc><lastmod>2026-09-28</lastmod></url>
+  <url>
+    <loc>/guide/remote-providers/</loc>
+    <lastmod>2026-09-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+</urlset>

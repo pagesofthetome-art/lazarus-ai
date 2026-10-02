@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-cli/schema.json",
+  "productName": "Lazarus",
+  "app": {
+    "windows": [
+      {
+        "title": "Lazarus",
+        "width": 1280,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false,
+        "visible": false,
+        "decorations": false,
+        "transparent": true,
+        "dragDropEnabled": false
+      }
+    ]
+  },
+  "bundle": {
+    "resources": {
+      "resources/whisper_server.py": "resources/whisper_server.py",
+      "resources/llama/x86_64-pc-windows-msvc/*": ""
+    }
+  }
+}

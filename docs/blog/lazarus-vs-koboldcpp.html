@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lazarus vs Kobold.cpp: Which Is Better?</title>
+<meta name="description" content="Kobold.cpp does creative writing. Lazarus generates text, images, and video. All local, all uncensored. Full comparison.">
+<meta name="keywords" content="Lazarus vs koboldcpp, kobold.cpp alternative, local ai creative writing, koboldai alternative, uncensored ai local, koboldcpp image generation">
+<meta property="og:title" content="Lazarus vs Kobold.cpp — Which Local AI App Is Better?">
+<meta property="og:description" content="Kobold does creative writing — Lazarus generates anything: text, images, video. All local, all uncensored. Full comparison.">
+<meta property="og:url" content="/blog/lazarus-vs-koboldcpp.html">
+<meta property="og:type" content="article">
+<link rel="canonical" href="/blog/lazarus-vs-koboldcpp.html">
+<meta name="robots" content="index, follow">
+<!-- Privacy: No external fonts loaded. Using system fonts. -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article","headline":"Lazarus vs Kobold.cpp — Which Local AI App Is Better?","author":{"@type":"Person","name":"Lazarus contributors"},"datePublished":"2026-03-30","dateModified":"2026-04-05","publisher":{"@type":"Organization","name":"Lazarus"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is Lazarus better than Kobold.cpp for creative writing?","acceptedAnswer":{"@type":"Answer","text":"No. Kobold.cpp is purpose-built for creative writing with story mode, adventure mode, and advanced generation parameters. Lazarus is better if you want text chat combined with image and video generation in one app."}},{"@type":"Question","name":"Does Kobold.cpp support image generation?","acceptedAnswer":{"@type":"Answer","text":"Kobold.cpp has basic image generation via SD.cpp, but it is limited compared to Lazarus's full ComfyUI integration which supports Stable Diffusion XL, FLUX, and video generation workflows."}},{"@type":"Question","name":"Can I use Kobold.cpp with SillyTavern?","acceptedAnswer":{"@type":"Answer","text":"Yes. Kobold.cpp is one of the most popular backends for SillyTavern. Lazarus is a standalone app and does not serve as a backend for third-party frontends."}},{"@type":"Question","name":"Which is easier to set up — Lazarus or Kobold.cpp?","acceptedAnswer":{"@type":"Answer","text":"Kobold.cpp ships as a single executable with zero dependencies. Lazarus requires installing the app plus Ollama. Both are straightforward, but Kobold.cpp has fewer moving parts."}}]}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazarus.css">
+<script defer src="/assets/lazarus.js"></script>
+</head>
+<body>
+<nav class="lu-nav">
+  <a class="lu-nav-brand" href="/" aria-label="Lazarus">
+    <span class="lu-mono" data-mono="nav" data-size="40" aria-hidden="true"></span>
+    <span class="lu-nav-word">Lazarus</span>
+  </a>
+  <div class="lu-nav-links" id="lu-nav-links">
+    <a class="lu-nav-link" href="/">Home</a>
+    <a class="lu-nav-link" href="/blog/">Blog</a>
+    <a class="lu-nav-link" href="/guide/">Guide</a>
+    <a class="lu-nav-link" href="/remote-access/">Remote</a>
+  </div>
+  <div class="lu-nav-right">
+    <a class="lu-nav-icon" href="/guide/code/" title="GitHub" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg><span class="lu-nav-badge">1700+&#8202;⭐</span></a>
+    <a class="lu-nav-icon discord" href="/discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.45 3c-.2.36-.44.85-.6 1.23a18.3 18.3 0 0 0-5.7 0c-.16-.38-.4-.87-.6-1.23a19.7 19.7 0 0 0-4.87 1.37C.55 8.9-.32 13.3.11 17.63a19.9 19.9 0 0 0 6 3.03c.48-.66.9-1.36 1.27-2.1-.7-.26-1.36-.58-1.99-.96.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.24 0c.16.13.32.26.49.38-.63.38-1.3.7-2 .96.37.74.8 1.44 1.27 2.1a19.8 19.8 0 0 0 6-3.03c.5-5.03-.85-9.39-3.55-13.26ZM8.02 15c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.95 2.42-2.15 2.42Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.94 2.42-2.15 2.42Z"/></svg><span class="lu-nav-badge">900+&#8202;<span style="font-size:0.715em">🟢</span></span></a>
+    <span class="lu-nav-sep"></span>
+    <div class="switch" id="theme-switch" role="button" aria-label="Toggle theme"></div>
+    <a class="lu-nav-dl" href="/guide/install/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download</a>
+    <button type="button" class="lu-nav-toggle" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<article class="lu-doc">
+<h1>Lazarus vs Kobold.cpp</h1>
+<div class="meta">Published March 30, 2026 &middot; 6 min read</div>
+
+<p>Kobold.cpp is a powerhouse for creative writing and roleplay. Built on llama.cpp, it ships as a single executable with zero dependencies and offers advanced text generation controls that writers love. But the local AI landscape has evolved beyond text — and <a href="/">Lazarus v2.2.2</a> represents that evolution by combining LLM chat with full ComfyUI integration for image and video generation, a built-in coding agent, 13 MCP tools, and multi-provider support.</p>
+<p>If your creative workflow involves visuals alongside text, this comparison gets interesting. Both apps run entirely on your hardware with complete privacy, but they target very different use cases. Here is how Lazarus and Kobold.cpp stack up in 2026.</p>
+
+<h2>Feature Comparison</h2>
+<table>
+<thead><tr><th>Feature</th><th class="hl">Lazarus</th><th>Kobold.cpp</th></tr></thead>
+<tbody>
+<tr><td>LLM Chat</td><td><span class="check">Yes (Ollama)</span></td><td><span class="check">Yes (built-in llama.cpp)</span></td></tr>
+<tr><td>Coding Agent</td><td><span class="check hl">Yes</span></td><td><span class="cross">No</span></td></tr>
+<tr><td>MCP Tools</td><td><span class="check hl">13 built-in</span></td><td><span class="cross">No</span></td></tr>
+<tr><td>File Upload + Vision</td><td><span class="check hl">Yes</span></td><td><span class="cross">No</span></td></tr>
+<tr><td>Thinking Mode</td><td><span class="check hl">Yes</span></td><td><span class="cross">No</span></td></tr>
+<tr><td>Granular Permissions</td><td><span class="check hl">7 categories, 3 levels</span></td><td><span class="cross">No</span></td></tr>
+<tr><td>Multi-Provider</td><td><span class="check hl">Ollama + OpenAI + Anthropic</span></td><td><span class="cross">Local only</span></td></tr>
+<tr><td>Model Load/Unload</td><td><span class="check hl">Yes (VRAM mgmt)</span></td><td><span class="cross">No</span></td></tr>
+<tr><td>Image Generation</td><td><span class="check hl">Yes (ComfyUI)</span></td><td><span class="check">Basic (SD.cpp)</span></td></tr>
+<tr><td>Video Generation</td><td><span class="check hl">Yes (ComfyUI)</span></td><td><span class="cross">No</span></td></tr>
+<tr><td>Story/Adventure Mode</td><td><span class="cross">No</span></td><td><span class="check">Yes</span></td></tr>
+<tr><td>Custom Personas</td><td><span class="check hl">Yes</span></td><td><span class="cross">No</span></td></tr>
+<tr><td>Answers directly, abliterated models available</td><td><span class="check hl">Yes</span></td><td><span class="check">Yes</span></td></tr>
+<tr><td>License</td><td><span class="check">AGPL-3.0</span></td><td>AGPL v3</td></tr>
+<tr><td>Setup</td><td>Installer + Ollama</td><td>Single executable</td></tr>
+<tr><td>UI Type</td><td>Native Desktop (Tauri)</td><td>Web-based (browser)</td></tr>
+<tr><td>Advanced Gen Controls</td><td>Standard</td><td><span class="check">Extensive</span></td></tr>
+<tr><td>Third-party UI Support</td><td>Standalone</td><td><span class="check">SillyTavern, Tavern, etc.</span></td></tr>
+
+</tbody>
+</table>
+
+<h2>Where Lazarus Wins</h2>
+<ul>
+<li><strong>Full ComfyUI Image/Video Generation</strong> — Professional-grade image and video generation workflows with support for Stable Diffusion XL, FLUX, and Wan 2.1. Kobold.cpp's SD.cpp integration is basic by comparison.</li>
+<li><strong>AGPL-3.0 License</strong> — Same copyleft license family as KoboldCpp, keeping the open source ecosystem strong.</li>
+<li><strong>Native Desktop App</strong> — Tauri-based desktop app vs opening a browser tab. Better OS integration and lighter resource usage, similar to its advantage over <a href="lazarus-vs-open-webui.html">web-based tools like Open WebUI</a>.</li>
+<li><strong>Built-in Model Management</strong> — Browse and download models directly in the app via Ollama. Kobold.cpp requires you to source GGUF files yourself.</li>
+<li><strong>Custom Personas</strong> — Switch between AI personalities instantly. Kobold.cpp focuses on generation parameters rather than persona-based interaction.</li>
+<li><strong>Coding Agent</strong> — Built-in coding agent that reads your codebase, writes files, and runs commands. Kobold.cpp has no coding capabilities.</li>
+<li><strong>13 MCP Tools</strong> — Web search, file operations, shell access, screenshots, and more — all integrated as tool-use capabilities.</li>
+<li><strong>File Upload with Vision</strong> — Drag and drop images and vision models describe them. Kobold.cpp is text-focused.</li>
+<li><strong>Thinking Mode</strong> — Collapsible reasoning blocks that work with all providers for transparent AI reasoning.</li>
+<li><strong>Multi-Provider Support</strong> — Use Ollama, OpenAI, and Anthropic simultaneously instead of being limited to local GGUF models.</li>
+<li><strong>Model Load/Unload</strong> — Manage VRAM directly from the UI by loading and unloading models on demand.</li>
+<li><strong>Granular Permissions</strong> — Control tool access with 7 categories and 3 permission levels for safe agentic workflows.</li>
+</ul>
+
+<h2>Where Kobold.cpp Wins</h2>
+<ul>
+<li><strong>Creative Writing Tools</strong> — Story mode, adventure mode, and advanced generation parameters make it the best tool for fiction writing and roleplay. No other local AI app matches its creative writing capabilities.</li>
+<li><strong>Zero-Dependency Setup</strong> — Single executable, no installer needed. Download and run. This is the simplest setup of any local AI tool.</li>
+<li><strong>Third-party UI Compatibility</strong> — Works as a backend for <a href="lazarus-vs-sillytavern.html">SillyTavern</a> and other popular frontends, giving you flexibility in your UI choice.</li>
+<li><strong>Advanced Generation Controls</strong> — Fine-grained control over temperature, top-k, top-p, repetition penalty, mirostat, and many more parameters that power users demand.</li>
+<li><strong>Mature Uncensored Ecosystem</strong> — Kobold.cpp has been a go-to for uncensored local AI for years, with a large community of users who share models and presets.</li>
+</ul>
+
+<div class="verdict">
+<h3>The Verdict</h3>
+<p><strong>Choose Kobold.cpp</strong> if you are focused on creative writing, roleplay, or interactive fiction and want the most advanced text generation controls available.</p>
+<p><strong>Choose Lazarus</strong> if you want an all-in-one local AI app with text chat, image generation, video generation, a coding agent, 13 MCP tools, vision support, and multi-provider flexibility under one roof. Especially useful if your creative workflow combines text and visuals.</p>
+</div>
+
+<div class="faq">
+<h2>Frequently Asked Questions</h2>
+
+<h3>Is Lazarus better than Kobold.cpp for creative writing?</h3>
+<p>No. Kobold.cpp is purpose-built for creative writing with story mode, adventure mode, and advanced generation parameters. Lazarus is better if you want text chat combined with image and video generation in one app.</p>
+
+<h3>Does Kobold.cpp support image generation?</h3>
+<p>Kobold.cpp has basic image generation via SD.cpp, but it is limited compared to Lazarus's full ComfyUI integration which supports Stable Diffusion XL, FLUX, and video generation workflows.</p>
+
+<h3>Can I use Kobold.cpp with SillyTavern?</h3>
+<p>Yes. Kobold.cpp is one of the most popular backends for SillyTavern. Lazarus is a standalone app and does not serve as a backend for third-party frontends.</p>
+
+<h3>Which is easier to set up?</h3>
+<p>Kobold.cpp ships as a single executable with zero dependencies — download and run. Lazarus requires installing the app plus Ollama. Both are straightforward, but Kobold.cpp has fewer moving parts.</p>
+</div>
+
+<div class="related">
+<h3>Related Comparisons</h3>
+<a href="lazarus-vs-open-webui.html">Lazarus vs Open WebUI</a>
+<a href="lazarus-vs-lm-studio.html">Lazarus vs LM Studio</a>
+<a href="lazarus-vs-gpt4all.html">Lazarus vs GPT4All</a>
+<a href="lazarus-vs-sillytavern.html">Lazarus vs SillyTavern</a>
+<a href="lazarus-vs-jan.html">Lazarus vs Jan.ai</a>
+<a href="lazarus-vs-msty.html">Lazarus vs Msty</a>
+<a href="best-local-ai-apps-2026.html">Best Local AI Apps in 2026</a>
+<a href="run-uncensored-ai-locally.html">How to Run Uncensored AI Locally</a>
+</div>
+
+<div class="cta">
+<h2>Try Lazarus</h2>
+<p>Free, open source, AGPL-3.0 licensed. One command to get started.</p>
+<a href="/guide/code/" class="btn">View on GitHub</a>
+</div>
+</article>
+<footer>
+  <div class="footer-row footer-meta"><span>&copy; 2026 &middot; Lazarus &middot; AGPL-3.0</span></div>
+  <div class="footer-row footer-links">
+    <a href="/blog/">Blog</a>
+    <a href="/guide/">Guide</a>
+    <a href="/remote-access/">Remote access</a>
+    <a href="/discord" target="_blank" rel="noopener">Discord</a>
+    <a href="/guide/code/">GitHub</a>
+    <a href="/guide/faq-and-glossary/">Discussions</a>
+    <a href="/guide/settings-and-troubleshooting/">Issues</a>
+    <a href="https://reddit.com/user/GroundbreakingMall54">Reddit</a>
+  </div>
+</footer>
+</body>
+</html>

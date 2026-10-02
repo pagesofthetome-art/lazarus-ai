@@ -1,0 +1,79 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Chat image memory regression</title>
+<style>body{font:16px system-ui;background:#18181b;color:#eee;max-width:900px;margin:40px auto}button{padding:12px;margin-right:12px}pre{white-space:pre-wrap}</style>
+<h1>Chat image memory regression</h1><p>Synthetic images only. No model requests, no customer data.</p>
+<button id="run">Run upload and history test</button><button id="restore">Verify saved chat after reload</button><pre id="out">Ready</pre>
+<script type="module">
+import { prepareChatImage, prepareChatImages, MAX_IMAGE_BYTES, MAX_IMAGE_EDGE } from '/src/lib/chat-image-input.ts'
+import { useChatStore, flushChatPersist } from '/src/stores/chatStore.ts'
+import { idbStorage } from '/src/lib/idbStorage.ts'
+const out = document.querySelector('#out')
+const show = data => { out.textContent = JSON.stringify(data, null, 2) }
+const assert = (ok, reason) => { if (!ok) throw new Error(reason) }
+const toBlob = canvas => new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
+const { originalAttachment, isAttachmentReference } = await import('/src/lib/chat-attachments.ts')
+const fromData = image => new Blob([Uint8Array.from(atob(image.data), c => c.charCodeAt(0))], {type:image.mimeType})
+const stored = () => new Promise((resolve,reject) => {
+ setTimeout(() => { if (!useChatStore.persist.hasHydrated()) reject(new Error('Store hydration timed out')) }, 5000)
+ if (useChatStore.persist.hasHydrated()) resolve()
+ else { const stop = useChatStore.persist.onFinishHydration(() => { stop(); resolve() }) }
+})
+document.querySelector('#run').onclick = async () => {
+ try {
+  show({status:'starting'})
+  await stored()
+  show({status:'creating synthetic image'})
+  const canvas = document.createElement('canvas'); canvas.width = 2600; canvas.height = 1800
+  const ctx = canvas.getContext('2d'); const pixels = ctx.createImageData(canvas.width, canvas.height)
+  let random = 42
+  for(let i=0;i<pixels.data.length;i+=4){random=(Math.imul(random,1664525)+1013904223)>>>0; pixels.data[i]=random&255; pixels.data[i+1]=(random>>>8)&255; pixels.data[i+2]=(random>>>16)&255; pixels.data[i+3]=255}
+  ctx.putImageData(pixels,0,0)
+  show({status:'encoding fixture'}); const blob = await toBlob(canvas); show({status:'fixture encoded',bytes:blob.size}); canvas.width=canvas.height=0
+  const file = new File([blob], 'synthetic-photo.png', {type:'image/png'})
+  const started = performance.now()
+  show({status:'preparing first batch',bytes:file.size}); const selection = await prepareChatImages(Array(100).fill(file), 5, undefined, async f => { show({status:'decoding file',bytes:f.size}); const result = await prepareChatImage(f); show({status:'file prepared',base64:result.data.length}); return result })
+  assert(selection.images.length===5 && !selection.errors.length, 'five selected images should succeed: '+selection.errors)
+  let largest = 0, firstDimensions
+  for(const image of selection.images){
+   const bytes = fromData(image); assert(bytes.size<=MAX_IMAGE_BYTES,'encoded budget exceeded'); largest=Math.max(largest, bytes.size)
+   const bitmap = await createImageBitmap(bytes); assert(Math.max(bitmap.width,bitmap.height)<=MAX_IMAGE_EDGE,'pixel budget exceeded'); firstDimensions=[bitmap.width,bitmap.height];bitmap.close()
+  }
+  const s=useChatStore.getState(); const id=s.createConversation('memory-regression', 'local'); localStorage.setItem('memory-proof-id',id)
+  let lastAnswer
+  for(let turn=0;turn<20;turn++){
+    const batch=turn===0?selection:await prepareChatImages(Array(5).fill(file),5)
+    assert(batch.images.length===5&&!batch.errors.length,'repeat upload failed')
+    useChatStore.getState().addMessage(id,{id:crypto.randomUUID(),timestamp:Date.now(),role:'user',content:'Synthetic image turn '+turn,images:batch.images})
+    lastAnswer=crypto.randomUUID();useChatStore.getState().addMessage(id,{id:lastAnswer,timestamp:Date.now(),role:'assistant',content:''})
+    for(let chunk=1;chunk<=30;chunk++){
+      useChatStore.getState().updateMessageContent(id,lastAnswer,'Synthetic answer '+turn+' '+'.'.repeat(chunk))
+      await new Promise(resolve=>setTimeout(resolve,2))
+    }
+    await flushChatPersist()
+    show({status:'running',completedTurns:turn+1,totalTurns:20,originalBytes:file.size,largestPreparedBytes:largest})
+  }
+  // The next turn has no images, as in the second customer report.
+  useChatStore.getState().addMessage(id,{id:crypto.randomUUID(),timestamp:Date.now(),role:'user',content:'Text only after image history'})
+  useChatStore.getState().addMessage(id,{id:crypto.randomUUID(),timestamp:Date.now(),role:'assistant',content:'TEXT_ONLY_OK'})
+  await flushChatPersist()
+  const saved=JSON.parse(await idbStorage.getItem('chat-conversations'))
+  const conv=saved.state.conversations.find(c=>c.id===id)
+  assert(conv.messages.length===42,'history missing messages')
+  assert(conv.messages.filter(m=>m.images?.length).length===20,'images missing')
+  assert(conv.messages.flatMap(m=>m.images??[]).every(img=>isAttachmentReference(img.data)), 'images must be references after persist')
+  assert(JSON.stringify(conv).length < 40000, 'chat metadata must remain small')
+  const result={status:'PASS',turns:20,images:100,messages:42,textOnlyTurn:true,originalBytes:file.size,largestPreparedBytes:largest,preparedDimensions:firstDimensions,reductionPercent:100*(1-largest/file.size),persistedBytes:new Blob([JSON.stringify(saved)]).size,elapsedSeconds:(performance.now()-started)/1000}
+  localStorage.setItem('memory-proof-result',JSON.stringify(result));show(result)
+ }catch(error){show({status:'FAIL',error:String(error),stack:error.stack})}
+}
+document.querySelector('#restore').onclick=async()=>{
+ try{
+ await stored();const id=localStorage.getItem('memory-proof-id');const conv=useChatStore.getState().conversations.find(c=>c.id===id)
+ assert(conv?.messages.length===42,'reloaded history incomplete');assert(conv.messages.at(-1).content==='TEXT_ONLY_OK','final text lost')
+ let count=0
+ for(const m of conv.messages) for(const img of m.images??[]){const bitmap=await createImageBitmap(fromData(await originalAttachment(img)));assert(bitmap.width>0,'broken image');bitmap.close();count++}
+ assert(count===100,'attachments lost on restart')
+ show({status:'PASS_AFTER_RELOAD',chatBytesAfter:JSON.stringify(conv).length,messages:conv.messages.length,decodedImages:count,previous:JSON.parse(localStorage.getItem('memory-proof-result'))})
+ }catch(error){show({status:'FAIL',error:String(error)})}
+}
+out.textContent='Ready (modules loaded)'
+</script></html>

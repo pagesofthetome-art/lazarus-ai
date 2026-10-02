@@ -1,0 +1,1018 @@
+import { useEffect, useLayoutEffect, useState } from 'react'
+import { Header } from './Header'
+import { StaleModelsBanner } from './StaleModelsBanner'
+import { BackgroundShutdownBanner } from './BackgroundShutdownBanner'
+import { StorageQuotaToast } from './StorageQuotaToast'
+import { Sidebar } from './Sidebar'
+import { ChatView } from '../chat/ChatView'
+import { BackendSelector } from '../onboarding/BackendSelector'
+import { ErrorBoundary } from '../ui/ErrorBoundary'
+import { LazyView } from './LazyView'
+import {
+  BenchmarkSkeleton,
+  CreateSkeleton,
+  ModelManagerSkeleton,
+  OnboardingSkeleton,
+  SettingsSkeleton,
+} from './ViewSkeletons'
+import { useUIStore } from '../../stores/uiStore'
+import { useSettingsStore } from '../../stores/settingsStore'
+import { useCompareStore } from '../../stores/compareStore'
+import { useProviderStore } from '../../stores/providerStore'
+import { mayEnableFromWizard } from '../../lib/onboarding-provider-gate'
+import { useChatStore } from '../../stores/chatStore'
+import { useModelStore } from '../../stores/modelStore'
+import { useRemoteStore } from '../../stores/remoteStore'
+import { useRemoteRecovery } from '../../hooks/useRemoteRecovery'
+import { useModelHealthStore } from '../../stores/modelHealthStore'
+import { extractMemoriesFromPair } from '../../hooks/useMemory'
+import { detectLocalBackends, type DetectedBackend } from '../../lib/backend-detector'
+import { whenRunsIdle } from '../../lib/run-idle'
+import { startEngineIdleManager } from '../../lib/engine-idle-manager'
+import { backendCall, isTauri } from '../../api/backend'
+import { idbStorage, hasStoredItem } from '../../lib/idbStorage'
+import { recoverChatsFromBackup } from '../../lib/chat-backup-recovery'
+import { STORE_KEYS, IDB_STORE_KEYS, backupStoresIfChanged, flushSyncStoreBackup } from '../../lib/store-backup'
+import { idbKeysToRestore, mayReloadForIdbRestore } from '../../lib/idb-restore'
+import { log } from '../../lib/logger'
+import { withDetail } from '../../lib/error-text'
+import { scheduleIdle } from '../../lib/idle'
+import type { TextChunk } from '../../types/rag'
+import type { Role } from '../../types/chat'
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
+import { ReleaseNotesModal } from '../release/ReleaseNotesModal'
+import { ShortcutsModal } from './ShortcutsModal'
+import { CommandPalette } from '../ui/CommandPalette'
+import { Titlebar } from './Titlebar'
+
+// Aus der Komponente herausgezogen: `new Set(STORE_KEYS)` entstand bei jedem
+// Render neu und war damit die instabile Referenz, wegen der der Restore-Effekt
+// seine eigene Abhaengigkeit nicht nennen konnte. STORE_KEYS ist ein
+// Modulkonstante, das Set also genauso konstant.
+const STORE_KEYS_SET = new Set(STORE_KEYS)
+
+/**
+ * Was das Ereignis `remote-chat-message` traegt (Nutzlast von
+ * `src-tauri/src/commands/remote.rs:950`, `ChatEventPayload`).
+ *
+ * `role` steht hier ENGER als `Role` (das vier Werte hat), und das ist keine
+ * Annahme, sondern die gemessene Zusicherung der Gegenseite: `remote.rs:976`
+ * weist jede Anfrage mit einer anderen Rolle mit HTTP 400 ab, BEVOR das
+ * Ereignis ueberhaupt ausgesendet wird — der Kommentar dort nennt es Bug #9,
+ * „role must be 'user' or 'assistant' (never 'system' or arbitrary text)".
+ * Der Empfaenger kann also gar nichts anderes sehen, und das frueher hier
+ * stehende `role as any` hat genau diese schon erledigte Pruefung verdeckt.
+ *
+ * Die vier optionalen Felder tragen drueben `#[serde(default)]`: sie sind auf
+ * dem Draht immer da, aber als leerer String. Der Code unten liest sie mit
+ * Wahrheitspruefungen, was fuer „fehlt" und fuer „leer" dasselbe tut.
+ */
+type RemoteChatMessage = {
+  role: Extract<Role, 'user' | 'assistant'>
+  content: string
+  model?: string
+  mode?: string
+  chat_id?: string
+  chat_title?: string
+}
+
+// The backup triad must never write %APPDATA%/store_backup.json before the
+// restore decision — on a post-NSIS boot the first doBackup would otherwise
+// snapshot the wiped localStorage over the only good backup. Resolved on every
+// exit path of the restore effect (intact-store fast path, restore-then-reload,
+// no-backup fallback, browser give-up); module-level so a reload starts fresh.
+let resolveRestoreDecided: () => void = () => {}
+const restoreDecided = new Promise<void>((resolve) => { resolveRestoreDecided = resolve })
+
+// M7 / Audit W-T2 — Lazy-Grenzen der Top-Level-Views.
+//
+// ChatView bleibt bewusst ein *statischer* Import: `currentView` wird nicht
+// persistiert (uiStore.partialize), jeder Start landet also auf 'chat'. Ihn
+// lazy zu laden hieße, Bundle-Größe gegen einen weißen Blitz beim Kaltstart zu
+// tauschen — genau der Handel, den dieses Audit verbietet.
+//
+// Die übrigen fünf Views sieht niemand, bevor er sie anklickt. Onboarding ist
+// der Grenzfall: es ist beim allerersten Start sofort sichtbar. Es liegt
+// trotzdem hinter der Grenze, weil (a) es genau *einmal* im Leben einer
+// Installation gezeigt wird, (b) der Rahmen davor ohnehin `restoring` abwartet,
+// und (c) sein Fallback den Vollbild-Hintergrund von index.html trägt, der
+// Übergang vom HTML-Splash also farblich nahtlos ist statt weiß.
+//
+// Die Loader stehen auf Modulebene, damit LazyView eine stabile Identität
+// bekommt — eine Factory, die pro Render neu entsteht, würde den View bei jedem
+// Repaint neu mounten.
+const loadModelManager = () => import('../models/ModelManager').then((m) => ({ default: m.ModelManager }))
+const loadBenchmarkView = () => import('../models/BenchmarkView').then((m) => ({ default: m.BenchmarkView }))
+const loadSettingsPage = () => import('../settings/SettingsPage').then((m) => ({ default: m.SettingsPage }))
+const loadPluginsPage = () => import('../plugins/PluginsPage').then((m) => ({ default: m.PluginsPage }))
+const loadCreateExperimental = () => import('../create/experimental/CreateExperimental').then((m) => ({ default: m.CreateExperimental }))
+const loadOnboarding = () => import('../onboarding/Onboarding').then((m) => ({ default: m.Onboarding }))
+
+/**
+ * Die optische Korrektur der Icon-Leiter (`LucideProvider`) stand bis zum
+ * eigenen Onboarding-Fenster HIER, um die beiden fruehen Rueckgaben unten
+ * herum. Seit `index.html` in zwei Fenstern laedt, gibt es zwei Wurzeln —
+ * `App` im Hauptfenster, `OnboardingWindow` im kleinen — und der Provider
+ * liegt in `main.tsx` ueber beiden, einmal. Die Begruendung (ein Rezept an
+ * der Wurzel statt an 668 Call-Sites) steht dort.
+ */
+export function AppShell() {
+  // Keep the UI resident while letting the managed local model sleep when idle.
+  useEffect(() => startEngineIdleManager(), [])
+  useRemoteRecovery()
+  // Targeted, NOT `useUIStore()`. A whole-store subscription here put the
+  // entire app tree behind every uiStore write — and the explorer's resize
+  // handle writes `explorerWidth` on every pointermove, so dragging the
+  // divider re-rendered Titlebar, Header, Sidebar and the whole active view at
+  // pointer-event frequency. Only `currentView` matters to this component.
+  const currentView = useUIStore((s) => s.currentView)
+  const settings = useSettingsStore((s) => s.settings)
+  const updateSettings = useSettingsStore((s) => s.updateSettings)
+  // A/B Compare takes over the chat area; hide the left chat sidebar entirely
+  // while comparing (David 2026-06-06) so the two model columns get full width.
+  const isComparing = useCompareStore((s) => s.isComparing)
+  const onboardingDone = useSettingsStore((s) => s.settings.onboardingDone)
+  const [restoring, setRestoring] = useState(false)
+  // The one failure in this file the user has to be told about: a post-update
+  // store restore that threw. Shown as a dismissible line in the shell, next
+  // to the other shell-level notices.
+  const [restoreError, setRestoreError] = useState<string | null>(null)
+
+  const [detectedBackends, setDetectedBackends] = useState<DetectedBackend[]>([])
+  const [showSelector, setShowSelector] = useState(false)
+
+  useKeyboardShortcuts()
+  // Boot-sync the configured ComfyUI host/port into the FE URL builder.
+  // The backend loads them from config.json at startup, but the only FE
+  // mirror lived in SettingsPage's mount effect — so after an app restart
+  // every comfyuiUrl() (gallery media, control plane) pointed at localhost
+  // until the user happened to open Settings. On a remote-host setup (#82)
+  // that made the app look dead after every launch. Found live 2026-07-17.
+  useEffect(() => {
+    return scheduleIdle(() => {
+      void (async () => {
+        try {
+          const { backendCall, setComfyPort, setComfyHost, isMacOS } = await import('../../api/backend')
+          // Not on the Mac: ComfyUI is never started and never renders there, so
+          // mirroring its host/port can only teach the app a wrong address.
+          if (isMacOS()) return
+          const s = await backendCall<{ port?: number; host?: string }>('comfyui_status')
+          if (typeof s?.port === 'number' && s.port > 0) setComfyPort(s.port)
+          if (typeof s?.host === 'string' && s.host.trim()) setComfyHost(s.host)
+        } catch { /* backend not up yet — Settings' own mirror still applies later */ }
+      })()
+    })
+  }, [])
+
+  // Push the persisted ComfyUI GPU override to the backend on boot + change
+  // (rhodium92 AMD, 2026-07-01). The backend resets to "auto" each launch, so
+  // without this a saved force-cpu / force-gpu wouldn't apply until the user
+  // re-opened Settings. Desktop-only — the web build has no local ComfyUI.
+  useEffect(() => {
+    if (!isTauri()) return
+    // Level (a): silent on purpose. This mirrors a stored preference into the
+    // backend on every boot, with no user standing in front of it — and it
+    // runs on machines that have no ComfyUI at all. The setting itself is
+    // safe either way: it is persisted, this effect re-fires on the next
+    // launch, and Settings → ComfyUI shows the mode actually in force.
+    backendCall('set_comfy_gpu_mode', { mode: settings.comfyGpuMode || 'auto' }).catch(() => {})
+  }, [settings.comfyGpuMode])
+
+  // ── Store backup/restore: survive NSIS updates that wipe WebView2 data ──
+  // The key lists and the snapshot builder live in lib/store-backup so the
+  // update path can ask for a backup too. It used to hand the process to the
+  // installer with whatever the 5 s interval last wrote (Bug A1, 2.6.7).
+  // (STORE_KEYS_SET steht jetzt auf Modulebene, siehe oben.)
+
+  // Feature FF: reserved key under which memory embeddings ride inside the RAG
+  // chunk backup file. Never collides with a real documentId (those are UUIDs).
+  const MEMORY_VECTORS_BACKUP_KEY = '__memory_vectors__'
+
+  // Split memory vectors out of a parsed RAG backup payload and import them
+  // into the memory-embedding IndexedDB store. Best-effort. Returns the RAG-
+  // only portion (memory key stripped) so the caller can import chunks cleanly.
+  const restoreMemoryVectorsFrom = async (parsed: Record<string, unknown>): Promise<Record<string, unknown>> => {
+    const mem = parsed[MEMORY_VECTORS_BACKUP_KEY]
+    if (mem && typeof mem === 'object' && !Array.isArray(mem)) {
+      try {
+        const { importAll: importMemoryVectors } = await import('../../lib/memoryEmbedDB')
+        await importMemoryVectors(mem as Record<string, never>)
+      } catch { /* best-effort */ }
+    }
+    const { [MEMORY_VECTORS_BACKUP_KEY]: _omit, ...ragOnly } = parsed
+    return ragOnly
+  }
+
+  // On startup: if localStorage was wiped, restore from %APPDATA% backup.
+  // Tauri v2 sets the global asynchronously via `withGlobalTauri` — on slow
+  // cold-starts the first render beats it (commit 835ce86, same reason the
+  // backup triad polls). A bare isTauri() bail here would skip the restore
+  // permanently and let the triad's first doBackup clobber the backup file
+  // with the freshly-wiped state, so we poll with the same 100 ms × 50 pattern.
+  useEffect(() => {
+    const runRestore = () => {
+      const hasStores = STORE_KEYS.some(k => localStorage.getItem(k))
+      const restoreComplete = localStorage.getItem('lu-restore-complete')
+      if (hasStores && restoreComplete) {
+        // localStorage intact, but IndexedDB might have been wiped (different
+        // storage layer, different lifetime). Quietly restore RAG chunks if a
+        // backup exists and the live store has none for the documents the
+        // localStorage `rag-store` knows about. Best-effort; ignore errors.
+        ;(async () => {
+          // The chats live in IndexedDB too, and until now nothing on this
+          // branch looked at them. A hard process kill mid write, which is
+          // what a self update is, can leave Chromium discarding the whole
+          // IndexedDB database while localStorage comes back whole, and this
+          // branch IS that boot: every localStorage store answers, so the full
+          // restore below never runs. aldrich_ironhart lost a 230k token
+          // coding chat that way on 2.6.5 with a good copy of it sitting in
+          // store_backup.json the entire time.
+          try {
+            const live: Record<string, string | null> = {}
+            for (const key of IDB_STORE_KEYS) {
+              // Presence only. Only an absent store is restored, and reading
+              // the whole value here doubled the largest string at launch.
+              const present = await hasStoredItem(key)
+              live[key] = present === true
+                ? 'present'
+                : present === false
+                  ? null
+                  : await Promise.resolve(idbStorage.getItem(key)).catch(() => null)
+            }
+            if (Object.values(live).some((v) => !v)) {
+              const raw = await backendCall<string | null>('restore_stores')
+              const parsed = raw ? JSON.parse(raw) : null
+              const wanted = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+                ? idbKeysToRestore(live, parsed as Record<string, unknown>)
+                : []
+              let back = 0
+              for (const key of wanted) {
+                try {
+                  await Promise.resolve(idbStorage.setItem(key, (parsed as Record<string, string>)[key]))
+                  back++
+                } catch { /* one key failing must not stop the rest */ }
+              }
+              if (back > 0) {
+                log.warn('[AppShell] IndexedDB stores were empty, restored from the appData backup', { keys: wanted })
+                // The stores already hydrated empty, so only a reload picks
+                // this up. Once per window session, never a loop.
+                if (mayReloadForIdbRestore(typeof sessionStorage !== 'undefined' ? sessionStorage : null)) {
+                  resolveRestoreDecided()
+                  window.location.reload()
+                  return
+                }
+              }
+            }
+          } catch { /* best-effort, the RAG restore below still runs */ }
+          // Chats a failed IndexedDB save never kept, see chat-backup-recovery.ts.
+          // Before resolveRestoreDecided below: the first backup must not
+          // replace store_backup.json before it has been looked at.
+          try {
+            await new Promise<void>((resolve) => {
+              if (useChatStore.persist.hasHydrated()) resolve()
+              else useChatStore.persist.onFinishHydration(() => resolve())
+            })
+            await recoverChatsFromBackup(
+              () => useChatStore.getState().conversations,
+              (chats) => { useChatStore.getState().importConversations(chats, 'merge') },
+            )
+          } catch (err) { log.warn('[AppShell] chat recovery from the backup failed, will retry next launch', { err: String(err) }) }
+          try {
+            const data = await backendCall<string | null>('restore_rag_chunks')
+            if (data) {
+              const rawParsed = JSON.parse(data)
+              if (rawParsed && typeof rawParsed === 'object' && !Array.isArray(rawParsed)) {
+                // Feature FF: split memory embeddings out first, then restore the
+                // RAG-only chunk portion. memoryEmbedDB.importAll is last-writer-
+                // wins; safe to run on an intact-localStorage cold start.
+                const parsed = await restoreMemoryVectorsFrom(rawParsed)
+                const { exportAllChunks, importAllChunks } = await import('../../lib/ragDB')
+                const live = await exportAllChunks()
+                // Only import entries the live store is missing — never clobber
+                // newer in-app activity with a stale backup.
+                const toImport: Record<string, TextChunk[]> = {}
+                for (const [docId, chunks] of Object.entries(parsed)) {
+                  if (!live[docId] && Array.isArray(chunks) && chunks.length > 0) {
+                    toImport[docId] = chunks
+                  }
+                }
+                if (Object.keys(toImport).length > 0) {
+                  await importAllChunks(toImport)
+                }
+              }
+            }
+          } catch { /* best-effort */ }
+          // Release the triad only after the quiet import read the backup
+          // file — doRagBackup would otherwise overwrite it first.
+          resolveRestoreDecided()
+        })()
+        return
+      }
+
+      setRestoring(true)
+
+      // 1. Fast path: check onboarding marker to prevent flash
+      backendCall<boolean>('is_onboarding_done').catch(() => false).then(async (markerExists) => {
+        // 2. Try full store restore
+        try {
+          const data = await backendCall<string | null>('restore_stores')
+          if (data) {
+            const parsed = JSON.parse(data)
+            // Validate: must be a plain object with string values, only known keys
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+              let restored = 0
+              for (const [key, value] of Object.entries(parsed)) {
+                if (STORE_KEYS_SET.has(key) && typeof value === 'string' && value) {
+                  // IDB-backed keys go back to IndexedDB — the chat blob can
+                  // exceed the ~5 MB localStorage quota (that's why those
+                  // stores moved to IDB), and hydration reads them from there.
+                  // Per-key try/catch: one failing key must not abort the rest.
+                  try {
+                    if (IDB_STORE_KEYS.has(key)) {
+                      await Promise.resolve(idbStorage.setItem(key, value))
+                    } else {
+                      localStorage.setItem(key, value)
+                    }
+                    restored++
+                  } catch { /* skip this key, keep restoring the rest */ }
+                }
+              }
+              if (restored > 0) {
+                // Pull RAG chunks from %APPDATA% before the reload so the new
+                // localStorage references find their embeddings in IndexedDB
+                // (Bug V, kj103x 2026-05-23). Best-effort: missing backup =
+                // chunks need to be re-indexed by re-uploading docs.
+                try {
+                  const ragData = await backendCall<string | null>('restore_rag_chunks')
+                  if (ragData) {
+                    const parsedRag = JSON.parse(ragData)
+                    if (parsedRag && typeof parsedRag === 'object' && !Array.isArray(parsedRag)) {
+                      // Feature FF: restore memory embeddings, then RAG chunks.
+                      const ragOnly = await restoreMemoryVectorsFrom(parsedRag as Record<string, unknown>)
+                      const { importAllChunks } = await import('../../lib/ragDB')
+                      // Der Wert kommt aus JSON.parse, ist also `unknown`. Die
+                      // Pruefung, die der Zweig oben (Zeile ~355) selbst macht,
+                      // steht hier in `importAllChunks` — `ragDB.ts:133`
+                      // ueberspringt jeden Eintrag, der kein nichtleeres Array
+                      // ist. Die Zusicherung ist deshalb nur ein Typ-Schritt,
+                      // kein Vertrauensvorschuss zur Laufzeit.
+                      await importAllChunks(ragOnly as Record<string, TextChunk[]>)
+                    }
+                  }
+                } catch { /* best-effort */ }
+                localStorage.setItem('lu-restore-complete', '1')
+                resolveRestoreDecided()
+                window.location.reload()
+                return
+              }
+            }
+          }
+        } catch (e) {
+          // Level (b): the user finds out, the app carries on. This is the
+          // post-update restore. Reaching here means the backup could not be
+          // read or was not valid JSON — NOT "there is no backup", which
+          // returns null and lands in step 3 below without throwing. So the
+          // app is about to come up looking empty after an update, and
+          // without this line that reads as "the update ate my chats".
+          //
+          // Not blocking: there is nothing to block. The restore is over, and
+          // holding the app hostage behind a dialog would only add a wall in
+          // front of the chats that DID survive.
+          setRestoreError(
+            withDetail(
+              'Your chats and settings could not be restored after the update. Nothing was deleted — the backup is still in the app data folder. Close Lazarus and reopen it to try again; if it stays empty, keep that folder before reinstalling.',
+              e,
+            ),
+          )
+        }
+
+        // 3. No backup available — at least recover onboarding from marker file
+        if (markerExists) {
+          updateSettings({ onboardingDone: true })
+        }
+        resolveRestoreDecided()
+        setRestoring(false)
+      })
+    }
+
+    if (isTauri()) {
+      runRestore()
+      return
+    }
+    let tries = 0
+    const waitForTauri = setInterval(() => {
+      tries++
+      if (isTauri()) {
+        clearInterval(waitForTauri)
+        runRestore()
+      } else if (tries >= 50) {
+        // 5 s elapsed — probably browser dev session, nothing to restore.
+        clearInterval(waitForTauri)
+        resolveRestoreDecided()
+      }
+    }, 100)
+    return () => clearInterval(waitForTauri)
+    // Beide Deps sind konstant: STORE_KEYS_SET liegt jetzt auf Modulebene,
+    // `updateSettings` ist eine Zustand-Action mit fester Referenz. Der
+    // Restore-Effekt bleibt damit exakt der Mount-Einmal-Effekt, der er war.
+  }, [updateSettings])
+
+  // Backup stores to %APPDATA% — three-pronged so chat history survives
+  // NSIS updates + abrupt process kills:
+  //   1. 10 s safety-net interval (was 30 s — too slow, users lost chats if
+  //      they sent a message shortly before an upgrade).
+  //   2. Debounced event-driven backup: 1 s after every chat/codex/memory
+  //      mutation. Catches "typed + restart within interval window" case.
+  //   3. beforeunload sync flush on Tauri window close. Fires for graceful
+  //      quits and "X" button; does NOT fire for taskkill / NSIS upgrade
+  //      (why we need 1+2 as well).
+  // No dependency — we want this to run ONCE on mount and not rerun on
+  // every settings flip. Tauri v2 sets `window.__TAURI__` asynchronously
+  // via `withGlobalTauri` — on slower machines the first render fires
+  // BEFORE the global exists, so we poll for up to 5 s, then arm the triad.
+  useEffect(() => {
+    let cleanup: (() => void) | null = null
+    let disposed = false
+    let tries = 0
+
+    const setupTriad = async () => {
+      // Never write the first backup before the restore effect decided — a
+      // post-NSIS boot with wiped storage would otherwise snapshot the empty
+      // state over the only good store_backup.json.
+      await restoreDecided
+      if (disposed) return
+
+      let backupInflight = false
+      const doBackup = async () => {
+        // Inflight guard: the 1 s debounce and the 5 s interval can overlap
+        // now that the snapshot awaits IndexedDB reads.
+        if (backupInflight) return
+        backupInflight = true
+        // Writes only when a store actually changed. This used to serialise and
+        // re-write the whole history every five seconds no matter what, which is
+        // the SSD churn and the GC pressure coalescedStorage exists to prevent —
+        // and it ran on an idle app, on battery, for as long as it was open.
+        try { await backupStoresIfChanged() } catch { /* best-effort */ }
+        backupInflight = false
+      }
+
+      // Separate, debounced backup for RAG IndexedDB chunks (Bug V, kj103x
+      // 2026-05-23). These are heavy (768-float embedding vectors per chunk,
+      // sometimes thousands per doc) so we don't bundle them into the chat
+      // snapshot — the chat-store backup must stay fast for the 1 s debounce
+      // case. RAG backup runs at most once every 30 s and after IndexedDB
+      // grows, which is the right cadence: chunks change on document upload
+      // / delete, both rare events compared to chat messages.
+      let ragLastRun = 0
+      let ragInflight = false
+      const doRagBackup = async () => {
+        if (ragInflight) return
+        if (Date.now() - ragLastRun < 30_000) return
+        ragInflight = true
+        try {
+          const { exportAllChunks } = await import('../../lib/ragDB')
+          const { exportAll: exportMemoryVectors } = await import('../../lib/memoryEmbedDB')
+          const snapshot = await exportAllChunks()
+          // Feature FF: piggyback memory embeddings on the SAME backup file so
+          // they survive an NSIS upgrade / WebView2 wipe alongside RAG chunks.
+          // Stored under a reserved key (never a real documentId UUID); the
+          // restore path splits it back out. importAllChunks ignores it anyway
+          // because the value is an object, not a TextChunk[] array.
+          const memVectors = await exportMemoryVectors()
+          if (Object.keys(memVectors).length > 0) {
+            ;(snapshot as Record<string, unknown>)[MEMORY_VECTORS_BACKUP_KEY] = memVectors
+          }
+          // Level (a): silent on purpose. This is the 30 s background backup
+          // loop; a missed write is retried on the next tick and nothing the
+          // user did just failed. Swallowed HERE rather than in the outer
+          // catch so a failed write still stamps ragLastRun and keeps the
+          // 30 s spacing instead of hot-retrying.
+          await backendCall('backup_rag_chunks', { data: JSON.stringify(snapshot) }).catch(() => {})
+          ragLastRun = Date.now()
+        } catch { /* best-effort */ }
+        ragInflight = false
+      }
+
+      // Migration: write onboarding marker if missing AND user has already
+      // onboarded (keeps NSIS-update recovery working). Do NOT rewrite the
+      // marker for users who just hit Settings → "Re-run onboarding" — for
+      // them onboardingDone is false, and the missing marker is intentional.
+      backendCall<boolean>('is_onboarding_done').catch(() => false).then((markerExists) => {
+        if (!markerExists && useSettingsStore.getState().settings.onboardingDone) {
+          // Level (a): silent on purpose. Nobody asked for this — it is a
+          // one-time migration that writes a recovery marker. It re-runs on
+          // every launch until it succeeds, and the thing it protects (not
+          // re-running onboarding after an NSIS update) is already covered by
+          // the persisted store on this machine.
+          backendCall('set_onboarding_done').catch(() => {})
+        }
+      })
+
+      void doBackup()  // first immediate backup
+      // Same first-fire convention for RAG chunks so a fresh post-restore
+      // boot writes a complete snapshot back to disk immediately.
+      void doRagBackup()
+      const interval = setInterval(doBackup, 5_000)
+      const ragInterval = setInterval(() => { void doRagBackup() }, 30_000)
+
+      let debounceTimer: ReturnType<typeof setTimeout> | null = null
+      const scheduleBackup = () => {
+        if (debounceTimer) clearTimeout(debounceTimer)
+        debounceTimer = setTimeout(doBackup, 1_000)
+      }
+      const unsubChat = useChatStore.subscribe(scheduleBackup)
+
+      const onBeforeUnload = () => {
+        // The 5 s / 30 s intervals cover the common case; this is the "last
+        // write" insurance for changes since the previous interval. Must stay
+        // synchronous: an await during page teardown means the trailing
+        // backup_stores invoke may never fire.
+        flushSyncStoreBackup()
+        void doRagBackup()
+      }
+      window.addEventListener('beforeunload', onBeforeUnload)
+
+      cleanup = () => {
+        clearInterval(interval)
+        clearInterval(ragInterval)
+        if (debounceTimer) clearTimeout(debounceTimer)
+        unsubChat()
+        window.removeEventListener('beforeunload', onBeforeUnload)
+      }
+    }
+
+    const waitForTauri = setInterval(() => {
+      tries++
+      if (isTauri()) {
+        clearInterval(waitForTauri)
+        void setupTriad()
+      } else if (tries >= 50) {
+        // 50 × 100 ms = 5 s. Give up silently — probably browser dev session.
+        clearInterval(waitForTauri)
+      }
+    }, 100)
+
+    return () => {
+      disposed = true
+      clearInterval(waitForTauri)
+      if (cleanup) cleanup()
+    }
+  }, [])
+
+  // Bug (h): synchronously sync the theme class with the persisted setting
+  // BEFORE first paint, so the user never sees a one-frame white flash on
+  // launch. useLayoutEffect runs before the browser commits the paint;
+  // useEffect (the previous code) ran after, which produced the
+  // "build sometimes opens white" symptom. Default-`dark` is also baked
+  // into index.html so the very first paint (before any React renders)
+  // is already dark even on cold-start.
+  useLayoutEffect(() => {
+    const isDark = settings.theme !== 'light' // unset / undefined → dark
+    document.documentElement.classList.toggle('dark', isDark)
+    document.documentElement.classList.toggle('light', !isDark)
+  }, [settings.theme])
+
+  // ── Issue #31: Ollama host sync (Rust ↔ frontend) ─────────────
+  // Two async prereqs to serialize against:
+  //   (a) Tauri v2 `__TAURI_INTERNALS__` is set async via `withGlobalTauri`.
+  //   (b) Zustand `persist` middleware hydrates `lu-providers` async — if we
+  //       push Rust's value into the store BEFORE hydration finishes,
+  //       hydration replays the stale localStorage baseUrl and clobbers us.
+  //
+  // The deliberate order:
+  //   1. Wait for the Tauri global via the same 100ms × 50-tick poll the
+  //      backup triad uses (v2.3.3 commit 835ce86).
+  //   2. Use zustand's own `onFinishHydration` callback for ordering against
+  //      hydration — more reliable than polling `hasHydrated()` because it
+  //      fires deterministically AFTER the replay, not whenever we happen
+  //      to check.
+  //   3. Fetch Rust's resolved base (config.json > OLLAMA_HOST > default)
+  //      and push it into both the providerStore and backend.ts, regardless
+  //      of what hydration just wrote — Rust wins at cold start.
+  //   4. Arm a zustand subscribe listener for future GUI edits so
+  //      `set_ollama_host` keeps Rust's config.json authoritative.
+  useEffect(() => {
+    let cancelled = false
+    let tries = 0
+    let storeUnsub: (() => void) | null = null
+    let hydrationUnsub: (() => void) | null = null
+
+    const armSubscription = () => {
+      storeUnsub = useProviderStore.subscribe(async (state, prev) => {
+        const next = state.providers.ollama?.baseUrl
+        const old = prev.providers.ollama?.baseUrl
+        if (!next || next === old || cancelled) return
+        const { setOllamaBase } = await import('../../api/backend')
+        setOllamaBase(next)
+        if (isTauri()) {
+          // Level (a): silent on purpose. setOllamaBase() on the line above has
+          // already applied the new host to everything the user can see; this
+          // only mirrors it into Rust's config.json. The providerStore is
+          // persisted and wins on the next boot anyway (see the comment on the
+          // hydration path below), and this subscription re-fires on the next
+          // edit. Reporting from inside a store subscription would also mean
+          // an error with no control anywhere near it.
+          backendCall('set_ollama_host', { host: next }).catch(() => {})
+        }
+      })
+    }
+
+    const pullAndArm = async () => {
+      if (cancelled) return
+      const { setOllamaBase } = await import('../../api/backend')
+
+      // Arm the store subscription FIRST, so that the setProviderConfig
+      // below fires its listener (which writes back to Rust via
+      // `set_ollama_host`). If we armed after, the initial sync would not
+      // reach config.json and users with OLLAMA_HOST would see an empty
+      // `ollama_base` field there.
+      if (!cancelled) armSubscription()
+
+      try {
+        const res = await backendCall<{ base?: string }>('get_ollama_host')
+        if (!cancelled && res?.base) {
+          setOllamaBase(res.base)
+          const current = useProviderStore.getState().providers.ollama?.baseUrl
+          if (current !== res.base) {
+            useProviderStore.getState().setProviderConfig('ollama', { baseUrl: res.base })
+          }
+        }
+      } catch { /* Rust not ready — providerStore wins, subscription handles later edits */ }
+
+      const current = useProviderStore.getState().providers.ollama?.baseUrl
+      if (!cancelled && current) setOllamaBase(current)
+    }
+
+    const afterHydration = () => {
+      // Either hydration already finished (so we run now) or we register a
+      // one-shot callback for when it does.
+      // `persist` steht am Store, weil er mit dem persist-Middleware gebaut ist
+      // (stores/providerStore.ts:175) — zustand haengt die API dort typisiert an.
+      // Das `as any` war ein Rest aus der Zeit davor.
+      const persist = useProviderStore.persist
+      if (!persist || persist.hasHydrated?.()) {
+        void pullAndArm()
+      } else {
+        hydrationUnsub = persist.onFinishHydration?.(() => { void pullAndArm() }) ?? null
+      }
+    }
+
+    const waitForTauri = setInterval(() => {
+      if (cancelled) { clearInterval(waitForTauri); return }
+      tries++
+      if (isTauri()) {
+        clearInterval(waitForTauri)
+        afterHydration()
+      } else if (tries >= 50) {
+        // 5 s elapsed — probably browser dev session. Still wire the store
+        // subscription so user edits reach Rust if Tauri appears later.
+        clearInterval(waitForTauri)
+        armSubscription()
+      }
+    }, 100)
+
+    return () => {
+      cancelled = true
+      clearInterval(waitForTauri)
+      if (storeUnsub) storeUnsub()
+      if (hydrationUnsub) hydrationUnsub()
+    }
+  }, [])
+
+  // ── Mirror remote mobile chat into the dispatched desktop conversation ──
+  useEffect(() => {
+    if (!isTauri()) return
+    let unlisten: (() => void) | undefined
+    ;(async () => {
+      const { listen } = await import('@tauri-apps/api/event')
+      unlisten = await listen<RemoteChatMessage>(
+        'remote-chat-message',
+        (event) => {
+          // `Partial<…>` statt einer Zusicherung: der `?? {}`-Zweig existiert,
+          // WEIL die Nutzlast fehlen kann, und genau das sagt der Typ jetzt.
+          // Die Wahrheitspruefung in der naechsten Zeile ist die Verengung.
+          const { role, content, mode, chat_id, chat_title, model }: Partial<RemoteChatMessage> =
+            event.payload ?? {}
+          if (!role || !content) return
+          const chat = useChatStore.getState()
+
+          // ── Codex route ──────────────────────────────────────────────
+          // Find or create a Codex desktop conversation keyed by the mobile
+          // chat_id so successive messages from the same mobile Codex chat
+          // land in the same desktop conversation. Marked with `mode: 'codex'`
+          // so the Code sidebar tab picks them up.
+          if (mode === 'codex') {
+            const mobileChatId = chat_id || 'mobile-codex'
+            const tagged = `[mobile:${mobileChatId}]`
+            const conv = chat.conversations.find((c) =>
+              // `remoteChatId` steht auf KEINEM Typ dieses Baums, und es wird
+              // auch nirgends geschrieben: die Zeile kam mit 55ceb072 herein und
+              // ist seither die einzige Fundstelle im ganzen Verzeichnisbaum
+              // (`git log -S remoteChatId --all` = ein Treffer, dieser Lesezugriff).
+              // Der Vergleich ist damit seit seiner Entstehung immer `false`;
+              // getragen hat den Treffer immer der Titel-Zweig davor. Das `as any`
+              // hat das verdeckt — die benannte Form sagt es.
+              c.mode === 'codex' &&
+              (c.title.includes(tagged) ||
+                (c as { remoteChatId?: string }).remoteChatId === mobileChatId),
+            )
+            let convId = conv?.id
+            if (!convId) {
+              const title = (chat_title && chat_title.trim())
+                ? `${chat_title}  ${tagged}`
+                : `Mobile Coding Agent  ${tagged}`
+              const activeModel = useModelStore.getState().activeModel || model || ''
+              convId = chat.createConversation(activeModel, '', 'codex')
+              chat.renameConversation(convId, title)
+            }
+            // Dedup
+            const refreshed = useChatStore.getState().conversations.find((c) => c.id === convId)
+            const last = refreshed?.messages[refreshed.messages.length - 1]
+            if (last && last.role === role && last.content === content) return
+            useChatStore.getState().addMessage(convId, {
+              id: `remote-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              role,
+              content,
+              timestamp: Date.now(),
+            })
+            return
+          }
+
+          // ── Default Lazarus route: dispatched conversation ────────────────
+          const { dispatchedConversationId } = useRemoteStore.getState()
+          if (!dispatchedConversationId) return
+          const conv = chat.conversations.find((c) => c.id === dispatchedConversationId)
+          const last = conv?.messages[conv.messages.length - 1]
+          if (last && last.role === role && last.content === content) return
+          chat.addMessage(dispatchedConversationId, {
+            id: `remote-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            role,
+            content,
+            timestamp: Date.now(),
+          })
+
+          // Auto-extract memories from remote user/assistant pairs so Remote
+          // sessions contribute to the same cross-chat memory as desktop.
+          if (role === 'assistant' && content.trim()) {
+            const afterAdd = useChatStore
+              .getState()
+              .conversations.find((c) => c.id === dispatchedConversationId)
+            const msgs = afterAdd?.messages || []
+            let userMsg = ''
+            for (let i = msgs.length - 2; i >= 0; i--) {
+              if (msgs[i].role === 'user') {
+                userMsg = msgs[i].content
+                break
+              }
+            }
+            if (userMsg) {
+              // R2-22: ohne Bereich schrieb die Bruecke jede Erinnerung global.
+              // Der Ausloeser ist nicht der erste Dispatch, der legt eine
+              // frische Unterhaltung an, sondern der Neustartweg in
+              // `ChatView.tsx`: der haengt die Bruecke an eine BESTEHENDE
+              // Unterhaltung, und deren Projekt ging dabei verloren. Der
+              // Speicher wird hier ohnehin schon gelesen.
+              extractMemoriesFromPair(userMsg, content, dispatchedConversationId, {
+                scope: useChatStore.getState().conversations
+                  .find((c) => c.id === dispatchedConversationId)?.memoryScope,
+              }).catch(() => {})
+            }
+          }
+        },
+      )
+    })()
+    return () => {
+      if (unlisten) unlisten()
+    }
+  }, [])
+
+  // Ollama 0.20.7 stale-manifest scan — runs once per session shortly after
+  // startup. Flags installed models that the server now rejects with "does
+  // not support chat/completion/generate" (pulled before the registry-side
+  // capabilities refresh). Populates useModelHealthStore → StaleModelsBanner
+  // surfaces the result as a top-of-app notice with one-click Refresh All.
+  useEffect(() => {
+    if (!onboardingDone || !isTauri()) return
+    if (sessionStorage.getItem('lu-model-health-scan-done')) return
+    sessionStorage.setItem('lu-model-health-scan-done', '1')
+
+    // 3 s delay: give Ollama time to respond to /api/version after cold start
+    // and avoid racing the backend-detection effect below.
+    const timer = setTimeout(async () => {
+      try {
+        useModelHealthStore.getState().setScanning(true)
+        const { scanInstalledModels, checkConnection } = await import('../../api/ollama')
+        const ok = await checkConnection()
+        if (!ok) return
+        const results = await scanInstalledModels()
+        const stale = results.filter((r) => r.stale).map((r) => r.name)
+        useModelHealthStore.getState().setStaleModels(stale)
+      } catch {
+        // Scan is best-effort — silently fall back if Ollama is unreachable.
+      } finally {
+        useModelHealthStore.getState().setScanning(false)
+      }
+    }, 3000)
+    return () => clearTimeout(timer)
+  }, [onboardingDone])
+
+  // Auto-detect local backends on startup (once per session)
+  useEffect(() => {
+    if (!onboardingDone) return
+    if (sessionStorage.getItem('lu-backend-detection-done')) return
+
+    sessionStorage.setItem('lu-backend-detection-done', '1')
+
+    detectLocalBackends().then((backends) => {
+      if (backends.length === 0) return
+
+      // Auto-adopt the first non-Ollama openai-compat backend we find — but
+      // NOT when the app-managed built-in engine owns the `openai` slot.
+      // 2.5.7: that slot now holds the bundled llama-server (managed:true) by
+      // default. Silently overwriting it here would leave `managed:true`
+      // pointing at a foreign URL (LM Studio / vLLM), breaking the model list
+      // (`list_bundled_models`) and the fixed-URL assumption. So we only
+      // auto-adopt an external backend when the user has already switched away
+      // from the built-in engine (slot not managed). When the built-in engine
+      // is the active default, detected externals stay opt-in via the selector
+      // modal below and Settings → Providers ("use another engine").
+      // (Pre-2.5.7 rationale — Discord #help-chat, djoks.exe 2026-04-21: without
+      //  auto-enable, dismissing the selector left LM Studio disabled and its
+      //  models never appeared. Still true for users who left the built-in slot.)
+      //
+      // R2-14: `enabled: true` stand hier bedingungslos und hob damit den
+      // Disable-Knopf der Anbieterkarte wieder auf. `disabledByUser` heisst
+      // "ich will den nicht", und der Erkenner beim Anlauf hat kein Recht,
+      // dagegen zu entscheiden. Das Tor ist dasselbe, das ModelsStep schon
+      // fragt. Der baseUrl-Teil darf bleiben: ein geaenderter Port ist keine
+      // Einschaltung, nur eine aktuelle Adresse.
+      const openaiSlot = useProviderStore.getState().providers.openai
+      const nonOllama = backends.find((b) => b.id !== 'ollama')
+      if (nonOllama && !openaiSlot.managed) {
+        useProviderStore.getState().setProviderConfig('openai', {
+          ...(mayEnableFromWizard(openaiSlot) ? { enabled: true } : {}),
+          name: nonOllama.name,
+          baseUrl: nonOllama.baseUrl,
+          isLocal: true,
+          managed: false,
+        })
+      }
+
+      // Also auto-(re)enable Ollama when it's detected. The provider defaults
+      // to enabled=true, but a previous session may have disabled it; here we
+      // pin the detected baseUrl and bring it back so models show up in the
+      // Settings → AI Backends list and the chat selector.
+      const detectedOllama = backends.find((b) => b.id === 'ollama')
+      if (detectedOllama) {
+        // R2-14, zweite Stelle, dieselbe Regel. T2 hat genau diesen Fall auf
+        // der Box gemessen: Ollama stand ausdruecklich auf DISABLED und stand
+        // nach einem Anlauf wieder da.
+        useProviderStore.getState().setProviderConfig('ollama', {
+          ...(mayEnableFromWizard(useProviderStore.getState().providers.ollama)
+            ? { enabled: true }
+            : {}),
+          baseUrl: detectedOllama.baseUrl,
+          isLocal: true,
+        })
+      }
+
+      // Single backend → we're done (already enabled above, or was Ollama).
+      if (backends.length === 1) return
+
+      // User previously opted out of the selector (tickbox "don't show again")
+      // → never re-show. They manage providers via Settings → Providers.
+      // This is the persistent guard; the sessionStorage check above is just
+      // the within-session guard.
+      if (useProviderStore.getState().hideBackendSelector) return
+
+      // Multiple backends detected → show selection dialog so the user can
+      // change which one is the primary openai-compat provider if they want.
+      // G25: never mid-run. Detection lands seconds after startup, and when a
+      // run was already streaming by then the modal stood over the chat for
+      // the rest of a 20 minute agent run (R17c). Wait until every surface
+      // (chat, agent, coding) is idle before opening it.
+      whenRunsIdle(() => {
+        setDetectedBackends(backends)
+        setShowSelector(true)
+      })
+    })
+  }, [onboardingDone])
+
+  // While restoring from backup, show nothing (prevents onboarding flash)
+  if (restoring) return null
+
+  if (!onboardingDone) {
+    return <LazyView load={loadOnboarding} fallback={<OnboardingSkeleton />} />
+  }
+
+  return (
+    /* D-S42 — „Keine Ebenen: Sidebar, Chat-Pane und Composer sind alle weiss,
+       getrennt nur durch 1px gray-200, waehrend Dark drei Stufen hat."
+
+       Nachgemessen (WCAG 2.1, relative Luminanz), Leinwand gegen Pane:
+
+         dunkel  #141414 (L 0,00699) → #1e1e1e (L 0,01299)   = 1,105:1
+         hell    #f3f4f6 (L 0,90412) → #ffffff (L 1,00000)   = 1,100:1
+
+       Der Stufenabstand war also numerisch derselbe — die Ebenen fehlten
+       trotzdem, und zwar wegen der KANTE. Beide Panes tragen einen 1px-Ring:
+
+         dunkel  ring-white/[0.05] auf #1e1e1e ergibt #292929 (L 0,02239)
+                 gegen die Leinwand #141414                   = 1,270:1
+         hell    ring-black/[0.04] auf #ffffff ergibt #f5f5f5 (L 0,91141)
+                 gegen die Leinwand #f3f4f6                   = 1,008:1
+
+       1,008:1 ist keine Kante, das ist Rauschen — 34-mal weniger Abstand als
+       im Dunkeln. Im Hellmodus stand die Pane damit ohne Stufe UND ohne Rand
+       auf der Leinwand, also gar nicht auf ihr.
+
+       Geaendert ist genau EIN Wert: die Leinwand geht von gray-100 auf
+       gray-200 (#e5e7eb, L 0,79809). Damit
+
+         hell    #e5e7eb → #ffffff                            = 1,238:1
+
+       — die Stufe traegt jetzt allein, ohne auf die unsichtbare Kante
+       angewiesen zu sein, und sie ist staerker als die dunkle (1,105:1). Der
+       unveraenderte Ring gewinnt dabei mit: 1,008:1 → 1,134:1 gegen die
+       tiefere Leinwand. Alle Zahlen sind am laufenden Fenster nachgerechnet
+       (Canvas-Pixel + WCAG-2.1-Luminanz), nicht geschaetzt; die Rechnung
+       steht als Test in `__tests__/hellmodus-hat-ebenen.test.ts`.
+       Der Ring bleibt unangetastet: er sitzt auch auf der Sidebar
+       (`Sidebar.tsx:319`), und die Datei gehoert in diesem Durchgang einem
+       anderen Agenten — eine Kante nur an der Pane zu schaerfen haette zwei
+       Raender aus einer Familie auseinanderlaufen lassen.
+
+       NACHTRAG D-T06 (01.09.2026): hier stand, die Literale liessen sich
+       nicht durch ein Token ersetzen, weil es fuer die Leinwand keins gab.
+       Der zweite Halbsatz stimmte, der erste nicht. Es gibt jetzt eins —
+       `--color-lu-canvas` in index.css, mit genau dem Wert, der hier stand.
+       Ersetzt ist ausschliesslich die DUNKLE Seite; das helle
+       `bg-gray-200` bleibt Zeichen fuer Zeichen stehen. Der Tausch ist
+       damit im Browser folgenlos, in beiden Modi.
+
+       Was weiterhin NICHT passiert: eine `.light`-Spiegelung der Leiter.
+       Nachgezaehlt zerfaellt #141414 im Hellmodus in ZWEI Rollen —
+       Fensterrahmen (`bg-gray-200`: hier, Titlebar, Header) und Vollflaeche
+       (`bg-white`: ViewSkeletons, Kontextmenues, die Create-Wurzel). Eine
+       gespiegelte Leiter muesste eine der beiden falsch faerben. Die
+       Begruendung steht ausfuehrlich am Token selbst.
+
+       Und #1e1e1e (die Pane, eine Zeile tiefer) bleibt Literal: sie teilt
+       ihren Wert mit der Sidebar, und die gehoert in diesem Durchgang einem
+       anderen Agenten. Ein halb migriertes Paar waere schlechter als ein
+       ganzes Literal. */
+    <div className="h-screen w-screen overflow-hidden bg-gray-200 dark:bg-lu-canvas text-gray-900 dark:text-gray-100">
+      <div className="h-full flex flex-col">
+        <Titlebar />
+        <Header />
+        <StaleModelsBanner />
+        <BackgroundShutdownBanner />
+        {restoreError && (
+          <div className="mx-2 mt-2 flex items-start gap-2 rounded-lg border border-red-500/20 bg-red-500/[0.06] px-3 py-2">
+            <p role="alert" className="flex-1 text-[0.65rem] leading-snug text-red-500 dark:text-red-400 whitespace-pre-line">
+              {restoreError}
+            </p>
+            <button
+              onClick={() => setRestoreError(null)}
+              className="shrink-0 text-[0.6rem] text-red-500/70 hover:text-red-400 transition-colors"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+        <StorageQuotaToast />
+        <div className="flex-1 flex overflow-hidden gap-2 p-2">
+          {!isComparing && <Sidebar />}
+          <main className="lazarus-main-surface flex-1 overflow-hidden rounded-xl bg-white dark:bg-[#1e1e1e] ring-1 ring-black/[0.04] dark:ring-white/[0.05]">
+            {/* Boot-View: statisch, damit der Kaltstart sofort etwas zeigt. */}
+            {currentView === 'chat' && <ErrorBoundary><ChatView /></ErrorBoundary>}
+            {currentView === 'developer' && <ErrorBoundary><ChatView /></ErrorBoundary>}
+            {/* LazyView bringt seine eigene ErrorBoundary *um* die Suspense-
+                Grenze mit — ein abgelehnter Chunk-Import wird dort gefangen,
+                statt bis zur Root-Boundary durchzuschlagen. */}
+            {currentView === 'models' && <LazyView load={loadModelManager} fallback={<ModelManagerSkeleton />} />}
+            {currentView === 'benchmark' && <LazyView load={loadBenchmarkView} fallback={<BenchmarkSkeleton />} />}
+            {currentView === 'settings' && <LazyView load={loadSettingsPage} fallback={<SettingsSkeleton />} />}
+            {currentView === 'plugins' && <LazyView load={loadPluginsPage} fallback={<SettingsSkeleton />} />}
+            {currentView === 'create' && <LazyView load={loadCreateExperimental} fallback={<CreateSkeleton />} />}
+          </main>
+        </div>
+      </div>
+
+      {/* Backend selection dialog (shown when multiple local backends detected) */}
+      <BackendSelector
+        open={showSelector}
+        backends={detectedBackends}
+        onClose={() => setShowSelector(false)}
+      />
+      {/* What is new, once per version. Mounted inside the onboarded tree, so
+          it can never stack on top of the onboarding wizard. */}
+      <ReleaseNotesModal />
+      <ShortcutsModal />
+      {/* Cmd/Ctrl+K. Hoert auf `lu-command-palette`, genau wie die
+          Kuerzel-Uebersicht darueber auf `lu-show-shortcuts` hoert — kein
+          zweiter Tastatur-Handler. */}
+      <CommandPalette />
+    </div>
+  )
+}

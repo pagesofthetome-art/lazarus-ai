@@ -1,0 +1,7 @@
+0000000000401080 <piledriver_style_fn_with_avx2_leak>:
+  401080:	55                   	push   %rbp
+  401081:	48 89 e5             	mov    %rsp,%rbp
+  401084:	c5 fc 58 c1          	vaddps %ymm1,%ymm0,%ymm0
+  401088:	c4 e2 7d 58 c1       	vpbroadcastd %xmm1,%ymm0
+  40108d:	c5 fc 77             	vzeroupper
+  401090:	c3                   	ret

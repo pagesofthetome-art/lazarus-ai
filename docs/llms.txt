@@ -1,0 +1,16 @@
+# Lazarus
+
+Lazarus is an open-source, local-first AI desktop application for Windows and Linux. It supports local chat, coding tools, image and video workflows, voice, and user-configured local or remote providers.
+
+Lazarus does not operate a hosted model catalog, inference account, paid model API, or cloud memory-sync service. Local inference runs on the user's device. If a user configures a remote provider, requests go to that provider under its terms.
+
+- Product overview: /guide/what-it-is/
+- Handbook: /guide/
+- Install and update: /guide/install/
+- Chat: /guide/chat/
+- Coding agent: /guide/agent/
+- Create tools: /guide/create/
+- Optional remote providers: /guide/remote-providers/
+- Settings and troubleshooting: /guide/settings-and-troubleshooting/
+- FAQ: /guide/faq-and-glossary/
+- Local AI articles: /blog/

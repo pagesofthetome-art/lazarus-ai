@@ -1,0 +1,33 @@
+import type { PlanGap } from '../../lib/plan-reconcile'
+
+/**
+ * Ein Zug, den das Modell nicht selbst beendet hat, und der Satz dafuer.
+ *
+ * Fehler D, Symptom 2 (aldrich_ironhart, Discord 08.09.2026, Ollama, Code
+ * Reiter): "the plan hangs at step 2". Laeuft ein Zug in die Token Grenze,
+ * kommt er OHNE Werkzeugaufruf zurueck, und die Schleife in useCodex.ts kann
+ * ihn von einem Modell, das fertig ist, nicht unterscheiden: sie faellt durch
+ * `break-no-toolcalls` und der Lauf endet wortlos. Der Plan steht danach genau
+ * auf dem Schritt, an dem er stand.
+ *
+ * Der Grund lag die ganze Zeit auf der Leitung. Ollama schickt ihn als
+ * `done_reason: "length"`, `wire.ts` liest ihn aus, der regulaere Chat gibt ihn
+ * als `finishReason` weiter und erklaert ihn dem Nutzer
+ * (lib/answer-notes.ts). Nur der Transport des Coding Agenten warf ihn weg.
+ *
+ * Eigener Satz statt `emptyAnswerExplanation`: dort geht es um eine Antwort,
+ * die nie geschrieben wurde, hier um einen LAUF, der auf einem benannten
+ * Schritt stehenbleibt. Der offene Schritt gehoert in den Satz, denn er ist
+ * das Einzige, was der Nutzer danach wieder aufgreifen kann.
+ *
+ * Reine Funktion, damit der Wortlaut pruefbar ist: der Rest dieser Weiche
+ * steckt in einem `useCallback`, den kein Test von aussen erreicht.
+ */
+export function codexCutoffNote(finishReason: string | undefined, gap: PlanGap | null): string | null {
+  if (finishReason !== 'length') return null
+  const head = 'The model ran out of tokens in the middle of this step, so it never sent the next tool call.'
+  const tail = 'Raise Max Tokens in Settings, or give the model a larger context, then send "continue".'
+  return gap
+    ? `${head} The plan stands at ${gap.done} of ${gap.total}, still open: "${gap.next}". ${tail}`
+    : `${head} ${tail}`
+}

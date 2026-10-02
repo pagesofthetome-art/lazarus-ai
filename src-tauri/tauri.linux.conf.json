@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-cli/schema.json",
+  "productName": "Lazarus",
+  "bundle": {
+    "resources": {
+      "resources/whisper_server.py": "resources/whisper_server.py",
+      "resources/llama/x86_64-unknown-linux-gnu/*": "llama/"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+00000000004010f0 <skylakex_style_fn>:
+  4010f0:	55                   	push   %rbp
+  4010f1:	48 89 e5             	mov    %rsp,%rbp
+  4010f4:	62 f1 7c 48 58 c1    	vaddps %zmm1,%zmm0,%zmm0
+  4010fa:	c5 fc 77             	vzeroupper
+  4010fd:	c3                   	ret

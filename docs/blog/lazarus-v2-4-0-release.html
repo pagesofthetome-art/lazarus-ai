@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lazarus v2.4.0: Settings Polish and Fixes</title>
+<meta name="description" content="v2.4.0 release notes: single-instance lock, Reset tutorial, re-run onboarding, in-app Privacy section, configurable HuggingFace path, Linux drag fix.">
+<meta property="og:title" content="Lazarus v2.4.0 — Settings Polish, Linux Drag Fix, and Configurable HuggingFace Path">
+<meta property="og:description" content="v2.4.0 release notes: single-instance lock, Re-run onboarding, in-app Privacy section, configurable HuggingFace download folder, Linux drag fix.">
+<meta property="og:image" content="/social-preview.png">
+<meta property="og:url" content="/blog/lazarus-v2-4-0-release.html">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2026-04-23">
+<meta property="article:author" content="Lazarus contributors">
+<meta property="article:tag" content="Release">
+<meta property="article:tag" content="Tauri">
+<meta property="article:tag" content="HuggingFace">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Lazarus v2.4.0 — Settings Polish + Linux Drag Fix">
+<meta name="twitter:description" content="v2.4.0: single-instance lock, configurable HF path, in-app Privacy section, Linux drag fix.">
+<meta name="twitter:image" content="/social-preview.png">
+<link rel="canonical" href="/blog/lazarus-v2-4-0-release.html">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" href="../favicon.png">
+<!-- Privacy: No external fonts loaded. Using system fonts. -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","headline":"Lazarus v2.4.0 — Settings Polish, Linux Drag Fix, and Configurable HuggingFace Path","description":"Lazarus v2.4.0 ships a single-instance lock, working Reset tutorial button, Re-run onboarding action, in-app Privacy section, configurable HuggingFace GGUF download path, and a Linux window-drag permission fix.","image":"/social-preview.png","datePublished":"2026-04-23","dateModified":"2026-04-23","author":{"@type":"Person","name":"Lazarus contributors","url":"/guide/"},"publisher":{"@type":"Organization","name":"Lazarus","url":"/"},"mainEntityOfPage":{"@type":"WebPage","@id":"/blog/lazarus-v2-4-0-release.html"},"keywords":"Lazarus v2.4.0, configurable huggingface download path, tauri single instance, linux window drag fix, agent permissions tutorial reset, in-app privacy section, re-run onboarding"}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What changed in Lazarus v2.4.0?","acceptedAnswer":{"@type":"Answer","text":"Eight fixes total: single-instance lock so a double-launch focuses the existing window, working Reset tutorial button (was the opposite of its label before), new Re-run onboarding action, in-app Privacy section, configurable HuggingFace GGUF download path, removed duplicate path display in Discover, Linux window-drag capability fix, and a HuggingFace search filename-heuristic fix that affected repo names containing quant tags."}},{"@type":"Question","name":"How do I change the HuggingFace download folder in v2.4.0?","acceptedAnswer":{"@type":"Answer","text":"Open Settings, expand the new Model Storage section, paste a folder path or click Browse to pick one. Leave empty to keep the previous auto-detect behaviour (the active openai-compat provider's models folder, e.g. LM Studio). Takes effect immediately, no restart required."}},{"@type":"Question","name":"Will the auto-update bring v2.4.0 to me?","acceptedAnswer":{"@type":"Answer","text":"Yes. The signed updater channel is live for Windows (NSIS + MSI), Linux (deb, rpm, AppImage), and the latest.json endpoint serves all of them. Existing v2.3.x installs prompt for v2.4.0 on next launch."}},{"@type":"Question","name":"Why did the Reset tutorial button stop working before v2.4.0?","acceptedAnswer":{"@type":"Answer","text":"The button was wired to setTutorialCompleted() which always sets tutorialCompleted to true. Clicking it on a fresh install silently skipped the tour, and clicking after seeing the tour did nothing. v2.4.0 adds a dedicated resetTutorial() store action that flips it back to false."}},{"@type":"Question","name":"Is Lazarus really 100% local?","acceptedAnswer":{"@type":"Answer","text":"Yes. Chat, agent runs, image and video generation all execute on your machine. The only outbound network calls without explicit opt-in are GitHub Releases update checks. Cloud-provider APIs (OpenAI, Anthropic, OpenRouter, Groq) only fire when you configure them with your own keys. The new Settings - Privacy section spells this out in-app."}},{"@type":"Question","name":"Where does Lazarus store my data?","acceptedAnswer":{"@type":"Answer","text":"%APPDATA%/Lazarus on Windows (and the equivalent on Linux/macOS). Conversations, memories, generated media, settings backups, agent workspace files all live there. Back the folder up, move it between machines, delete it - Lazarus writes nothing else."}}]}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazarus.css">
+<script defer src="/assets/lazarus.js"></script>
+</head>
+<body>
+<nav class="lu-nav">
+  <a class="lu-nav-brand" href="/" aria-label="Lazarus">
+    <span class="lu-mono" data-mono="nav" data-size="40" aria-hidden="true"></span>
+    <span class="lu-nav-word">Lazarus</span>
+  </a>
+  <div class="lu-nav-links" id="lu-nav-links">
+    <a class="lu-nav-link" href="/">Home</a>
+    <a class="lu-nav-link" href="/blog/">Blog</a>
+    <a class="lu-nav-link" href="/guide/">Guide</a>
+    <a class="lu-nav-link" href="/remote-access/">Remote</a>
+  </div>
+  <div class="lu-nav-right">
+    <a class="lu-nav-icon" href="/guide/code/" title="GitHub" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg><span class="lu-nav-badge">1700+&#8202;⭐</span></a>
+    <a class="lu-nav-icon discord" href="/discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.45 3c-.2.36-.44.85-.6 1.23a18.3 18.3 0 0 0-5.7 0c-.16-.38-.4-.87-.6-1.23a19.7 19.7 0 0 0-4.87 1.37C.55 8.9-.32 13.3.11 17.63a19.9 19.9 0 0 0 6 3.03c.48-.66.9-1.36 1.27-2.1-.7-.26-1.36-.58-1.99-.96.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.24 0c.16.13.32.26.49.38-.63.38-1.3.7-2 .96.37.74.8 1.44 1.27 2.1a19.8 19.8 0 0 0 6-3.03c.5-5.03-.85-9.39-3.55-13.26ZM8.02 15c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.95 2.42-2.15 2.42Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.94 2.42-2.15 2.42Z"/></svg><span class="lu-nav-badge">900+&#8202;<span style="font-size:0.715em">🟢</span></span></a>
+    <span class="lu-nav-sep"></span>
+    <div class="switch" id="theme-switch" role="button" aria-label="Toggle theme"></div>
+    <a class="lu-nav-dl" href="/guide/install/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download</a>
+    <button type="button" class="lu-nav-toggle" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<div class="container lu-doc">
+  <div class="breadcrumb"><a href="../">Lazarus</a> / <a href="./">Blog</a> / This Post</div>
+
+  <div class="post-meta">
+    <span class="post-tag">Release</span>
+    <span>April 23, 2026</span>
+    <span>&middot;</span>
+    <span>6 min read</span>
+  </div>
+
+  <article>
+    <h1>v2.4.0 &mdash; Settings Polish, Linux Drag Fix, and Configurable HuggingFace Path</h1>
+
+    <p><a href="/guide/code/">Lazarus</a> v2.4.0 is a polish release. Eight fixes, two of them surfaced through community feedback on Discord, six caught during an internal end-to-end pass on the v2.3.9 build. No new headline features &mdash; this release exists so the next feature release lands on a cleaner foundation.</p>
+
+    <p>Quick TL;DR before we dig in:</p>
+
+    <ul>
+      <li><strong>Single-instance lock</strong> &mdash; double-clicking the shortcut focuses the existing window instead of spawning a second process</li>
+      <li><strong>Settings &gt; Model Storage</strong> &mdash; paste or pick the folder where HuggingFace GGUF downloads land</li>
+      <li><strong>Settings &gt; Privacy</strong> &mdash; in-app statement of what runs locally and what doesn&rsquo;t</li>
+      <li><strong>Settings &gt; Onboarding</strong> &mdash; a button that re-runs the first-launch wizard on demand</li>
+      <li><strong>Reset tutorial</strong> &mdash; the button now actually does what its label promises</li>
+      <li><strong>Linux window drag</strong> &mdash; the title-bar drag works on Ubuntu 24.04 again</li>
+      <li><strong>Discover</strong> &mdash; the HuggingFace download path is no longer printed twice</li>
+      <li><strong>HuggingFace search heuristic</strong> &mdash; search results for repos with a quant tag in the name no longer 404 on download</li>
+    </ul>
+
+    <h2>Single-Instance Lock</h2>
+
+    <p>Before v2.4.0, double-clicking the desktop shortcut started a second <code>lazarus.exe</code> process. Both instances would race each other writing to <code>%APPDATA%/Lazarus/store_backup.json</code> &mdash; not a frequent corruption source, but a real one when both happened to flush at the same millisecond.</p>
+
+    <p>v2.4.0 ships with <code>tauri-plugin-single-instance</code>. The second launch focuses, un-minimizes, and brings the existing window to front. No new process. Double-checked with three back-to-back launches: only one PID survives.</p>
+
+    <h2>Settings &gt; Model Storage &mdash; Configurable HuggingFace Folder</h2>
+
+    <p>The <strong>Model Manager &gt; Discover &gt; Text</strong> tab lets you download GGUF models from HuggingFace. Until v2.4.0, the destination folder was always auto-detected from the active openai-compat provider &mdash; usually LM Studio&rsquo;s <code>~/.lmstudio/models</code> or the equivalent on Linux/macOS.</p>
+
+    <p>That worked fine for single-disk setups. It did <strong>not</strong> work for dual-boot users who wanted a shared model partition between Linux and Windows, or anyone running a NAS-mounted models folder. Reported on Discord by <code>diimmortalis</code>.</p>
+
+    <p>v2.4.0 adds a dedicated <strong>Settings &gt; Model Storage</strong> section. Three controls:</p>
+
+    <ul>
+      <li>A path input (placeholder shows <code>(auto-detect)</code> when empty &mdash; meaning the previous behaviour)</li>
+      <li>A <strong>Browse&hellip;</strong> button that opens the native folder picker</li>
+      <li>A <strong>Reset</strong> button that clears the override (only visible when set)</li>
+    </ul>
+
+    <p>The override takes effect immediately. Discover&rsquo;s subtitle updates live to show the new <code>Saves to: &lt;path&gt;</code>. Verified end-to-end with a Gemma 4 E4B download (4.6 GB) landing in a custom Desktop folder, while the LM Studio default folder stayed untouched.</p>
+
+    <h2>Settings &gt; Privacy &mdash; In-App Statement</h2>
+
+    <p>The privacy claim has always been on the README and in the schema.org metadata, but never inside the app itself. That mattered for first-launch trust &mdash; if you can&rsquo;t be bothered to open GitHub, you were taking the README at its word.</p>
+
+    <p>v2.4.0 adds a <strong>Settings &gt; Privacy</strong> section that lays out the actual behaviour:</p>
+
+    <ul>
+      <li><strong>100% local by default.</strong> Chat, agent runs, image and video generation all execute on your machine. No telemetry, no analytics, no model pings home.</li>
+      <li>The only outbound network calls without explicit opt-in are <strong>GitHub Releases update checks</strong>.</li>
+      <li>Cloud provider APIs (OpenAI, Anthropic, OpenRouter, Groq) <strong>only fire when you configure them with your own keys</strong>.</li>
+      <li>Conversations, memories, and generated media live in <code>%APPDATA%/Lazarus</code> on Windows (or the equivalent on Linux/macOS). Back up the folder, move it between machines, or delete it &mdash; Lazarus writes nothing else.</li>
+    </ul>
+
+    <h2>Settings &gt; Onboarding &mdash; Re-Run Wizard</h2>
+
+    <p>The first-launch wizard runs once: hardware scan, recommended models, agent-mode tour. After that, the only way to see it again was <strong>Reset to Defaults</strong>, which wipes every other preference too &mdash; not great if you wanted to redo the hardware scan or show the app to a friend.</p>
+
+    <p>v2.4.0 adds an <strong>Onboarding</strong> section to Settings with a single <strong>Re-run onboarding</strong> button. It clears the marker file, flips <code>onboardingDone</code> back to false, and reloads the app. The wizard renders again from step 1.</p>
+
+    <p>The Rust command <code>set_onboarding_done</code> now accepts an optional boolean instead of always writing the marker, so callers can also clear it.</p>
+
+    <h2>Reset Tutorial &mdash; Actually Resets Now</h2>
+
+    <p>This was a quiet bug for several releases. The Reset tutorial link in <strong>Settings &gt; Agent Permissions</strong> called <code>setTutorialCompleted()</code>, which unconditionally sets <code>tutorialCompleted: true</code>. Clicking it on a fresh install silently <em>skipped</em> the agent-mode tour. Clicking it after seeing the tour did nothing at all.</p>
+
+    <p>v2.4.0 adds a dedicated <code>resetTutorial()</code> store action that flips the flag back to <code>false</code>, and rewires the button. Verified live: click Reset, create a new chat, click the Agent toggle &mdash; the &ldquo;Welcome to Agent Mode&rdquo; tutorial renders again. A regression test in <code>stores.test.ts</code> guards against the next regression.</p>
+
+    <h2>Linux Window Drag Fix</h2>
+
+    <p>On Ubuntu 24.04, dragging the Lazarus title bar threw an unhandled Promise rejection:</p>
+
+    <pre><code>window.start_dragging not allowed.
+Permissions associated with this command: core:window:allow-start-dragging</code></pre>
+
+    <p>The window stayed anchored. Keyboard tiling (Super+arrows) still worked, so the bug only bit users who actually dragged windows around. Reported on Discord by <code>diimmortalis</code> with a clean Promise-rejection dump.</p>
+
+    <p>The fix was one line in <code>src-tauri/capabilities/default.json</code> &mdash; <code>core:window:allow-start-dragging</code> was missing from the capability list. Added.</p>
+
+    <h2>Discover &mdash; No More Duplicate Path Display</h2>
+
+    <p>Cosmetic but jarring: the Discover tab showed the HuggingFace download path twice. Once in the section subtitle (<em>&ldquo;Download GGUF models from HuggingFace. Saves to: ...&rdquo;</em>) and again in a paragraph below the download grid (<em>&ldquo;Downloads save to: ...&rdquo;</em>). v2.4.0 removes the second one.</p>
+
+    <h2>HuggingFace Search Filename Fix</h2>
+
+    <p>This one is a pre-existing bug that surfaced while end-to-end testing the new Model Storage feature. Searching the Discover tab for <em>tinyllama Q4</em> returned repos like <code>hieupt/TinyLlama-1.1B-Chat-v1.0-Q4_K_M-GGUF</code>. The client guessed the inner GGUF filename by appending <code>-Q4_K_M.gguf</code> to the repo&rsquo;s base name. For repos that <em>already</em> ended in a quant tag, that produced doubled tags &mdash; <code>...-Q4_K_M-Q4_K_M.gguf</code> &mdash; which 404 every time on HuggingFace.</p>
+
+    <p>v2.4.0 extracts the heuristic into <code>deriveQ4FilenameFromRepo()</code>, adds a case-insensitive quant-suffix detector (matching <code>Q4_K_M</code>, <code>Q5_K_M</code>, <code>IQ2_XXS</code>, <code>UD-IQ</code>, <code>BF16</code>, <code>FP16</code> and friends), and collapses the doubled tag. Nine regression tests in <code>discover-hf-filename.test.ts</code> cover the edge cases.</p>
+
+    <h2>Tests &amp; Verification</h2>
+
+    <p>Test suite went from 2205 to 2216 (+11 regression tests). <code>cargo check</code> clean. <code>tsc --noEmit</code> clean.</p>
+
+    <p>Live end-to-end on the installed v2.4.0 build:</p>
+
+    <ul>
+      <li><strong>Single-instance:</strong> 3 back-to-back exe launches &rarr; 1 PID</li>
+      <li><strong>HF download override:</strong> typed custom path, Discover subtitle updated, Gemma 4 E4B partial download (35.9 MB at 897 KB/s) landed in the picked folder, LM Studio default untouched</li>
+      <li><strong>Re-run onboarding:</strong> click &rarr; marker deleted &rarr; 6-step wizard renders &rarr; Get Started &rarr; marker re-created with fresh timestamp</li>
+      <li><strong>Reset tutorial:</strong> click &rarr; <code>tutorialCompleted</code> flipped to false in the persisted store &rarr; new chat &rarr; Agent toggle &rarr; tutorial renders</li>
+    </ul>
+
+    <h2>Download</h2>
+
+    <p>v2.4.0 is on <a href="/guide/install//tag/v2.4.0">GitHub Releases</a>. Installers for Windows (<code>.exe</code>, <code>.msi</code>) and Linux (<code>.deb</code>, <code>.rpm</code>, <code>.AppImage</code>) — the auto-update channel is signed against a public minisign key. Auto-update picks the new build up on next launch for anyone on v2.3.x.</p>
+
+    <h2>Related</h2>
+
+    <ul>
+      <li><a href="lazarus-v2-3-1-release.html">v2.3.1 release notes</a> &mdash; in-app Ollama install + configurable ComfyUI port</li>
+      <li><a href="lazarus-v2-3-0-release.html">v2.3.0 release notes</a> &mdash; Remote Access + Coding Agent streaming + agent overhaul</li>
+      <li><a href="run-uncensored-ai-locally.html">How to run uncensored AI locally</a> &mdash; full setup walkthrough</li>
+      <li><a href="best-local-ai-apps-2026.html">Best local AI apps in 2026</a> &mdash; landscape overview</li>
+    </ul>
+
+    <hr>
+
+    <p><em>Lazarus v2.4.0. AGPL-3.0 licensed. Built by <a href="/guide/">Lazarus contributors</a>. Bug reports and feature requests on <a href="/guide/faq-and-glossary/">GitHub Discussions</a> or in the <a href="/discord">Discord</a>.</em></p>
+  </article>
+
+  <div class="post-footer">
+    <p>Eight fixes, configurable HuggingFace path, in-app Privacy section</p>
+    <a href="/guide/install//tag/v2.4.0" class="cta-btn" target="_blank">
+      Download v2.4.0
+    </a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-row footer-meta"><span>&copy; 2026 &middot; Lazarus &middot; AGPL-3.0</span></div>
+  <div class="footer-row footer-links">
+    <a href="/blog/">Blog</a>
+    <a href="/guide/">Guide</a>
+    <a href="/remote-access/">Remote access</a>
+    <a href="/discord" target="_blank" rel="noopener">Discord</a>
+    <a href="/guide/code/">GitHub</a>
+    <a href="/guide/faq-and-glossary/">Discussions</a>
+    <a href="/guide/settings-and-troubleshooting/">Issues</a>
+    <a href="https://reddit.com/user/GroundbreakingMall54">Reddit</a>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qwen-Image 2.1 Explained: 7B, Alpha Channel, Ten References, and a New License</title>
+<meta name="description" content="What changed in Qwen-Image 2.1: a 7B image model where the first one had 20B, a VAE with an alpha channel, ten reference images in a pass, one model instead of two, and a research license where the series used to be Apache 2.0.">
+<meta name="keywords" content="qwen-image 2.1 explained, qwen image architecture, qwen3-vl-8b text encoder, qwen research license, qwen image alpha channel, qwen image edit model">
+<meta property="og:title" content="Qwen-Image 2.1 Explained: 7B, Alpha Channel, Ten References, and a New License">
+<meta property="og:description" content="Smaller image model, new VAE with alpha, ten reference images, no separate edit model, and a license that is no longer Apache 2.0. What the change means in practice.">
+<meta property="og:image" content="/social-preview.png">
+<meta property="og:url" content="/blog/qwen-image-2-1-explained.html">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2026-09-22">
+<meta property="article:author" content="Lazarus contributors">
+<meta property="article:tag" content="Qwen-Image">
+<meta property="article:tag" content="Model Guide">
+<meta property="article:tag" content="Licensing">
+<meta property="article:tag" content="Local AI">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Qwen-Image 2.1 Explained: 7B, Alpha Channel, Ten References, and a New License">
+<meta name="twitter:description" content="One model instead of two, 7B instead of 20B, and a research license instead of Apache 2.0. The changes that matter.">
+<meta name="twitter:image" content="/social-preview.png">
+<link rel="canonical" href="/blog/qwen-image-2-1-explained.html">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" href="../favicon.png">
+<!-- Privacy: No external fonts loaded. Using system fonts. -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","headline":"Qwen-Image 2.1 Explained: 7B, Alpha Channel, Ten References, and a New License","description":"What changed in Qwen-Image 2.1 against the rest of the series: a 7B image model in place of 20B, a Qwen3-VL-8B text encoder, a 64 channel VAE with an alpha channel, up to ten reference images in one pass, one model instead of a separate edit model, and the Qwen Research License in place of Apache 2.0.","image":"/social-preview.png","datePublished":"2026-09-22","dateModified":"2026-09-22","inLanguage":"en","author":{"@type":"Person","name":"Lazarus contributors","url":"/guide/"},"publisher":{"@type":"Organization","name":"Lazarus","url":"/"},"mainEntityOfPage":{"@type":"WebPage","@id":"/blog/qwen-image-2-1-explained.html"},"keywords":"qwen-image 2.1 explained, qwen image architecture, qwen3-vl-8b text encoder, qwen research license, qwen image alpha channel, qwen image edit model"}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazarus.css">
+<script defer src="/assets/lazarus.js"></script>
+</head>
+<body>
+<nav class="lu-nav">
+  <a class="lu-nav-brand" href="/" aria-label="Lazarus">
+    <span class="lu-mono" data-mono="nav" data-size="40" aria-hidden="true"></span>
+    <span class="lu-nav-word">Lazarus</span>
+  </a>
+  <div class="lu-nav-links" id="lu-nav-links">
+    <a class="lu-nav-link" href="/">Home</a>
+    <a class="lu-nav-link" href="/blog/">Blog</a>
+    <a class="lu-nav-link" href="/guide/">Guide</a>
+    <a class="lu-nav-link" href="/remote-access/">Remote</a>
+  </div>
+  <div class="lu-nav-right">
+    <a class="lu-nav-icon" href="/guide/code/" title="GitHub" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg><span class="lu-nav-badge">1700+&#8202;⭐</span></a>
+    <a class="lu-nav-icon discord" href="/discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.45 3c-.2.36-.44.85-.6 1.23a18.3 18.3 0 0 0-5.7 0c-.16-.38-.4-.87-.6-1.23a19.7 19.7 0 0 0-4.87 1.37C.55 8.9-.32 13.3.11 17.63a19.9 19.9 0 0 0 6 3.03c.48-.66.9-1.36 1.27-2.1-.7-.26-1.36-.58-1.99-.96.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.24 0c.16.13.32.26.49.38-.63.38-1.3.7-2 .96.37.74.8 1.44 1.27 2.1a19.8 19.8 0 0 0 6-3.03c.5-5.03-.85-9.39-3.55-13.26ZM8.02 15c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.95 2.42-2.15 2.42Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.94 2.42-2.15 2.42Z"/></svg><span class="lu-nav-badge">900+&#8202;<span style="font-size:0.715em">🟢</span></span></a>
+    <span class="lu-nav-sep"></span>
+    <div class="switch" id="theme-switch" role="button" aria-label="Toggle theme"></div>
+    <a class="lu-nav-dl" href="/guide/install/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download</a>
+    <button type="button" class="lu-nav-toggle" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<div class="container lu-doc">
+  <div class="breadcrumb"><a href="../">Lazarus</a> / <a href="./">Blog</a> / This Post</div>
+
+  <div class="post-meta">
+    <span class="post-tag">Model Guide</span>
+    <span>September 22, 2026</span>
+    <span>&middot;</span>
+    <span>5 min read</span>
+  </div>
+
+  <article>
+    <h1>Qwen-Image 2.1 Explained: 7B, Alpha Channel, Ten References, and a New License</h1>
+
+    <p>Qwen-Image 2.1 came out on 20 September 2026, and it is the odd one in its own family. It is smaller than the model the series started with, it replaced two models with one, and it is the first entry that is not open under Apache 2.0. Each of those is worth a paragraph, because each of them changes what you can do with it.</p>
+
+    <h2>The series so far</h2>
+
+    <p>Four points make the shape of it clear:</p>
+
+    <ul>
+      <li><strong>Qwen-Image, August 2025</strong>, the entry the series is usually named after and often written as 2508. A 20B image model with a Qwen2.5-VL text encoder.</li>
+      <li><strong>Qwen-Image 2512 and Qwen-Image-Edit 2511</strong>, the pair that split the work in two: one set of weights that draws, another that edits. Both are under Apache 2.0, and both are still available under it.</li>
+      <li><strong>Qwen-Image 2.0, February 2026</strong>, which brought native 2K rendering.</li>
+      <li><strong>Qwen-Image 2.1, 20 September 2026</strong>, one model for both jobs, a new architecture underneath, and a new license on top.</li>
+    </ul>
+
+    <h2>What is new</h2>
+
+    <p>Start with the parts. The image model in 2.1 is a single stream DiT of 7B parameters across 32 layers. The text encoder is Qwen3-VL-8B. The VAE is new, with 64 channels and RGBA, and the training objective is flow matching. Native 2K carried over from 2.0.</p>
+
+    <p>On top of that architecture, five things are new against every earlier entry in the series:</p>
+
+    <ul>
+      <li><strong>A native alpha channel.</strong> The VAE carries RGBA, so transparency is part of the output rather than something you cut out afterwards.</li>
+      <li><strong>Up to ten reference images in one pass.</strong> Not one image guiding an edit, but ten, together.</li>
+      <li><strong>Local edits from a drawn marking</strong>, rather than only from a painted mask.</li>
+      <li><strong>A prefix KV cache</strong>, which is there to make repeated editing quicker.</li>
+      <li><strong>Better typography</strong>, which is to say text rendered inside the picture.</li>
+    </ul>
+
+    <p>And the headline behaviour, the one that makes the model interesting for a desktop app: one set of weights both generates from a prompt and edits a reference image. There is no separate edit model in 2.1 at all.</p>
+
+    <h2>What falls away</h2>
+
+    <p>A new architecture is also a list of things that stop working, and this one is longer than usual.</p>
+
+    <p><strong>The 20B base is gone.</strong> The first Qwen-Image put 20B parameters into the image model; 2.1 puts 7B there. It is not a bigger sibling of the old model, it is a different one. Anything tuned against the 20B shape has nothing to attach to.</p>
+
+    <p><strong>The separate edit model is gone</strong>, which is the good kind of removal: one download instead of two, one picker entry instead of two.</p>
+
+    <p><strong>The old Lightning and Turbo LoRAs do not fit.</strong> They were built for the earlier architecture. As of 21 September 2026 there is no Lightning or Turbo LoRA for 2.1, so the fast paths people had grown used to are not available yet.</p>
+
+    <p><strong>The old edit nodes do not fit either.</strong> ComfyUI added support in 0.37.0, merged on 19 September 2026, with a new encode node called <code>TextEncodeQwenImage21</code>. A graph built around the older Qwen-Image edit nodes will not run 2.1.</p>
+
+    <p><strong>And Apache 2.0 is gone.</strong> Which deserves its own section.</p>
+
+    <h2>The license</h2>
+
+    <p>Qwen-Image 2.1 is published under the Qwen Research License. That license covers research and evaluation. It does not grant commercial use, and commercial use needs a separate license from Alibaba Qwen. This is a real change from the rest of the series and not a formality: Qwen-Image 2512 and Qwen-Image-Edit 2511 are Apache 2.0, and they stay Apache 2.0, so if your work needs permissive terms those are the weights that give them to you.</p>
+
+    <p>We are not going to soften that. If you are building something you intend to sell, or generating assets for paid work, the newest model in the series is not the one to build on as published. If you are experimenting, studying what the architecture does, or comparing it against what you already run, it is squarely within what the license covers.</p>
+
+    <h2>What reaches Lazarus 3.0.1</h2>
+
+    <p>Lazarus 3.0.1 carries the model on Windows and Linux. The Model Manager has a bundle called Qwen-Image 2.1 (Generate and Edit): three files, 16.1 GB, with the license named in the description before the download starts. One click puts the files in the right ComfyUI folders, and once the running ComfyUI lists them, the model is selectable in the Image lane picker and the Edit lane picker like any other local image model. No new button, no new tab.</p>
+
+    <p>Generating uses a prompt and a negative prompt, with the defaults from the official template: 25 steps, CFG 1, euler, simple, 1024x1024. Editing takes one reference image plus a prompt and no mask; the mask path is closed for this model on purpose, and the output follows the reference image. The model needs ComfyUI 0.37.0 or newer, and if the node is missing the app says so precisely: "Qwen-Image 2.1 needs ComfyUI 0.37.0 or newer. Update ComfyUI in Settings."</p>
+
+    <h2>What does not reach it</h2>
+
+    <p>Several of the model's new abilities are not exposed in 3.0.1, stated as they stand and with nothing said about plans:</p>
+
+    <ul>
+      <li>Multiple reference images. The model takes ten, the Edit lane takes one. Not in this release.</li>
+      <li>RGBA output. The VAE has the channel, the app does not write it out. Not in this release.</li>
+      <li>Masks with this model. Closed deliberately, because the edit path here is reference plus prompt.</li>
+      <li>A prompt enhancer, and the KV cache node. Neither is wired up. Not in this release.</li>
+    </ul>
+
+    <p>The LoRA stack stays open for every local image model, so a 2.1 LoRA would appear there the moment one exists. None does.</p>
+
+    <h2>So is it worth downloading</h2>
+
+    <p>If you have a card in the 16 to 24 GB range and you are curious how a 7B model handles both jobs, yes, and the setup is one click and a version check. If you need permissive licensing, stay with the Apache 2.0 entries in the series. If you were hoping for transparency output or a ten image edit, the model can do it and this release cannot, so wait until it can rather than downloading 16 GB on the strength of a feature list.</p>
+
+    <p>The practical walkthrough, with the file sizes, the memory guide and the two lanes step by step, is in <a href="how-to-run-qwen-image-2-1-locally.html">How to run Qwen-Image 2.1 locally</a>.</p>
+
+    <h2>Related</h2>
+
+    <ul>
+      <li><a href="how-to-run-qwen-image-2-1-locally.html">How to run Qwen-Image 2.1 locally</a>, the step by step version</li>
+      <li><a href="lazarus-v3-0-1-release.html">v3.0.1 release notes</a>, the release that added it</li>
+      <li><a href="/qwen-image-2-1/">Qwen-Image 2.1 in Lazarus</a>, everything we have written about it</li>
+    </ul>
+
+    <hr>
+
+    <p><em>Lazarus 3.0.1. AGPL-3.0 licensed. Built by <a href="/guide/">Lazarus contributors</a>. Bug reports and feature requests on <a href="/guide/settings-and-troubleshooting/">GitHub Issues</a> or in the <a href="/discord">Discord</a>.</em></p>
+  </article>
+
+  <div class="post-footer">
+    <p>Smaller model, one lane fewer, and a license worth reading</p>
+    <a href="/guide/install/" class="cta-btn" target="_blank">
+      Download 3.0.1
+    </a>
+  </div>
+</div>
+<footer>
+  <div class="footer-row footer-meta"><span>&copy; 2026 &middot; Lazarus &middot; AGPL-3.0</span></div>
+  <div class="footer-row footer-links">
+    <a href="/blog/">Blog</a>
+    <a href="/guide/">Guide</a>
+    <a href="/remote-access/">Remote access</a>
+    <a href="/discord" target="_blank" rel="noopener">Discord</a>
+    <a href="/guide/code/">GitHub</a>
+    <a href="/guide/faq-and-glossary/">Discussions</a>
+    <a href="/guide/settings-and-troubleshooting/">Issues</a>
+    <a href="https://reddit.com/user/GroundbreakingMall54">Reddit</a>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,28 @@
+Dump of file fixture: R7, the APX decode artifact (lu-301/bau/isa-guard-apx.md).
+Two hits, on purpose, because the rule has to be proved in both directions.
+
+Hit 1 is the exact line sidecar-windows.yml run 35640770023 (job 106469248703,
+release/3.0.1-prep) printed for mtmd.dll, address and operand text reproduced
+character for character from lu-301/bau/isa-guard-ci-auszug.txt. It addresses
+memory through r25, an Intel APX extended general purpose register that MSVC
+does not emit for x64, so these bytes are a jump table or constant pool inside
+.text that dumpbin swept over as if it were code. It must come out
+DECODE_ARTIFACT_APX. The owner in the map below is $LN4275 in clip.obj,
+likewise as reported: a compiler-generated local label, which is what MSVC
+attaches to a data block in .text and never to a function.
+
+Hit 2 is the counter-test and must stay UNPROTECTED: a real AVX-512 EVEX
+instruction with zmm registers, a k-mask and the {z} zeroing suffix, sitting
+in an own-code function with no isa-flag check in front of it, but addressed
+through the ordinary rax-r15 register file. The rule keys on the APX
+registers alone and on nothing else about AVX-512 spelling, so this one is
+not excused, and the module still fails.
+
+The byte columns are reconstructed, not copied: the CI log kept only the
+guard's own verdict lines, never the raw disassembly around these addresses.
+Only the leading opcode byte is load-bearing for the guard (0x62 = EVEX, R1),
+and it is correct in both rows.
+
+  0000000180097301: 62 51 04 CC 56 39           vorps       zmm25{k4}{z},zmm15,zmmword ptr [r25]
+  0000000180097410: 62 F1 6C C9 56 0C 24        vorps       zmm1{k1}{z},zmm2,zmmword ptr [rsp]
+  0000000180097417: C3                          ret

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lazarus v3.0.2: The Code Tab Scrolls Again</title>
+<meta name="description" content="v3.0.2 is a hotfix. The Code tab lost its scrollbar and its input box in a long conversation, a regression we shipped in 3.0.1. Here is what happened and what is fixed.">
+<meta name="keywords" content="Lazarus 3.0.2, code tab scrollbar fix, issue 138, hotfix release, local ai coding agent">
+<meta property="og:title" content="Lazarus v3.0.2: The Code Tab Scrolls Again">
+<meta property="og:description" content="A hotfix for the Code tab: the transcript scrolls and the input box stays in view again. Our regression, shipped in 3.0.1, fixed in 3.0.2.">
+<meta property="og:image" content="/social-preview.png">
+<meta property="og:url" content="/blog/lazarus-v3-0-2-hotfix.html">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2026-09-22">
+<meta property="article:author" content="Lazarus contributors">
+<meta property="article:tag" content="Release">
+<meta property="article:tag" content="Code">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Lazarus v3.0.2: The Code Tab Scrolls Again">
+<meta name="twitter:description" content="A hotfix for the Code tab. The transcript scrolls and the composer stays in view again.">
+<meta name="twitter:image" content="/social-preview.png">
+<link rel="canonical" href="/blog/lazarus-v3-0-2-hotfix.html">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" href="../favicon.png">
+<!-- Privacy: No external fonts loaded. Using system fonts. -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","headline":"Lazarus v3.0.2: The Code Tab Scrolls Again","description":"Lazarus 3.0.2 is a hotfix for issue 138: the Code tab lost its scrollbar and its input box once a conversation grew taller than the window, a regression introduced in 3.0.1. The frame is held to the window height again.","image":"/social-preview.png","datePublished":"2026-09-22","dateModified":"2026-09-22","inLanguage":"en","author":{"@type":"Person","name":"Lazarus contributors","url":"/guide/"},"publisher":{"@type":"Organization","name":"Lazarus","url":"/"},"mainEntityOfPage":{"@type":"WebPage","@id":"/blog/lazarus-v3-0-2-hotfix.html"},"keywords":"Lazarus 3.0.2, code tab scrollbar fix, issue 138, hotfix release, local ai coding agent"}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What does Lazarus 3.0.2 fix?","acceptedAnswer":{"@type":"Answer","text":"One thing: the Code tab lost its scrollbar and its input box once a conversation grew taller than the window (issue 138). Only the start of a long conversation was visible, the mouse wheel did nothing, and the composer with its toolbar sat below the bottom edge. The frame around the transcript is held to the window height again, so the transcript scrolls and the input box stays in view."}},{"@type":"Question","name":"Was the Chat tab affected too?","acceptedAnswer":{"@type":"Answer","text":"No. The Chat tab was never affected. The change that caused this touched both views, but only the Chat view kept the rule that makes a flex child shrink inside its frame. The Code view lost it, so the fix adds it back there."}},{"@type":"Question","name":"Which versions have the bug?","acceptedAnswer":{"@type":"Answer","text":"3.0.1 only. It is a regression we introduced in that release, not an old problem. 3.0.0 and earlier scroll normally, and 3.0.2 scrolls normally again."}},{"@type":"Question","name":"Do I have to download 3.0.2 by hand?","acceptedAnswer":{"@type":"Answer","text":"No. The signed auto update channel picks it up on your next launch if you are already on 3.0.x. The badge in the top bar offers the update, it downloads in the background, and nothing restarts until you click. A manual download from GitHub Releases works the same way."}}]}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazarus.css">
+<script defer src="/assets/lazarus.js"></script>
+</head>
+<body>
+<nav class="lu-nav">
+  <a class="lu-nav-brand" href="/" aria-label="Lazarus">
+    <span class="lu-mono" data-mono="nav" data-size="40" aria-hidden="true"></span>
+    <span class="lu-nav-word">Lazarus</span>
+  </a>
+  <div class="lu-nav-links" id="lu-nav-links">
+    <a class="lu-nav-link" href="/">Home</a>
+    <a class="lu-nav-link" href="/blog/">Blog</a>
+    <a class="lu-nav-link" href="/guide/">Guide</a>
+    <a class="lu-nav-link" href="/remote-access/">Remote</a>
+  </div>
+  <div class="lu-nav-right">
+    <a class="lu-nav-icon" href="/guide/code/" title="GitHub" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg><span class="lu-nav-badge">1700+&#8202;⭐</span></a>
+    <a class="lu-nav-icon discord" href="/discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.45 3c-.2.36-.44.85-.6 1.23a18.3 18.3 0 0 0-5.7 0c-.16-.38-.4-.87-.6-1.23a19.7 19.7 0 0 0-4.87 1.37C.55 8.9-.32 13.3.11 17.63a19.9 19.9 0 0 0 6 3.03c.48-.66.9-1.36 1.27-2.1-.7-.26-1.36-.58-1.99-.96.17-.12.33-.25.49-.38a14.2 14.2 0 0 0 12.24 0c.16.13.32.26.49.38-.63.38-1.3.7-2 .96.37.74.8 1.44 1.27 2.1a19.8 19.8 0 0 0 6-3.03c.5-5.03-.85-9.39-3.55-13.26ZM8.02 15c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.95 2.42-2.15 2.42Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.09 2.15 2.43 0 1.33-.94 2.42-2.15 2.42Z"/></svg><span class="lu-nav-badge">900+&#8202;<span style="font-size:0.715em">🟢</span></span></a>
+    <span class="lu-nav-sep"></span>
+    <div class="switch" id="theme-switch" role="button" aria-label="Toggle theme"></div>
+    <a class="lu-nav-dl" href="/guide/install/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download</a>
+    <button type="button" class="lu-nav-toggle" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<div class="container lu-doc">
+  <div class="breadcrumb"><a href="../">Lazarus</a> / <a href="./">Blog</a> / This Post</div>
+
+  <div class="post-meta">
+    <span class="post-tag">Release</span>
+    <span>September 22, 2026</span>
+    <span>&middot;</span>
+    <span>3 min read</span>
+  </div>
+
+  <article>
+    <h1>v3.0.2: The Code Tab Scrolls Again</h1>
+
+    <p><a href="/guide/code/">Lazarus</a> 3.0.2 is a hotfix with one fix in it, and the bug it fixes was ours. We shipped it in 3.0.1. If you opened the Code tab last week and found that you could not scroll and could not type, that was not your machine, your theme or your window manager. It was a single missing line of layout in our own code.</p>
+
+    <h2>What Went Wrong</h2>
+
+    <p>Once a conversation in the Code tab grew taller than the window, the tab stopped behaving like a window and started behaving like a very long page that nobody could move. Only the beginning of the conversation was visible. The mouse wheel did nothing over the transcript. Worst of all, the composer, the box you type into, together with its toolbar, sat below the bottom edge of the window, out of reach. A long session in the Code tab was effectively read only.</p>
+
+    <p>The cause, stated plainly: in 3.0.1 we changed the frame that holds the transcript and the composer so that it no longer counted as a scrolling container. Inside a scrolling container, a child is allowed to shrink and scroll its own contents. Outside one, it insists on its full height instead. The frame therefore grew with the conversation and pushed the composer past the bottom of the window. The Chat tab got the accompanying rule that keeps a child shrinkable in the same change. The Code tab did not, and nothing in our test suite noticed the difference.</p>
+
+    <h2>What Is Fixed</h2>
+
+    <p>The frame is held to the window height again. The transcript scrolls, the scrollbar is back, the mouse wheel works, and the input box stays where it belongs no matter how long the conversation runs. The <a href="/guide/code/">Code tab chapter</a> of the handbook describes the tab as it behaves in 3.0.2. <strong>The Chat tab was never affected</strong>, and nothing else in the app changed in this release. Reported as issue 138, confirmed at 1280 by 800 with sixty messages in the transcript, and fixed there.</p>
+
+    <h2>Getting It</h2>
+
+    <p>Nothing to do. The signed auto update channel picks 3.0.2 up on your next launch if you are already on 3.0.x, downloads it in the background, and waits for you to click before it restarts. If you would rather fetch it yourself, it is on <a href="/guide/install/">GitHub Releases</a>, one installer for Windows and three packages for Linux, with the file names listed in the <a href="/guide/install/">install chapter</a>. There is no macOS build; on a Mac, remote provider runs in the browser.</p>
+
+    <p>Sorry for the week. Keep filing these.</p>
+
+    <h2>Related</h2>
+
+    <ul>
+      <li><a href="lazarus-v3-0-1-release.html">v3.0.1 release notes</a>, the release this regression arrived in</li>
+      <li><a href="/guide/code/">The Code tab</a>, the handbook chapter for the tab this fixes</li>
+    </ul>
+
+    <hr>
+
+    <p><em>Lazarus 3.0.2. AGPL-3.0 licensed. Built by <a href="/guide/">Lazarus contributors</a>. Bug reports and feature requests on <a href="/guide/settings-and-troubleshooting/">GitHub Issues</a> or in the <a href="/discord">Discord</a>.</em></p>
+  </article>
+
+  <div class="post-footer">
+    <p>The Code tab scrolls again, and keeps its input box</p>
+    <a href="/guide/install/" class="cta-btn" target="_blank">
+      Download 3.0.2
+    </a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-row footer-meta"><span>&copy; 2026 &middot; Lazarus &middot; AGPL-3.0</span></div>
+  <div class="footer-row footer-links">
+    <a href="/blog/">Blog</a>
+    <a href="/guide/">Guide</a>
+    <a href="/remote-access/">Remote access</a>
+    <a href="/discord" target="_blank" rel="noopener">Discord</a>
+    <a href="/guide/code/">GitHub</a>
+    <a href="/guide/faq-and-glossary/">Discussions</a>
+    <a href="/guide/settings-and-troubleshooting/">Issues</a>
+    <a href="https://reddit.com/user/GroundbreakingMall54">Reddit</a>
+  </div>
+</footer>
+</body>
+</html>

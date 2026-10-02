@@ -1,0 +1,10 @@
+Dump of file fixture: protected own-code VEX, real pattern from
+review-k1-avx.md Fundstelle 2a (ggml-base.dll, iq2xs_init_impl$omp$1), trimmed
+to the lines the guard needs: the isa check, the guarding jl, the VEX hit,
+and the scalar fallback the jl targets.
+
+  0000000180027ED6: 8B 0D BC 19 07 00  mov         ecx,dword ptr [0000000180099898h]
+  0000000180027F7E: 83 F9 05           cmp         ecx,5
+  0000000180027F81: 7C 40              jl          0000000180027FC3
+  0000000180027F83: C4 C2 71 46 C2     vpsravd     xmm0,xmm1,xmm10
+  0000000180027FC3: 48 8D 94 24 88 00  lea         rdx,[rsp+88h]

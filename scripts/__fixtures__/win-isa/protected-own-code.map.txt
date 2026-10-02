@@ -1,0 +1,5 @@
+ Static symbols
+
+ 0001:00000000       iq2xs_init_impl$omp$1      0000000180027e10 f   ggml-quants.obj
+ 0001:00000200       iq2xs_init_impl$omp$2      0000000180028010 f   ggml-quants.obj
+ 0003:00000010       __isa_available            0000000180099898     MSVCRT:cpu_disp.obj

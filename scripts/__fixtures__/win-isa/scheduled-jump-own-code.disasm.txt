@@ -1,0 +1,31 @@
+Dump of file fixture: known false-red form (i)/A, the real shape found in
+llama.dll built with MSVC 14.51.36256 (VS 2026) during the toolset review of
+21.09.2026, lu-301/bau/isa-review-1451.md section 2. Own code
+(llama-kv-cache.obj), two AVX-512DQ+VL vpmullq, and a genuine
+__isa_available >= 6 check whose jl jumps over both of them into the scalar
+fallback. The MSVC scheduler moved one unrelated "mov r11,qword ptr [rcx]"
+between the cmp and the jl, which the guard's original "the jump must be the
+very next line" rule could not follow, so it called this UNPROTECTED.
+
+A mov cannot write EFLAGS, so the jl still evaluates that same cmp: this
+must come out ALLOWED_PROTECTED. Its negative twin,
+scheduled-jump-no-guard-own-code.*, is the identical shape with the jl
+removed and must stay UNPROTECTED, so this fixture proves the scheduler
+tolerance and not "a cmp on the isa flag is enough".
+
+Addresses, bytes and text are copied verbatim from the runner's
+llama.dll.disasm.txt; only the untouched middle of the vector block is left
+out.
+
+  000000018007A970: 48 83 EC 18        sub         rsp,18h
+  000000018007A974: 83 3D 15 10 19 00  cmp         dword ptr [000000018020B990h],6
+                    06
+  000000018007A97B: 4C 8B 19           mov         r11,qword ptr [rcx]
+  000000018007A97E: 0F 8C CA 00 00 00  jl          000000018007AA4E
+  000000018007AA0A: 0F 54 C4           andps       xmm0,xmm4
+  000000018007AA0D: 62 F2 FD 08 40 D5  vpmullq     xmm2,xmm0,xmm5
+  000000018007AA25: 0F 54 C4           andps       xmm0,xmm4
+  000000018007AA28: 62 F2 FD 08 40 CD  vpmullq     xmm1,xmm0,xmm5
+  000000018007AA4D: C3                 ret
+  000000018007AA4E: 48 89 5C 24 20     mov         qword ptr [rsp+20h],rbx
+  000000018007AA53: 45 33 C0           xor         r8d,r8d
