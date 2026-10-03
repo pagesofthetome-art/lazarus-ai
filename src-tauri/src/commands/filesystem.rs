@@ -2025,6 +2025,8 @@ mod binary_read_tests {
             "model.gguf".into(),
             None,
             Some(dir.to_string_lossy().to_string()),
+            None,
+            None,
         )
         .await
         .expect("read");
@@ -2039,7 +2041,7 @@ mod binary_read_tests {
         let dir = ws("txt");
         fs::write(dir.join("a.txt"), "hallo\nwelt\n").unwrap();
 
-        let v = fs_read("a.txt".into(), None, Some(dir.to_string_lossy().to_string()))
+        let v = fs_read("a.txt".into(), None, Some(dir.to_string_lossy().to_string()), None, None)
             .await
             .expect("read");
 
@@ -2056,7 +2058,7 @@ mod binary_read_tests {
         fs::write(dir.join("big.bin"), &big).unwrap();
 
         let started = std::time::Instant::now();
-        let v = fs_read("big.bin".into(), None, Some(dir.to_string_lossy().to_string()))
+        let v = fs_read("big.bin".into(), None, Some(dir.to_string_lossy().to_string()), None, None)
             .await
             .expect("read");
         let took = started.elapsed();

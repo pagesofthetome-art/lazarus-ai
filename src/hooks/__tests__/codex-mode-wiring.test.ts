@@ -50,14 +50,15 @@ describe('the mode is resolved per send, from the conversation', () => {
   })
 
   it('derives the effective knobs from the mode plus the settings', () => {
-    expect(codex).toMatch(/const knobs = codexModeKnobs\(\{/)
+    expect(codex).toMatch(/const baseKnobs = codexModeKnobs\(\{/)
     expect(codex).toMatch(/mode: codexMode,/)
   })
 })
 
 describe('the three switch points read the preset, not the raw setting', () => {
   it('the exec confirm gate is knobs.confirmExec', () => {
-    expect(codex).toMatch(/awaitApproval: knobs\.confirmExec/)
+    expect(codex).toMatch(/confirmExec: knobs\.confirmExec/)
+    expect(codex).toMatch(/awaitApproval: \(knobs\.confirmExec \|\| \(developerMode/)
     // Negative control: the pre-C1 shape called the gate inline with the
     // setting, which no preset could reach.
     expect(codex).not.toMatch(/awaitApproval: codexConfirmEnabled\(\{/)

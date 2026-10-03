@@ -80,11 +80,11 @@ test('dieselbe Bitte auf Englisch — der Vergleich, den die Persona gezogen hat
   expect(await werkzeuge(page)).toContain('web_fetch')
 })
 
-test('gewoehnliche Unterhaltung laeuft weiter ohne Werkzeuge', async ({ page }) => {
-  // Ohne diese Gegenprobe waere der Test oben auch dann gruen, wenn die App
-  // einfach jeder Nachricht Werkzeuge anhaengt — und genau daran verschluckt
-  // sich ein kleines Modell (Persona-Befund 5: es plappert den Katalog nach).
+test('text-only mode sends an ordinary chat without tool definitions', async ({ page }) => {
   await boot(page)
+  await page.getByRole('button', { name: 'Plugins', exact: true }).last().click()
+  await page.getByRole('button', { name: 'Turn off tools in Chat for faster text-only replies' }).click()
+  await page.locator('div.fixed.inset-0.z-40').click({ position: { x: 4, y: 4 } })
   await schicke(page, 'Erklaer mir mal, wie Rekursion funktioniert.')
   expect(await werkzeuge(page)).toEqual([])
 })

@@ -35,9 +35,9 @@ describe('woher die Zahl im Zaehler kommt', () => {
     }
   })
 
-  it('NEGATIVKONTROLLE: the own catalogue stays an answer, not a guess', () => {
-    expect(remoteWindowSource('lu-cloud', undefined, 128_000)).toBe('probe')
-    expect(SOURCE_LABEL[remoteWindowSource('lu-cloud', undefined, 128_000)]).toBe('from server')
+  it('an unresolved retired-provider model is still an estimate, not a server answer', () => {
+    expect(remoteWindowSource('lu-cloud', undefined, 128_000)).toBe('guess')
+    expect(SOURCE_LABEL[remoteWindowSource('lu-cloud', undefined, 128_000)]).toBe('estimated')
   })
 
   it('a catalogue that names no window promises nothing either', () => {

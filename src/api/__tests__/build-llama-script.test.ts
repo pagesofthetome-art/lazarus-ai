@@ -125,7 +125,7 @@ describe('build-llama.sh', () => {
     expect(code).not.toBe(0)
   })
 
-  it('appends .exe only for windows targets, and carries the lu- prefix', () => {
+  it('appends .exe only for windows targets, and carries the Lazarus prefix', () => {
     // GitHub #120: the output name gained the app prefix because Tauri's deb
     // bundler drops every externalBin into /usr/bin, where Debian's own
     // llama.cpp-tools package already owns llama-server and dpkg refuses the
@@ -133,10 +133,10 @@ describe('build-llama.sh', () => {
     // engine.rs and the NSIS hooks) and they have to agree, so the expected
     // strings below are the fourth guard against one of them drifting back.
     expect(callFn('out_name_for', 'x86_64-pc-windows-msvc').out).toBe(
-      'lu-llama-server-x86_64-pc-windows-msvc.exe',
+      'lazarus-llama-server-x86_64-pc-windows-msvc.exe',
     )
     expect(callFn('out_name_for', 'aarch64-apple-darwin').out).toBe(
-      'lu-llama-server-aarch64-apple-darwin',
+      'lazarus-llama-server-aarch64-apple-darwin',
     )
   })
 

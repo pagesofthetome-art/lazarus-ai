@@ -38,6 +38,7 @@ import { resolveToolSupport, canUseTools } from '../../../lib/tool-support'
 import { useModelStore } from '../../../stores/modelStore'
 import { useChatStore } from '../../../stores/chatStore'
 import { useAgentModeStore } from '../../../stores/agentModeStore'
+import { useProviderStore } from '../../../stores/providerStore'
 import { AgentModeToggle } from '../AgentModeToggle'
 import type { CloudModel } from '../../../types/models'
 
@@ -99,6 +100,9 @@ function agentButtonFor(name: string): HTMLButtonElement {
 
 beforeEach(() => {
   serveCatalogue()
+  useProviderStore.setState(state => ({
+    providers: { ...state.providers, openai: { ...state.providers.openai, isLocal: false } },
+  }))
   useChatStore.setState({
     conversations: [{
       id: 'c1', title: 'x', messages: [], model: 'openai::example/tool-model',
@@ -108,7 +112,13 @@ beforeEach(() => {
   })
   useAgentModeStore.setState({ agentModeActive: {}, workspaces: {} })
 })
-afterEach(() => { cleanup(); vi.restoreAllMocks() })
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+  useProviderStore.setState(state => ({
+    providers: { ...state.providers, openai: { ...state.providers.openai, isLocal: true } },
+  }))
+})
 
 describe('the field survives the road from the wire to the store', () => {
   it('carries the server answer for each model, true and false alike', async () => {

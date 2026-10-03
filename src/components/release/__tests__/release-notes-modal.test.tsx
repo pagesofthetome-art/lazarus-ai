@@ -235,15 +235,15 @@ describe('the wired-up sheet, end to end', () => {
 
   it('opens for the shipping version and Escape closes it, stamping the version so it does not return', async () => {
     render(<ReleaseNotesModal />)
-    // package.json pins the running version to 3.0.3, and RELEASE_NOTES
+    // package.json pins the running version to 3.0.5, and RELEASE_NOTES
     // carries an entry for it, so the sheet is open on mount.
     await waitFor(() => expect(screen.getByTestId('release-heading')).toBeTruthy())
-    expect(screen.getByTestId('release-heading').textContent).toBe("What's new in 3.0.3")
-    expect(useReleaseNotesStore.getState().lastNotesVersion).not.toBe('3.0.3')
+    expect(screen.getByTestId('release-heading').textContent).toBe("What's new in 3.0.5")
+    expect(useReleaseNotesStore.getState().lastNotesVersion).not.toBe('3.0.5')
 
     fireEvent.keyDown(document, { key: 'Escape' })
 
-    await waitFor(() => expect(useReleaseNotesStore.getState().lastNotesVersion).toBe('3.0.3'))
+    await waitFor(() => expect(useReleaseNotesStore.getState().lastNotesVersion).toBe('3.0.5'))
     await waitFor(() => expect(screen.queryByTestId('release-heading')).toBeNull())
   })
 })

@@ -22,13 +22,13 @@ import { useSendSizeStore } from '../../stores/sendSizeStore'
 
 describe('A2: the paid-provider send cap', () => {
   it('gives a 262k cloud model a 64k budget, not 209k', () => {
-    const budget = effectiveSendWindow({ providerId: 'lu-cloud', modelWindow: 262144 })
+    const budget = effectiveSendWindow({ providerId: 'anthropic', modelWindow: 262144 })
     expect(budget).toBe(DEFAULT_SEND_WINDOW_TOKENS)
   })
 
   it('negative control: without the cap the same model gets 0.8 of its window', () => {
     const budget = effectiveSendWindow({
-      providerId: 'lu-cloud',
+      providerId: 'anthropic',
       modelWindow: 262144,
       capEnabled: false,
     })
@@ -38,7 +38,7 @@ describe('A2: the paid-provider send cap', () => {
 
   it('never RAISES a small model to the cap', () => {
     // 32k model: 0.8 x 32768 = 26214, well under 64k, so the cap does nothing.
-    expect(effectiveSendWindow({ providerId: 'lu-cloud', modelWindow: 32768 }))
+    expect(effectiveSendWindow({ providerId: 'anthropic', modelWindow: 32768 }))
       .toBe(Math.floor(32768 * 0.8))
   })
 
@@ -50,7 +50,8 @@ describe('A2: the paid-provider send cap', () => {
   })
 
   it('applies to every provider that bills, and to no other', () => {
-    expect(isPaidProvider('lu-cloud')).toBe(true)
+    expect(isPaidProvider('anthropic')).toBe(true)
+    expect(isPaidProvider('lu-cloud')).toBe(false)
     expect(isPaidProvider('openai')).toBe(true)
     expect(isPaidProvider('anthropic')).toBe(true)
     expect(isPaidProvider('ollama')).toBe(false)
@@ -58,7 +59,7 @@ describe('A2: the paid-provider send cap', () => {
 
   it('lets a power user raise the ceiling', () => {
     expect(effectiveSendWindow({
-      providerId: 'lu-cloud',
+      providerId: 'anthropic',
       modelWindow: 262144,
       sendWindowTokens: 120000,
     })).toBe(120000)
@@ -66,7 +67,7 @@ describe('A2: the paid-provider send cap', () => {
 
   it('keeps Small-Model Mode tighter than the cap', () => {
     expect(effectiveSendWindow({
-      providerId: 'lu-cloud',
+      providerId: 'anthropic',
       modelWindow: 262144,
       smallModelMode: true,
     })).toBe(6000)

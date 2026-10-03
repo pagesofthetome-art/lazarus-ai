@@ -1,13 +1,10 @@
 /**
- * Jeder Programmstart prueft auf Updates.
+ * Jeder Programmstart prueft genau einmal auf Updates.
  *
- * Die Startpruefung laeuft ueber `initUpdateChecker` und damit ueber
- * `plugin:updater|check`. Sie lief bis T13b trotzdem nie: `checkForUpdate()`
- * ohne `force` kehrt um, solange `lastChecked` juenger als sechs Stunden ist
- * (`updateStore.ts:270`), `lastChecked` wird gespeichert (`:546`) und
- * `onRehydrateStorage` (`:557-573`) nullt ihn nur, wenn eine gespeicherte
- * `latestVersion` oder `updateAvailable` danebensteht. Auf einer Maschine, die
- * auf dem neuesten Stand ist, steht beides nicht.
+ * `initUpdateChecker` ruft `checkForUpdate(true, true)` auf, damit ein frischer
+ * gespeicherter `lastChecked`-Zeitpunkt den einmaligen Start-Check nicht
+ * unterdrueckt. Der zweite Parameter sorgt dafuer, dass ein Update-Prompt
+ * erscheint, bevor etwas geladen wird. Es gibt keinen periodischen Timer.
  *
  * Der Tester hat das am 12.09.2026 auf der Windows-Box dreimal in Folge
  * gemessen: drei Starts, null Aufrufe am Draht. `lastChecked` war beim
@@ -17,9 +14,8 @@
  * neu startet, bekommt nie eine automatische Pruefung. Das steht gegen die
  * Regel "Updates muessen ankommen".
  *
- * Negativkontrolle: mit der Originalquelle (`checkForUpdate()` ohne Argument
- * in `initUpdateChecker`) sind die Faelle 1 und 2 rot, je 1 erwarteter Aufruf
- * gegen 0 gemessene; Fall 3 und die zwei Deckelfaelle bleiben gruen.
+ * Ein gewoehnlicher manueller Aufruf unterliegt weiter dem 6-Stunden-Deckel;
+ * der Start-Check und ein explizit erzwungener Aufruf umgehen ihn.
  *
  * Run: npx vitest run src/stores/__tests__/jeder-start-prueft-auf-updates.test.ts
  */
@@ -57,6 +53,7 @@ async function frischerStart(lastChecked: number | null) {
 }
 
 beforeEach(() => {
+  vi.stubEnv('VITE_GITHUB_REPO', 'pagesofthetome-art/lazarus-ai')
   vi.useFakeTimers()
   vi.setSystemTime(NOW)
   fetchSpy = vi.fn(async () => ({
@@ -69,9 +66,10 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers()
   vi.unstubAllGlobals()
+  vi.unstubAllEnvs()
 })
 
-describe('die Startpruefung haengt an einem eigenen, kurzen Deckel', () => {
+describe('die Startpruefung laeuft einmal pro Start, unabhaengig vom letzten Zeitpunkt', () => {
   it('prueft, wenn die letzte Pruefung 20 Minuten alt ist', async () => {
     await frischerStart(NOW - 20 * MINUTE)
 
@@ -90,16 +88,16 @@ describe('die Startpruefung haengt an einem eigenen, kurzen Deckel', () => {
     expect(fetchSpy).toHaveBeenCalledTimes(1)
   })
 
-  it('haelt den gemessenen Fall der Box auf, 47 Sekunden nach der letzten Pruefung', async () => {
+  it('prueft auch beim Neustart 47 Sekunden nach der letzten Pruefung', async () => {
     await frischerStart(NOW - 47 * 1000)
 
-    expect(fetchSpy).toHaveBeenCalledTimes(0)
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
   })
 
-  it('haelt zwei Starts kurz hintereinander auf, 14 Minuten auseinander', async () => {
+  it('prueft auch beim Neustart 14 Minuten nach der letzten Pruefung', async () => {
     await frischerStart(NOW - 14 * MINUTE)
 
-    expect(fetchSpy).toHaveBeenCalledTimes(0)
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
   })
 
   // NEGATIVKONTROLLE: der 6-Stunden-Deckel selbst bleibt, wie er war. Nur der

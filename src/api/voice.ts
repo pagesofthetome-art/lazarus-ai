@@ -6,16 +6,53 @@ export function chunkForTts(text: string, maxLength = 240): string[] {
   if (!trimmed) return []
   const chunks: string[] = []
   let current = ''
-  for (const sentence of (trimmed.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? [trimmed])) {
-    const part = sentence.trim()
-    if (!part) continue
-    if (current && current.length + 1 + part.length > maxLength) { chunks.push(current); current = '' }
-    for (const word of part.split(/\s+/)) {
-      if (current && current.length + 1 + word.length > maxLength) { chunks.push(current); current = '' }
-      current = current ? `${current} ${word}` : word
-    }
+  const segments: string[] = []
+  const punctuation = /[.!?。！？]+/gu
+  let start = 0
+  for (const match of trimmed.matchAll(punctuation)) {
+    let end = match.index! + match[0].length
+    while (end < trimmed.length && /\s/u.test(trimmed[end])) end++
+    segments.push(trimmed.slice(start, end))
+    start = end
   }
-  if (current) chunks.push(current)
+  if (start < trimmed.length) segments.push(trimmed.slice(start))
+
+  for (let segment of segments) {
+    if (current.length + segment.length <= maxLength) {
+      current += segment
+      continue
+    }
+    if (current) {
+      chunks.push(current.trimEnd())
+      current = ''
+      segment = segment.trimStart()
+    }
+
+    // Long text without sentence breaks falls back to word boundaries. If a
+    // single token exceeds the limit, split by Unicode code point so an emoji
+    // surrogate pair is never cut in half.
+    while (segment.length > maxLength) {
+      const points = Array.from(segment)
+      let pointCount = 0
+      let codeUnits = 0
+      while (pointCount < points.length && codeUnits + points[pointCount].length <= maxLength) {
+        codeUnits += points[pointCount].length
+        pointCount++
+      }
+      if (pointCount === 0) pointCount = 1
+      const prefix = points.slice(0, pointCount).join('')
+      const boundary = prefix.search(/\s+\S*$/u)
+      if (boundary > 0) {
+        chunks.push(prefix.slice(0, boundary).trimEnd())
+        segment = segment.slice(prefix.slice(0, boundary).length).trimStart()
+      } else {
+        chunks.push(prefix)
+        segment = segment.slice(prefix.length).trimStart()
+      }
+    }
+    current = segment.trimStart()
+  }
+  if (current) chunks.push(current.trimEnd())
   return chunks
 }
 

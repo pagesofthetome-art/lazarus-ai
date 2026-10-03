@@ -67,8 +67,8 @@ describe('the installer frees the bundled engine', () => {
 
   it('frees the file the bundle actually ships and Rust actually starts', () => {
     const external = conf.bundle?.externalBin ?? []
-    expect(external).toContain('bin/lu-llama-server')
-    expect(engineRs).toMatch(/"lu-llama-server\.exe"/)
+    expect(external).toContain('bin/lazarus-llama-server')
+    expect(engineRs).toMatch(/"lazarus-llama-server\.exe"/)
   })
 })
 

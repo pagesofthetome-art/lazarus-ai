@@ -7,10 +7,11 @@
  * unconditionally reached the moment MlxMediaSettings renders on a Mac.
  *
  * This is the systematic check the fix is built on, kept as a live test so
- * it holds going forward: it reads src-tauri/src/main.rs for every
+ * it holds going forward: it reads src-tauri/src/desktop_main.rs for every
  * registered Tauri command, greps src/ for every literal command name
- * actually passed to `backendCall(...)` / `invokeMedia(...)` (the same
- * two-pass method used to find this gap), and asserts every one of those
+ * actually passed to `backendCall(...)` / `invokeMedia(...)` (including calls
+ * through the typed MLX wrappers, using the same two-pass method used to find
+ * this gap), and asserts every one of those
  * REACHABLE commands has an endpointMap entry in backend.ts. A future
  * commands::media_cmds (or any other module's) command that gets called
  * from the frontend but never wired into endpointMap fails this test
@@ -36,9 +37,9 @@ const REPO_ROOT = join(HERE, '..', '..')
 
 /** Every command name registered in tauri::generate_handler![...]. */
 function rustCommands(): Set<string> {
-  const mainRs = readFileSync(join(REPO_ROOT, 'src-tauri', 'src', 'main.rs'), 'utf-8')
-  const m = mainRs.match(/\.invoke_handler\(tauri::generate_handler!\[([\s\S]*?)\n\s*\]\)/)
-  if (!m) throw new Error('Could not find tauri::generate_handler![...] block in main.rs. Has the invoke_handler setup moved?')
+  const desktopMain = readFileSync(join(REPO_ROOT, 'src-tauri', 'src', 'desktop_main.rs'), 'utf-8')
+  const m = desktopMain.match(/\.invoke_handler\(tauri::generate_handler!\[([\s\S]*?)\n\s*\]\)/)
+  if (!m) throw new Error('Could not find tauri::generate_handler![...] block in desktop_main.rs. Has the invoke_handler setup moved?')
   const names = new Set<string>()
   for (let line of m[1].split('\n')) {
     line = line.split('//')[0].trim().replace(/,$/, '')
@@ -158,7 +159,7 @@ describe('endpointMap covers every backendCall/invokeMedia site the frontend can
     // #143, api/discover.ts comfyModelTarget). A missing route answers
     // "local", which is what the dev server always is.
     'comfy_model_target',
-    'exit_app', 'file_read', 'find_orphan_downloads', 'fix_comfyui_cors', 'funnel_ping',
+    'exit_app', 'file_read', 'find_orphan_downloads', 'fix_comfyui_cors',
     'get_comfy_gpu_status', 'get_current_time', 'import_local_model', 'install_character_trainer',
     'install_lmstudio', 'install_lmstudio_status', 'install_method', 'install_python',
     'install_python_status', 'installed_piper_voices', 'is_onboarding_done', 'kv_slot_action',

@@ -42,15 +42,11 @@ async function boot(page: Page) {
 }
 
 async function gotoCompare(page: Page) {
-  const wide = page.getByRole('button', { name: 'Compare', exact: true }).first()
-  if (await wide.isVisible().catch(() => false)) {
-    await wide.click()
-    return
-  }
-  // Below the `lg` breakpoint the six-item bar is collapsed into the kebab
-  // menu, same target view, reached through the overflow menu instead.
-  await page.getByRole('button', { name: 'Main navigation' }).click()
-  await page.getByRole('menuitem', { name: 'Compare', exact: true }).click()
+  // Compare lives on the Models page beside Benchmark; it was removed from
+  // the global navigation. Keep the centering check on the Compare surface,
+  // but enter it through the current user-facing route.
+  await page.getByRole('button', { name: 'Models', exact: true }).click()
+  await page.getByRole('button', { name: 'Compare models', exact: true }).click()
 }
 
 const WIDTHS = [1100, 1280, 1440, 1920]

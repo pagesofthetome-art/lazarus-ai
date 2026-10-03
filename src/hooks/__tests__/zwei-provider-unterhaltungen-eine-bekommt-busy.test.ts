@@ -153,7 +153,7 @@ describe('zwei provider-backed Unterhaltungen, eine bekommt dauerhaft busy (429)
 
     // B gets a clean, honest "busy" sentence in its OWN conversation, not a
     // silent hang and not a raw "429" status line.
-    expect(answerB).toMatch(/rate limited by (the )?provider/i)
+    expect(answerB).toMatch(/rate limited by (the )?(provider|Lazarus Engine)/i)
     expect(answerB).toMatch(/wait a moment and try again/i)
     // Never reads as an exhausted-wallet message (different code path,
     // different dialog): a mislabel here would pop the top-up dialog for a

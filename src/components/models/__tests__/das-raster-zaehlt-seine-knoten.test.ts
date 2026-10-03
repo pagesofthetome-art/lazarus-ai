@@ -151,16 +151,16 @@ describe('D-S26 · was das Raster wirklich kostet', () => {
     }
   })
 
-  it('die Obergrenze des Screens ist gedeckelt: Katalog + 20 HF-Treffer', () => {
+  it('die Obergrenze des Screens ist gedeckelt: Katalog + 100 HF-Treffer', () => {
     // Die „300 Modelle" des Befundes sind eine Hochrechnung. Was heute
     // gleichzeitig im DOM stehen kann, ist Katalog plus HuggingFace-Suche,
-    // und die Suche fragt mit `limit=20`.
-    expect(DISCOVER).toMatch(/huggingface\.co\/api\/models\?[^`'"]*limit=20/)
+    // and the search asks Hugging Face for at most 100 results.
+    expect(DISCOVER).toMatch(/URLSearchParams\(\{[^}]*limit: '100'/)
     const groesster = Math.max(
       messeReiter(getMainstreamTextModels()).kacheln,
       messeReiter(getUncensoredTextModels()).kacheln,
     )
-    expect(groesster + 20).toBeLessThan(150)
+    expect(groesster + 100).toBeLessThan(220)
   })
 
   it('SCHRANKE: waechst der Katalog ueber das Gemessene hinaus, neu messen', () => {

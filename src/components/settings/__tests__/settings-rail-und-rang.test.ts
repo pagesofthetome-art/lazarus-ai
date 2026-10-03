@@ -38,6 +38,7 @@ const codeOnly = (src: string) =>
   src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1')
 
 const SRC = codeOnly(readFileSync(resolve(__dirname, '..', 'SettingsPage.tsx'), 'utf8'))
+const MENU = codeOnly(readFileSync(resolve(__dirname, '..', '..', 'layout', 'PluginCatalogMenu.tsx'), 'utf8'))
 const CSS = readFileSync(resolve(__dirname, '..', '..', '..', 'index.css'), 'utf8')
 
 /** Die Palettenwerte, die in den Klassen unten wirklich stehen. */
@@ -78,66 +79,57 @@ const GEMESSEN = {
   red600: '#e7000b',     // Tailwind 4
 }
 
-// ── D-S27 / D-S48 — die Spalte haengt an etwas ────────────────────────────
+// ── Settings navigation and content layout ────────────────────────────────
 
-describe('D-S27 / D-S48: die Inhaltsspalte schwebt nicht mehr frei', () => {
+describe('Settings nav and content remain connected', () => {
   it('`max-w-lg mx-auto` ist weg — das WAR die freischwebende Spalte', () => {
     expect(SRC).not.toContain('max-w-lg mx-auto')
   })
 
-  it('es gibt eine 200px-Rail und eine auf 640px gedeckelte Inhaltsspalte', () => {
-    // Die beiden Zahlen des Audit-Solls: „200px-Rail links mit den Sektionen,
-    // 640px Content daneben, linksbuendig".
-    expect(SRC).toMatch(/w-\[200px\]/)
+  it('Plugins precedes the horizontally scrollable tabs and content stays bounded', () => {
+    expect(SRC).toContain('<PluginCatalogMenu')
+    expect(SRC).toContain('overflow-x-auto scrollbar-thin')
     expect(SRC).toMatch(/max-w-\[640px\]/)
+    const plugin = SRC.indexOf('<PluginCatalogMenu')
+    const tabs = SRC.indexOf('overflow-x-auto scrollbar-thin', plugin)
+    expect(plugin).toBeGreaterThan(-1)
+    expect(tabs).toBeGreaterThan(plugin)
   })
 
-  it('D-S48: der Rest des Fensters wird verteilt, nicht rechts abgeladen', () => {
-    // Der offene Teil von D-S48. Die Spaltenbreite war richtig und bleibt
-    // unangetastet; falsch war, WO der uebrige Raum lag — vollstaendig rechts.
-    //
-    // Gemessen am laufenden Dev-Server (Port 5273, Chromium, Sidebar zu,
-    // --ui-scale 1.15, gerenderte px; Leerraum = Abstand zwischen Pane-Rand
-    // und der ersten bzw. letzten Spalte):
-    //
-    //   Fenster   vorher links / rechts     nachher links / rechts
-    //    1280 px      36,8 / 231,2            134,0 / 134,0
-    //    1440 px      36,8 / 391,2            214,0 / 214,0
-    //    1920 px      36,8 / 871,2            454,0 / 454,0
-    //
-    // Zentriert wird das PAAR aus Rail und Inhalt. Der Inhalt allein mittig
-    // waere wieder die freischwebende Spalte aus D-S27 — deshalb sitzt
-    // `justify-center` auf der Zeile, die beide enthaelt, und nicht an der
-    // Spalte.
+  it('uses the current responsive row and content column', () => {
     const zeile = SRC.match(/<div className="flex[^"]*px-4 py-4 lg:px-8">/)?.[0] ?? ''
-    expect(zeile, 'Die Layoutzeile von Rail und Inhalt wurde nicht gefunden').not.toBe('')
-    expect(zeile).toContain('justify-center')
+    expect(zeile, 'Die responsive Settings-Zeile wurde nicht gefunden').not.toBe('')
+    expect(zeile).toContain('flex flex-col gap-4')
 
-    // NEGATIVKONTROLLE: nicht die Spalte selbst wurde zentriert. `mx-auto` an
-    // der Inhaltsspalte waere die Rueckkehr zu D-S27, und ihre Breite bleibt
-    // ein Deckel, kein Sollwert.
+    // Content stays bounded without introducing a second centered column.
     const spalte = SRC.match(/<div className="min-w-0 [^"]*max-w-\[640px\]"/)?.[0] ?? ''
     expect(spalte, 'Die Inhaltsspalte wurde nicht gefunden').not.toBe('')
     expect(spalte).not.toContain('mx-auto')
     expect(spalte).toContain('min-w-0')
   })
 
-  it('die Rail ist eine benannte Navigation und klebt beim Scrollen', () => {
+  it('the plugin dropdown overlays Settings content and retains its catalog actions', () => {
     const rail = SRC.match(/<nav[\s\S]*?>/)?.[0] ?? ''
     expect(rail).toContain('aria-label="Settings sections"')
-    expect(rail).toContain('sticky')
+    expect(SRC).toContain('<PluginCatalogMenu')
+    expect(MENU).toContain('role="menu" aria-label="Plugin catalog"')
+    expect(MENU).toContain('absolute left-1/2 top-full z-50')
+    expect(MENU).toContain('max-h-[calc(100dvh-5.5rem)]')
+    expect(MENU).toContain('overflow-y-auto')
+    expect(MENU).toContain('Search plugins by name or keyword')
+    expect(MENU).toContain('PLUGIN_CATEGORIES.map')
+    expect(MENU).toContain('View all plugins')
+    expect(SRC).toContain("setView('plugins')")
   })
 
-  it('unter `lg` bleibt genau EINE Navigation stehen, nicht zwei', () => {
-    // Die Rail erscheint ab lg, die waagerechte Tableiste verschwindet dort.
-    // Beides gleichzeitig sichtbar waere zwei Navigationen fuer dieselbe
-    // Sache — der Befund, den D-S27 an anderer Stelle beschreibt.
-    expect(SRC).toMatch(/hidden lg:flex w-\[200px\]/)
-    expect(SRC).toMatch(/lg:hidden sticky top-0/)
+  it('one named Settings navigation is rendered at all breakpoints', () => {
+    expect((SRC.match(/aria-label="Settings sections"/g) ?? []).length).toBe(1)
+    expect(SRC).toContain('overflow-x-auto scrollbar-thin')
   })
 
   it('der aktive Tab ist als solcher ausgezeichnet, nicht nur eingefaerbt', () => {
-    expect((SRC.match(/aria-current=\{tab === t\.id \? 'page' : undefined\}/g) ?? []).length).toBe(2)
+    expect(SRC).toContain("aria-current={tab === 'general' ? 'page' : undefined}")
+    expect((SRC.match(/aria-current=\{tab === t\.id \? 'page' : undefined\}/g) ?? []).length).toBe(1)
   })
 })
 
@@ -239,9 +231,10 @@ describe('die Rail und der Inhalt koennen nicht auseinanderlaufen', () => {
     expect(rail.every((t) => order.includes(t))).toBe(true)
   })
 
-  it('der Ankername wird an EINER Stelle abgeleitet, von Section wie von der Rail', () => {
+  it('each collapsible Settings section keeps a stable target and controlled body', () => {
     expect(SRC).toContain('id={sectionAnchorId(title)}')
-    expect(SRC).toContain('href={`#${sectionAnchorId(title)}`}')
+    expect(SRC).toContain('aria-controls={`${sectionAnchorId(title)}-body`}')
+    expect(SRC).toContain('id={`${sectionAnchorId(title)}-body`}')
   })
 
   it('kein Tab erzeugt zwei Sektionen mit demselben Anker', () => {
@@ -286,13 +279,13 @@ describe('D-S28: die Sektionskoepfe haben einen Rang bekommen', () => {
     const root = rootDecl * scale
     expect(root).toBeCloseTo(18.4, 3)
     const px = (rem: number) => rem * root
-    expect(px(1.15)).toBeCloseTo(21.16, 2)
+    expect(px(1)).toBeCloseTo(18.4, 2)
     expect(px(0.82)).toBeCloseTo(15.09, 2)
     expect(px(0.7)).toBeCloseTo(12.88, 2)
-    expect(px(1.15)).toBeGreaterThan(px(0.82))
+    expect(px(1)).toBeGreaterThan(px(0.82))
     expect(px(0.82)).toBeGreaterThan(px(0.7))
     // Und die Stufen stehen wirklich in der Datei.
-    expect(SRC).toContain('text-[1.15rem] font-semibold')
+    expect(SRC).toContain('text-[1rem] font-semibold leading-tight')
     expect(SRC).toContain('text-[0.82rem] font-semibold')
   })
 
@@ -416,10 +409,14 @@ describe('D-S30: Zustand und Aktion tragen nicht mehr dieselbe Flaeche', () => {
     expect(SRC).not.toContain("? 'bg-gray-200 dark:bg-white/10 text-gray-900 dark:text-white'")
   })
 
-  it('der gewaehlte Theme-Knopf spricht dieselbe Zustandssprache', () => {
-    for (const t of ['light', 'dark']) {
-      expect(SRC).toContain(`settings.theme === '${t}' ? 'bg-lazarus-accent-soft ring-1 ring-lazarus-accent-edge dark:ring-lazarus-accent`)
-    }
+  it('the Plugins entry uses the same quiet control style as the Settings tabs', () => {
+    const pluginClass = SRC.match(/<PluginCatalogMenu[\s\S]*?className="([^"]+)"/)?.[1] ?? ''
+    expect(pluginClass).toContain('rounded-md')
+    expect(pluginClass).toContain('border')
+    expect(pluginClass).toContain('bg-white/[0.03]')
+    expect(pluginClass).toContain('text-[0.7rem]')
+    expect(pluginClass).toContain('hover:border-purple-300/60')
+    expect(pluginClass).not.toContain('bg-lazarus-accent-soft')
   })
 
   it('die Aktion behaelt die neutrale graue Flaeche — sonst waere nur getauscht', () => {

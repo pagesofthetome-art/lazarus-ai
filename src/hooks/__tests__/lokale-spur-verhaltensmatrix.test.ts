@@ -51,7 +51,7 @@ import { __resetRunLanesForTests, localLaneHolder, queuedRunIds } from '../../li
 import { DEFAULT_SETTINGS } from '../../lib/constants'
 
 const LOCAL_MODEL = 'openai::local-builtin-model'
-const CLOUD_MODEL = 'lu-cloud::zai-org/GLM-5.3'
+const CLOUD_MODEL = 'openai::gpt-test'
 
 function controllableSSE() {
   let controller!: ReadableStreamDefaultController<Uint8Array>
@@ -261,7 +261,7 @@ describe('die lokale Spur: die volle Verhaltensmatrix aus Schritt 6', () => {
       settings: { ...DEFAULT_SETTINGS, cavemanMode: 'off', chatToolsEnabled: false },
     })
     useProviderStore.setState((s) => ({
-      providers: { ...s.providers, 'lu-cloud': { ...s.providers['lu-cloud'], enabled: true } },
+      providers: { ...s.providers, openai: { ...s.providers.openai, enabled: true, managed: false, isLocal: false, baseUrl: 'https://models.example.invalid/v1', apiKey: 'provider-test-key' } },
     }))
     useModelStore.setState({ models: [], activeModel: CLOUD_MODEL })
 

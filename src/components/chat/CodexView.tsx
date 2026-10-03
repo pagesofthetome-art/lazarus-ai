@@ -438,12 +438,12 @@ export function CodexView() {
         )}
 
         {developerMode && vmAccessError && !vmAccessConfirmOpen && (
-          <p className="px-3 py-1 text-[0.58rem] text-red-700 dark:text-red-300 border-b border-red-500/20" role="alert">
+          <p className="px-3 py-1 t-micro text-red-700 dark:text-red-300 border-b border-red-500/20" role="alert">
             {vmAccessError}
           </p>
         )}
         {developerMode && developerActionError && (
-          <p role="status" className="px-3 py-1 text-[0.58rem] text-amber-700 dark:text-amber-200 border-b border-amber-500/20">{developerActionError}</p>
+          <p role="status" className="px-3 py-1 t-micro text-amber-700 dark:text-amber-200 border-b border-amber-500/20">{developerActionError}</p>
         )}
 
         {/* Git-missing banner (v2.5.0). Codex shells out to git for

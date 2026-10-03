@@ -11,6 +11,7 @@ import { useModelStore } from '../stores/modelStore'
 import { useProviderStore } from '../stores/providerStore'
 import { getProviderForModel, getProviderIdFromModel } from '../api/providers'
 import { useSettingsStore } from '../stores/settingsStore'
+import { useCloudAuthStore } from '../stores/cloudAuthStore'
 import { resolveAgentNumCtx } from '../lib/agent-num-ctx'
 import {
   buildExtractionPrompt,
@@ -114,11 +115,17 @@ export async function extractMemoriesFromPair(
     const { provider, modelId, callModel } = call
     let expectedEntries = memState.entries
     const collectionRevision = memState.memoryCollectionRevision
+    const cloudSessionRevision = useCloudAuthStore.getState().sessionRevision
     let revoked = false
     const guard: MemoryWriteGuard = {
       current: () => {
         const current = useMemoryStore.getState()
-        if (current.entries !== expectedEntries || current.memoryCollectionRevision !== collectionRevision || !current.settings.autoExtractEnabled) revoked = true
+        if (
+          current.entries !== expectedEntries
+          || current.memoryCollectionRevision !== collectionRevision
+          || !current.settings.autoExtractEnabled
+          || useCloudAuthStore.getState().sessionRevision !== cloudSessionRevision
+        ) revoked = true
         return !revoked
       },
       wrote: () => { expectedEntries = useMemoryStore.getState().entries },

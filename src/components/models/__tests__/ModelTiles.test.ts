@@ -154,13 +154,11 @@ describe('Ton-Pass: „laeuft langsam" ist kein Fehler, „passt knapp" keine Wa
     expect(zeile).toContain('bg-orange-500/80')
   })
 
-  it('die Leiter bleibt eine Leiter: drei Zustaende, drei Farben', () => {
-    // Die mittlere Stufe hiess hier bis zum 04.09.2026 Bernstein. Sie heisst
-    // jetzt Blau, weil die App nur noch zwei Toene kennt und keiner davon
-    // Bernstein ist; die Leiter nennt damit den Ort statt einer Temperatur:
-    // Grafikspeicher, knapp daneben, CPU.
+  it('alle Hardware-Fit-Zustaende verwenden die definierte Farbpalette', () => {
+    // The fit indicator now distinguishes GPU fit, CPU fit, memory limits,
+    // unknown RAM, and the earlier tight-fit states.
     const punkte = [...SRC.matchAll(/dot: '([^']+)'/g)].map((m) => m[1])
-    expect(punkte).toHaveLength(4)
+    expect(punkte).toHaveLength(7)
     expect(new Set(punkte).size).toBe(4)
     expect(punkte[0]).toContain('emerald')
     expect(punkte[1]).toContain('sky')

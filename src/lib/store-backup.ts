@@ -55,6 +55,10 @@ export const STORE_KEYS = [
   // verloren, antwortet die API allen bereits eingerichteten Programmen des
   // Nutzers mit 401 — und die Fehlermeldung dort sagt nichts ueber ein Update.
   'lu-local-api',
+  // Installed plugin choices and their permissions. OAuth tokens are not
+  // stored here; omitting this key only made configured plugins disappear
+  // when the WebView2 profile had to be restored after an update.
+  'lazarus-plugin-connections',
 ]
 
 /** These persist through idbStorage (IndexedDB) since 2.5.0, because the

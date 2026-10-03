@@ -8,10 +8,8 @@
  *
  * Three things were true at once and each one made the other worse:
  *
- *   1. Plugins sat in the composer action bar as a bordered button with a
- *      label, next to Ask/Bypass/Plan, next to Think, next to the model
- *      picker. Four controls plus attach and voice in a box that is 70% of a
- *      split pane wide.
+ *   1. Plugins sits in the composer action bar and its catalog opens upward,
+ *      keeping the full menu above the narrow Code prompt area.
  *   2. The bar was `flex-wrap`, so the moment it ran out of width the tail
  *      (model picker, Send) dropped onto a second line.
  *   3. Starting a run WIDENS that bar: the mode trigger gains a run dot, or a
@@ -20,8 +18,8 @@
  *      and Stop appeared to open a line of its own.
  *
  * What this file pins, so none of the three can come back quietly:
- *   - Plugins is in the Code HEADER next to New, icon only, name in the
- *     tooltip. Not in composerActions, composerAbove or composerModel.
+ *   - Plugins stays in composerActions with the open-upward behavior used by
+ *     the Code toolbar.
  *   - Send and Stop are ONE fixed-size slot at the end of the row. Stop
  *     replaces Send in place, exactly as Chat has always done.
  *   - The bar never wraps, and everything in it is shrink-0 except the one
@@ -58,32 +56,17 @@ function propValue(src: string, prop: string): string {
   return src.slice(start)
 }
 
-const COMPOSER_PROPS = ['composerAbove', 'composerActions', 'composerModel']
-
-describe('Plugins moved out of the Code composer and into the header', () => {
-  it('is rendered in the header band, between New and the token counter', () => {
-    const header = CODEX.indexOf('data-testid="codex-header"')
-    const newSession = CODEX.indexOf('<span>New</span>')
-    const plugins = CODEX.indexOf('<PluginsDropdown')
-    const tokens = CODEX.indexOf('<TokenCounter')
-    expect(header).toBeGreaterThan(-1)
-    expect(plugins).toBeGreaterThan(newSession)
-    // TokenCounter is inside the header, so staying in front of it is proof
-    // that Plugins did not merely move up the file into some other band.
-    expect(tokens).toBeGreaterThan(plugins)
+describe('Plugins remains reachable from the Code action bar', () => {
+  it('is rendered in composerActions and opens upward', () => {
+    const actions = propValue(CODEX, 'composerActions')
+    expect(actions).toContain('<PluginsDropdown iconOnly openUpward />')
   })
 
-  it('is the icon form there, with the name in the tooltip', () => {
-    expect(CODEX).toMatch(/<PluginsDropdown iconOnly \/>/)
-    expect(PLUGINS).toMatch(/iconOnly = false/)
-    // The icon branch carries a tooltip and an accessible name and no label.
-    const iconBranch = PLUGINS.slice(
-      PLUGINS.indexOf('{iconOnly ? ('),
-      PLUGINS.indexOf(') : ('),
-    )
-    expect(iconBranch).toMatch(/title=\{anyPluginActive \? 'Plugins \(active\)' : 'Plugins'\}/)
-    expect(iconBranch).toMatch(/aria-label="Plugins"/)
-    expect(iconBranch).not.toMatch(/<span>Plugins<\/span>/)
+  it('keeps the compact icon accessible with a title and name', () => {
+    const actions = propValue(CODEX, 'composerActions')
+    expect(actions).toContain('<PluginsDropdown iconOnly openUpward />')
+    expect(PLUGINS).toMatch(/title=\{anyPluginActive \? 'Plugins \(active\)' : 'Plugins'\}/)
+    expect(PLUGINS).toMatch(/aria-label="Plugins"/)
   })
 
   it('the dropdown itself is unchanged, only the trigger and the place', () => {
@@ -94,19 +77,11 @@ describe('Plugins moved out of the Code composer and into the header', () => {
     }
   })
 
-  it('nothing handed to the Code prompt box mentions Plugins any more', () => {
-    // THE NEGATIVE CONTROL. Putting <PluginsDropdown openUpward /> back into
-    // composerActions turns this red, which is the only thing stopping the
-    // next round from quietly refilling the prompt window.
-    for (const prop of COMPOSER_PROPS) {
-      expect(propValue(CODEX, prop), `${prop} must not carry Plugins`).not.toMatch(/PluginsDropdown/)
-    }
-  })
-
-  it('leaves exactly one view-specific control in the Code composer', () => {
+  it('keeps both view-specific controls in the Code composer', () => {
     const actions = propValue(CODEX, 'composerActions')
+    expect(actions).toContain('<PluginsDropdown iconOnly openUpward />')
     expect(actions).toMatch(/<CodexModeDropdown openUpward \/>/)
-    expect(actions.match(/<[A-Z][A-Za-z0-9_]*/g)).toEqual(['<CodexModeDropdown'])
+    expect(actions.match(/<[A-Z][A-Za-z0-9_]*/g)).toEqual(['<PluginsDropdown', '<CodexModeDropdown'])
   })
 })
 

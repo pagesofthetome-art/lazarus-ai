@@ -54,7 +54,7 @@ describe('cloudAuthStore', () => {
 })
 
 describe('deriveCloudAvailable', () => {
-  it('requires signed-in + active license + launch gate + credit budget', () => {
+  it('keeps retired hosted cloud features unavailable, even with a valid legacy account', () => {
     expect(deriveCloudAvailable({ user: null, ...account({ licenseActive: false, quota: null }) })).toBe(false)
     expect(deriveCloudAvailable({ user: { id: 'u' }, ...account({ licenseActive: false, quota: quota(800) }) })).toBe(false)
     expect(deriveCloudAvailable({ user: { id: 'u' }, ...account({ quota: null }) })).toBe(false)
@@ -62,6 +62,6 @@ describe('deriveCloudAvailable', () => {
     expect(deriveCloudAvailable({ user: { id: 'u' }, ...account({ quota: quota(0) }) })).toBe(false)
     // Server-driven access gate (legacy closed-beta wall): access false gates out
     expect(deriveCloudAvailable({ user: { id: 'u' }, ...account({ access: false, quota: quota(800) }) })).toBe(false)
-    expect(deriveCloudAvailable({ user: { id: 'u' }, ...account({ quota: quota(800) }) })).toBe(true)
+    expect(deriveCloudAvailable({ user: { id: 'u' }, ...account({ quota: quota(800) }) })).toBe(false)
   })
 })

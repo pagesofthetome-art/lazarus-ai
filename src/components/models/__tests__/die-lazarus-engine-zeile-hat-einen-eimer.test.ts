@@ -14,7 +14,7 @@ import path from 'node:path'
 const MANAGER = fs.readFileSync(path.join(__dirname, '..', 'ModelManager.tsx'), 'utf8')
 const ENGINE_API = fs.readFileSync(path.join(__dirname, '..', '..', '..', 'api', 'engine.ts'), 'utf8')
 const RUST = fs.readFileSync(path.join(__dirname, '..', '..', '..', '..', 'src-tauri', 'src', 'commands', 'engine.rs'), 'utf8')
-const MAIN = fs.readFileSync(path.join(__dirname, '..', '..', '..', '..', 'src-tauri', 'src', 'main.rs'), 'utf8')
+const MAIN = fs.readFileSync(path.join(__dirname, '..', '..', '..', '..', 'src-tauri', 'src', 'desktop_main.rs'), 'utf8')
 const slice = (src: string, from: string, to: string) => {
   const a = src.indexOf(from)
   const b = src.indexOf(to, a)

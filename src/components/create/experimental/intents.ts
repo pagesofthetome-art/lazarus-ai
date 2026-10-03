@@ -197,9 +197,19 @@ const MLX_LOCAL_INTENTS: ReadonlySet<CreateIntent> = new Set<CreateIntent>(['ima
  * MLX case — silently drops the source and returns an unrelated fresh image.
  */
 export function visibleIntents(backend: CreateBackend, mlxHost: boolean): IntentMeta[] {
-  void backend
-  if (mlxHost) return INTENTS.filter((m) => MLX_LOCAL_INTENTS.has(m.id))
-  return INTENTS.filter((m) => !m.cloudOnly || m.hasLocalLane)
+  // A cloud backend can run every lane, regardless of the computer's local
+  // media runtime. Check it before the MLX rule: Mac users may select Cloud.
+  if (backend === 'cloud') return INTENTS
+
+  if (mlxHost) {
+    // Show cloud-backed teasers, but don't offer local ComfyUI workflows that
+    // have no MLX path and no hosted endpoint.
+    return INTENTS.filter((m) => m.cloudOnly || MLX_LOCAL_INTENTS.has(m.id))
+  }
+
+  // On ComfyUI hosts every mode is discoverable. Hosted-only modes remain
+  // visible as locked choices, while dual-lane modes use their local lane.
+  return INTENTS
 }
 
 /**
@@ -211,10 +221,9 @@ export function visibleIntents(backend: CreateBackend, mlxHost: boolean): Intent
  * have, so the honest state is the cloud teaser, not a working-looking pill.
  */
 export function isIntentLocked(meta: IntentMeta, backend: CreateBackend, mlxHost: boolean): boolean {
-  void meta
-  void backend
-  void mlxHost
-  return false
+  if (backend === 'cloud') return false
+  if (mlxHost) return !MLX_LOCAL_INTENTS.has(meta.id)
+  return Boolean(meta.cloudOnly && !meta.hasLocalLane)
 }
 
 /**

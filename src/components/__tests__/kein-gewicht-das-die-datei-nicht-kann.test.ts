@@ -5,7 +5,7 @@
  * ── Der Verdacht, und warum er nicht zutrifft ──
  *
  * Beim Nachpruefen von D-T03 fiel auf, dass Space Grotesk in
- * `public/fonts/lu-fonts.css` SECHS Deklarationen hat, aber nur DREI
+ * `public/fonts/lazarus-fonts.css` SECHS Deklarationen hat, aber nur DREI
  * physische Dateien — 500 und 700 zeigen paarweise auf dieselbe Datei, per
  * sha256 verglichen identisch:
  *
@@ -88,7 +88,7 @@ import {
 } from './woff2-tabellen'
 
 const ROOT = resolve(__dirname, '..', '..', '..')
-const CSS_PFAD = resolve(ROOT, 'public', 'fonts', 'lu-fonts.css')
+const CSS_PFAD = resolve(ROOT, 'public', 'fonts', 'lazarus-fonts.css')
 const CSS = readFileSync(CSS_PFAD, 'utf8')
 const BASIS = dirname(CSS_PFAD)
 const DEKLARATIONEN = deklarationen(CSS)

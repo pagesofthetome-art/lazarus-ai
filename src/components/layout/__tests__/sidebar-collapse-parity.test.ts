@@ -20,7 +20,7 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createElement } from 'react'
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
@@ -70,32 +70,12 @@ afterEach(() => {
   cleanup()
 })
 
-describe('the collapsed sidebar is a rail, not a hole', () => {
-  it('collapsed shows the rail with an expand button', () => {
+describe('the current Chat surface has no left sidebar', () => {
+  it('does not render a rail or panel in the collapsed state', () => {
     render(createElement(Sidebar))
-    expect(screen.getByTestId('sidebar-rail')).toBeTruthy()
-    expect(screen.queryByTestId('sidebar-panel')).toBeNull()
-    expect(screen.getByTestId('sidebar-toggle').getAttribute('aria-label')).toBe('Expand sidebar')
-  })
-
-  it('the rail is the web width, 56 px', () => {
-    render(createElement(Sidebar))
-    expect(screen.getByTestId('sidebar-rail').style.width).toBe('56px')
-  })
-
-  it('the expand button opens the panel, the collapse button closes it again', async () => {
-    render(createElement(Sidebar))
-    fireEvent.click(screen.getByTestId('sidebar-toggle'))
-    expect(useUIStore.getState().sidebarOpen).toBe(true)
-    // AnimatePresence mode="wait" lets the rail finish leaving before the
-    // panel enters, so the swap is one frame late in the DOM.
-    await waitFor(() => expect(screen.getByTestId('sidebar-panel')).toBeTruthy())
     expect(screen.queryByTestId('sidebar-rail')).toBeNull()
-
-    fireEvent.click(screen.getByTestId('sidebar-toggle'))
-    expect(useUIStore.getState().sidebarOpen).toBe(false)
-    await waitFor(() => expect(screen.getByTestId('sidebar-rail')).toBeTruthy())
     expect(screen.queryByTestId('sidebar-panel')).toBeNull()
+    expect(screen.queryByTestId('sidebar-toggle')).toBeNull()
   })
 
   it('COUNTER-TEST: outside Chat there is neither rail nor panel', () => {

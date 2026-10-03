@@ -46,8 +46,8 @@ function historyOf(tokens: number): Wire[] {
   return out
 }
 
-const CLOUD_32K = { providerId: 'lu-cloud', modelWindow: 32768, contextDecay: true }
-const CLOUD_262K = { providerId: 'lu-cloud', modelWindow: 262144, contextDecay: true }
+const CLOUD_32K = { providerId: 'anthropic', modelWindow: 32768, contextDecay: true }
+const CLOUD_262K = { providerId: 'anthropic', modelWindow: 262144, contextDecay: true }
 const OLLAMA = { providerId: 'ollama', modelWindow: 262144, contextDecay: true }
 /** Ein lokales Modell mit einem Fenster, das eine lange Unterhaltung sprengt. */
 const OLLAMA_8K = { providerId: 'ollama', modelWindow: 8192, contextDecay: true }
@@ -150,13 +150,13 @@ describe('2.6.8: ein lokales Modell wird gekappt — aber erst, wo es ueberlaeuf
       .toBe(knappDrunter.length)
   })
 
-  it('negative control: the same history on lu-cloud does shrink', () => {
+  it('negative control: the same history on a paid provider does shrink', () => {
     const history = historyOf(120000)
     expect(applyChatSendBudget(history, CLOUD_262K).messages.length).toBeLessThan(history.length)
   })
 
   it('an unknown window resolves to no cap rather than to a tiny one', () => {
-    expect(chatSendBudget({ providerId: 'lu-cloud', modelWindow: 0, contextDecay: true })).toBeNull()
+    expect(chatSendBudget({ providerId: 'anthropic', modelWindow: 0, contextDecay: true })).toBeNull()
   })
 
   it('nur der Notaus schliesst das Tor — der Anbieter nicht mehr', () => {
@@ -166,9 +166,9 @@ describe('2.6.8: ein lokales Modell wird gekappt — aber erst, wo es ueberlaeuf
     expect(chatBudgetApplies('ollama', true)).toBe(true)
     expect(chatBudgetApplies('lm-studio', true)).toBe(true)
     expect(chatBudgetApplies('openai', undefined)).toBe(true)
-    expect(chatBudgetApplies('lu-cloud', true)).toBe(true)
+    expect(chatBudgetApplies('anthropic', true)).toBe(true)
     // Der Notaus gilt fuer alle, lokal wie Cloud.
-    expect(chatBudgetApplies('lu-cloud', false)).toBe(false)
+    expect(chatBudgetApplies('anthropic', false)).toBe(false)
     expect(chatBudgetApplies('ollama', false)).toBe(false)
   })
 

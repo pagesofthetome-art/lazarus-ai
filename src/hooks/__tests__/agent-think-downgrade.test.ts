@@ -99,10 +99,10 @@ describe('the call sites name why, so nobody removes them as noise', () => {
   })
 
   it('the provider branch names where its 422 comes from', () => {
-    // Die 422-Entscheidung: DeepInfra hinter dem Lazarus-Cloud-Proxy, erreicht ueber
-    // provider.chatStream. Ohne diesen Satz sieht die Nummer beim naechsten
-    // Aufraeumen wieder wie useChat-Folklore aus.
-    expect(src).toContain('DeepInfra behind the retired hosted service proxy')
+    // Provider-compatible endpoints may use 422 for a rejected parameter.
+    // Keep the fallback tied to that transport, without naming a retired host.
+    expect(src).toContain('provider.chatStream')
+    expect(src).toContain('compatible endpoints may answer')
     expect(src).toContain('422')
   })
 })

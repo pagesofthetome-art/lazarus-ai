@@ -52,9 +52,13 @@ describe('D-S19: der Center-Slot traegt jetzt etwas, und rechts steht weniger', 
   })
 
   it('und nicht mehr rechts', () => {
-    // Alle sechs Ziele stehen in der Datenliste …
-    for (const label of ['Chat', 'Create', 'Compare', 'Benchmark', 'Models', 'Settings']) {
+    // These are the destinations in the global header. Compare and Benchmark
+    // belong to the Models screen, not the global navigation.
+    for (const label of ['Developer', 'Code', 'Chat', 'Create', 'Models', 'Settings']) {
       expect(CODE, `${label} fehlt in NAV_TARGETS`).toContain(`label: '${label}'`)
+    }
+    for (const label of ['Compare', 'Benchmark']) {
+      expect(CODE, `${label} gehört nicht in die globale Navigation`).not.toContain(`label: '${label}'`)
     }
     // … und die rechte Gruppe rendert keins davon mehr.
     expect(RIGHT).not.toContain('navTargets')
@@ -65,8 +69,7 @@ describe('D-S19: der Center-Slot traegt jetzt etwas, und rechts steht weniger', 
   it('rechts stehen nur Zustandsanzeigen und Schalter', () => {
     const komponenten = [...RIGHT.matchAll(/<([A-Z][A-Za-z]*)\s*\/>/g)].map((m) => m[1])
     expect(komponenten).toEqual(['DownloadBadge', 'UpdateBadge'])
-    // Der Theme-Knopf ist kein eigenes Bauteil und deshalb oben nicht dabei.
-    expect(RIGHT).toContain('onClick={toggleTheme}')
+    expect(RIGHT).toContain('aria-label="Open the gallery"')
   })
 
   it('und der Stale-Hinweis steht seit dem 04.09.2026 auch hier', () => {
@@ -112,13 +115,9 @@ describe('D-S20: ein Breakpoint, nicht zwei', () => {
     expect(CODE).not.toMatch(/\bxl:/)
   })
 
-  it('Leiste und Kebab schalten am selben Punkt', () => {
-    // 07.09.2026: zwischen dem 03.09. und dem Rollback war die Leiste ein
-    // Scrollrad, also ein Blockbehaelter mit eigener Scrollspur. Sie ist
-    // wieder die Reihe aus 2.6.7. Der Umschaltpunkt war die ganze Zeit
-    // derselbe, und genau das haelt dieser Test fest.
-    expect(NAV).toContain('hidden lg:flex')
-    expect(NAV).toContain('relative lg:hidden')
+  it('die aktuelle Navigation bleibt eine einzelne Zeile ohne Kebab-Umschaltung', () => {
+    expect(NAV).toContain('flex w-full max-w-3xl items-center justify-evenly')
+    expect(NAV).toContain('className="relative hidden"')
   })
 
   it('und der Punkt haengt nicht mehr an der View', () => {
@@ -178,19 +177,19 @@ describe('D-S21: das Klappmenue ist ein Menue', () => {
 })
 
 describe('D-S47: die Kebab-Regel ist an der Anordnung ablesbar', () => {
-  it('das Kebab steht bei dem, was es aufnimmt', () => {
-    // Vorher stand es rechts, bei CloudSwitch/Download/Theme — also genau bei
-    // den drei Dingen, die es NIE aufnimmt.
-    expect(NAV).toContain('<MoreVertical')
+  it('the visible navigation uses one shared destination list', () => {
+    expect(NAV).toContain('navTargets.map')
+    expect(NAV).toContain('className="relative hidden"')
     expect(RIGHT).not.toContain('<MoreVertical')
   })
 
-  it('und nimmt genau die Ziele auf, die die Leiste zeigt — dieselbe Liste', () => {
-    const leiste = NAV.slice(NAV.indexOf('hidden lg:flex'), NAV.indexOf('relative lg:hidden'))
-    const menue = NAV.slice(NAV.indexOf('relative lg:hidden'))
-    expect(leiste).toContain('navTargets.map')
-    expect(menue).toContain('navTargets.map')
-    // Ein Ziel, das nur in einer der beiden steht, kann es nicht mehr geben.
+  it('Compare und Benchmark stehen auf Models statt im globalen Header', () => {
+    const models = readFileSync(resolve(LAYOUT, '..', 'models', 'DiscoverModels.tsx'), 'utf-8')
+    expect(models).toContain('title="Compare models"')
+    expect(models).toContain("setView('benchmark')")
+    expect(models.indexOf('onClick={openCompare}')).toBeLessThan(models.indexOf("setView('benchmark')"))
+    expect(CODE).not.toContain("label: 'Compare'")
+    expect(CODE).not.toContain("label: 'Benchmark'")
   })
 
   it('die rechte Gruppe klappt nie — sie hat kein `lg:`-Verhalten', () => {

@@ -214,7 +214,7 @@ describe('project extraction isolation', () => {
   })
 })
 
-describe('lu-cloud', () => {
+describe('retired hosted provider', () => {
   it('fires no request without the opt-in (the shipped default)', async () => {
     activeModel = 'lu-cloud::Qwen/Qwen3-Coder-480B-A35B-Instruct'
     memoryCloudOptIn = false
@@ -224,16 +224,13 @@ describe('lu-cloud', () => {
     expect(chatStream).not.toHaveBeenCalled()
   })
 
-  it('fires on the cheapest catalogue model once the user opts in', async () => {
+  it('the old opt-in cannot re-enable a retired provider', async () => {
     activeModel = 'lu-cloud::Qwen/Qwen3-Coder-480B-A35B-Instruct'
     memoryCloudOptIn = true
 
     await threeTurns()
 
-    expect(chatStream).toHaveBeenCalledTimes(1)
-    expect(chatStream.mock.calls[0][0]).toBe('meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo')
-    // and never the flagship the visible chat is running on
-    expect(chatStream.mock.calls[0][0]).not.toContain('480B')
+    expect(chatStream).not.toHaveBeenCalled()
   })
 })
 

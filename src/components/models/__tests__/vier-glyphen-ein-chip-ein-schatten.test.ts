@@ -34,7 +34,7 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { ModelTile, BundleTile, CapLegend, CAPABILITIES } from '../ModelTiles'
+import { ModelTile, BundleTile, CapIcons, CapLegend, CAPABILITIES } from '../ModelTiles'
 import { ICON_SM } from '../../ui/icon-size'
 import type { DiscoverModel, ModelBundle } from '../../../api/discover'
 
@@ -100,7 +100,7 @@ describe('D-S22 · vier Bedeutungen, eine Optik, keine Legende', () => {
   })
 
   it('jedes Zeichen sagt seinen Namen, auch ohne Maus', () => {
-    const html = tile([alles])
+    const html = renderToStaticMarkup(createElement(CapIcons, { model: alles }))
     for (const cap of CAPABILITIES) {
       expect(html).toContain(`aria-label="${cap.title}"`)
       expect(html).toContain(`title="${cap.title}"`)
@@ -110,7 +110,7 @@ describe('D-S22 · vier Bedeutungen, eine Optik, keine Legende', () => {
 
   it('es GIBT eine Legende, und sie zeigt dieselben Zeichen in derselben Groesse', () => {
     const legende = renderToStaticMarkup(createElement(CapLegend))
-    const kachel = tile([alles])
+    const icons = renderToStaticMarkup(createElement(CapIcons, { model: alles }))
     for (const cap of CAPABILITIES) {
       expect(legende).toContain(cap.label)
       expect(legende).toContain(cap.title)
@@ -120,19 +120,17 @@ describe('D-S22 · vier Bedeutungen, eine Optik, keine Legende', () => {
     const pfade = (s: string) => [...s.matchAll(/ d="([^"]+)"/g)].map(m => m[1])
     const inLegende = new Set(pfade(legende))
     expect(inLegende.size).toBeGreaterThan(2)
-    for (const p of inLegende) expect(pfade(kachel)).toContain(p)
+    for (const p of inLegende) expect(pfade(icons)).toContain(p)
     // Und dieselbe Groesse — sonst ist es keine Legende, sondern ein Bild.
     expect(legende).toContain(`width="${ICON_SM}"`)
-    expect(kachel).toContain(`width="${ICON_SM}"`)
+    expect(icons).toContain(`width="${ICON_SM}"`)
   })
 
-  it('und sie steht wirklich auf dem Screen, ueber dem Raster', () => {
-    // Eine Legende, die nur im Test existiert, ist keine.
-    expect(SCREEN).toMatch(/<CapLegend\s*\/>/)
-    const legendeIdx = SCREEN.indexOf('<CapLegend')
-    const rasterIdx = SCREEN.indexOf('{gridGroups.map(')
-    expect(legendeIdx).toBeGreaterThan(-1)
-    expect(legendeIdx).toBeLessThan(rasterIdx)
+  it('the live card marks agentic models with the Agent badge', () => {
+    const html = tile([alles])
+    expect(html).toContain('> Agent</span>')
+    expect(html).toContain('title="Supports agent workflows and tool calling"')
+    expect(html).toContain('aria-label="Qwen3 8B supports agent workflows"')
   })
 
   it('die Legende kann nicht von den Kacheln abweichen — eine Tabelle, zwei Leser', () => {
@@ -255,15 +253,21 @@ describe('D-S24 · der Schatten, den niemand je gesehen hat', () => {
 describe('D-S25 · zwei Segmented-Sprachen 47px uebereinander', () => {
   const rows = SCREEN.slice(SCREEN.indexOf('{/* Filter bar:'), SCREEN.indexOf('{/* D-S22 ·'))
 
-  it('beide Reihen stehen in derselben Spur', () => {
-    expect((rows.match(/className=\{SEGMENT_TRACK\}/g) ?? []).length).toBe(2)
+  it('catalogue modes and size filters are separate labeled groups', () => {
+    expect(rows).toContain('aria-label="Catalogue"')
+    expect(rows).toContain('aria-label="Size"')
+    expect(rows.indexOf('aria-label="Catalogue"')).toBeLessThan(rows.indexOf('aria-label="Size"'))
+    expect((rows.match(/className=\{SEGMENT_TRACK\}/g) ?? []).length).toBe(1)
     expect(SCREEN).toMatch(/const SEGMENT_TRACK\s*=/)
   })
 
-  it('beide Reihen benutzen dasselbe Segment-Rezept', () => {
-    // Vier Mainstream-/Unfiltered- plus sechs Groessen-Segmente, alle
-    // `className="lazarus-control"` ohne Zusatz.
-    expect((rows.match(/className="lazarus-control"/g) ?? []).length).toBe(3)
+  it('the mode group retains Compare and Benchmark beside the catalogue modes', () => {
+    const catalogue = rows.slice(rows.indexOf('aria-label="Catalogue"'), rows.indexOf('aria-label="Size"'))
+    expect(catalogue).toContain('Mainstream')
+    expect(catalogue).toContain('Unfiltered')
+    expect(catalogue).toContain('Compare')
+    expect(catalogue).toContain('Benchmark')
+    expect((catalogue.match(/className="lazarus-control/g) ?? []).length).toBe(4)
   })
 
   it('kein Segment faerbt sich mehr selbst — der Zustand kommt aus aria-pressed', () => {

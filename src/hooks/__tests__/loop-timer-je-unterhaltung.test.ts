@@ -61,7 +61,7 @@ import { useToolAuditStore } from '../../stores/toolAuditStore'
 import { DEFAULT_SETTINGS } from '../../lib/constants'
 import { __resetRunStopsForTests } from '../../lib/run-stop'
 
-const MODEL = 'lu-cloud::zai-org/GLM-5.3'
+const MODEL = 'openai::gpt-test'
 
 const sse = (payload: object) =>
   new Response(`data: ${JSON.stringify(payload)}\n\ndata: [DONE]\n\n`, {
@@ -91,7 +91,7 @@ beforeEach(async () => {
     settings: { ...DEFAULT_SETTINGS, cavemanMode: 'off' },
   })
   useProviderStore.setState((s) => ({
-    providers: { ...s.providers, 'lu-cloud': { ...s.providers['lu-cloud'], enabled: true } },
+    providers: { ...s.providers, openai: { ...s.providers.openai, enabled: true, managed: false, isLocal: false, baseUrl: 'https://models.example.invalid/v1', apiKey: 'provider-test-key' } },
   }))
   useModelStore.setState({ models: [], activeModel: MODEL })
 })

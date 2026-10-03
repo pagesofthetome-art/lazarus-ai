@@ -56,7 +56,7 @@ import { DEFAULT_SETTINGS } from '../../lib/constants'
 import { __resetRunStopsForTests } from '../../lib/run-stop'
 import { toolRegistry, registerBuiltinTools } from '../../api/mcp'
 
-const MODEL = 'lu-cloud::zai-org/GLM-5.3'
+const MODEL = 'openai::test-agent'
 
 /**
  * A hand-driven SSE body: the test decides exactly when each chunk is
@@ -122,7 +122,13 @@ beforeEach(() => {
     settings: { ...DEFAULT_SETTINGS, cavemanMode: 'off' },
   })
   useProviderStore.setState((s) => ({
-    providers: { ...s.providers, 'lu-cloud': { ...s.providers['lu-cloud'], enabled: true } },
+    providers: { ...s.providers, openai: {
+      ...s.providers.openai,
+      enabled: true,
+      isLocal: false,
+      managed: false,
+      baseUrl: 'https://provider.test/v1',
+    } },
   }))
   useModelStore.setState({ models: [], activeModel: MODEL })
 })

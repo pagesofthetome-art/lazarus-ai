@@ -34,7 +34,7 @@ describe.each([
   })
 
   it('sets it where the wallet is refused', () => {
-    const at = src.indexOf("loopHalt = 'out of credits'")
+    const at = src.indexOf("loopHalt = 'provider quota exhausted'")
     expect(at).toBeGreaterThan(-1)
     const credits = src.indexOf("code === 'credits_exhausted'")
     expect(credits).toBeGreaterThan(-1)

@@ -24,6 +24,8 @@ export interface CloudAccount {
 
 interface CloudAuthState extends CloudAccount {
   paidPlan: boolean | null
+  /** Changes across every sign-in/sign-out boundary so in-flight work can be revoked. */
+  sessionRevision: number
   /** 'probing' until the keychain session restore + first /api/me resolve. */
   status: 'probing' | 'signed-out' | 'signed-in'
   user: CloudUser | null
@@ -40,12 +42,13 @@ export const useCloudAuthStore = create<CloudAuthState>()((set) => ({
   tier: null,
   access: true,
   paidPlan: null,
+  sessionRevision: 0,
   quota: null,
 
   setSignedOut: () =>
-    set({ status: 'signed-out', user: null, licenseActive: false, tier: null, access: true, paidPlan: null, quota: null }),
+    set((state) => ({ status: 'signed-out', user: null, licenseActive: false, tier: null, access: true, paidPlan: null, quota: null, sessionRevision: state.sessionRevision + 1 })),
   setSignedIn: (user, account) =>
-    set({ status: 'signed-in', user, ...account, paidPlan: account.licenseActive ? true : null }),
+    set((state) => ({ status: 'signed-in', user, ...account, paidPlan: account.licenseActive ? true : null, sessionRevision: state.sessionRevision + 1 })),
   setQuota: (quota) => set({ quota }),
 }))
 

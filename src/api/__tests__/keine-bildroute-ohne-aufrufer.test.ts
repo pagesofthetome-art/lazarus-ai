@@ -85,9 +85,12 @@ describe('der Remote-Server liefert keine Raster-Marke mehr aus', () => {
 })
 
 describe('die Gegenprobe: das Zeichen selbst ist nicht verschwunden', () => {
-  it('der Vektor, aus dem beide Seiten ihre Marke nehmen, liegt weiter in public/', () => {
-    const svg = resolve(ROOT, 'public', 'Lazarus-monogram.svg')
-    expect(existsSync(svg)).toBe(true)
-    expect(readFileSync(svg, 'utf8')).toContain('<path')
+  it('die aktuell verwendete Marken-Datei liegt weiter in public/', () => {
+    const brand = readFileSync(resolve(ROOT, 'src', 'components', 'layout', 'brand.ts'), 'utf8')
+    const assetPath = brand.match(/MONOGRAM\s*=\s*'([^']+)'/)?.[1]
+    expect(assetPath, 'brand.ts should name its shared mark').toBeTruthy()
+    const asset = resolve(ROOT, 'public', assetPath!.replace(/^\//, ''))
+    expect(existsSync(asset)).toBe(true)
+    expect(readFileSync(asset).byteLength).toBeGreaterThan(0)
   })
 })

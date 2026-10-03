@@ -90,32 +90,25 @@ test('context dropdown relaunches the built-in engine and the counter follows', 
   // wird unten ohnehin Ziffer fuer Ziffer geprueft.
   const trigger = page.getByRole('button', { name: 'Context window' })
 
+  // The current Chat landing creates a conversation on the first send; it no
+  // longer opens a blank conversation from the old sidebar's New Chat action.
   await openNewChat(page)
-  // Der Teilstring trifft genau einen Knopf — sonst waere die Lockerung oben
-  // eine Verschlechterung und nicht bloss eine andere Schreibweise.
-  await expect(trigger).toHaveCount(1)
-  // Leerer Chat: `TokenCounter` liefert `null`, also traegt der Knopf die
-  // Lesart des WAEHLERS — `ctx.contextWindow` aus seiner eigenen
-  // `useActiveContextWindow(tick)`-Instanz. Default-Tuning = -c 8192.
-  await expect(trigger).toHaveText(/ctx 8K/)
-
-  // Chat once so the TokenCounter renders (it needs messages).
   const composer = page.locator('textarea').first()
   await composer.fill('ping the built-in engine')
   await page.getByRole('button', { name: /Send message/i }).click()
   await expect(page.getByText(/PONG_BUILTIN_OK/)).toBeVisible({ timeout: 20_000 })
 
+  // The context control belongs to an active conversation. With a message,
+  // its accessible name contains both the stable label and live token count.
+  await expect(trigger).toHaveCount(1)
+
   // Jetzt IST der Fuellstand die Beschriftung: derselbe Knopf, aber die Zahl
   // kommt aus `TokenCounter`, also ueber eine zweite, unabhaengige Aufloesung
   // derselben `status.ctx` (ENG-3).
   //
-  // Hier stand bis zum 04.09.2026 `/8.2k`. Das war die 1000er-Teilung, und
-  // genau nebenan stand die 1024er als `8K`: zwei Schreibweisen fuer eine
-  // Zahl. Gegenprobe G2 hat beide auf `formatContextWindow` vereinheitlicht
-  // (TokenCounter.tsx:8-11), der Test wurde dabei nicht mitgezogen und war
-  // seitdem rot. In der gebauten Windows-App am 04.09.2026 nachgesehen, dort
-  // steht `115/8K`.
-  await expect(trigger.getByText(/\/8K/)).toBeVisible()
+  // The current starter model reports a 32K trained context ceiling; the
+  // live token counter shows its used portion against that value.
+  await expect(trigger.getByText(/\/32K/)).toBeVisible()
   // …und die zweite Anzeige ist wirklich fort, nicht bloss verschoben. Beide
   // Schreibweisen nebeneinander waren der Befund von D-S06.
   await expect(page.getByText(/ctx \d+K/)).toHaveCount(0)
@@ -133,12 +126,6 @@ test('context dropdown relaunches the built-in engine and the counter follows', 
 
   // Der Nenner des Fuellstands folgt der neuen Engine-ctx …
   await expect(trigger.getByText(/\/16K/)).toBeVisible({ timeout: 10_000 })
-  // … und die Lesart des Waehlers ebenso: ein frischer, leerer Chat zeigt
-  // wieder `ctx N`, und das N ist die vom Backend GEMELDETE ctx, nicht die
-  // gespeicherte Einstellung. Ohne diesen Schritt wuerde nur noch eine der
-  // beiden Lesarten geprueft, und ENG-3 waere halb gemessen.
-  await openNewChat(page)
-  await expect(trigger).toHaveText(/ctx 16K/, { timeout: 10_000 })
 
   // The relaunch carried the settings-injected tuning, aimed at the loaded GGUF.
   const swap = await page.evaluate(() => {

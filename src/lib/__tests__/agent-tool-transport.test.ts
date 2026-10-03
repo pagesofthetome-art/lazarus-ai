@@ -62,7 +62,9 @@ describe('the runtime refusal is a downgrade, not a dead end', () => {
   })
 
   it('a local provider gets the fallback message, factually correct', () => {
-    expect(agent).toContain("getProviderIdFromModel(activeModel) !== 'lu-cloud'")
+    // The runtime refusal is handled for every active transport; model fit is
+    // decided by the shared capability resolver before the next run.
+    expect(agent).toContain('markToolsUnsupported(modelToUse)')
     expect(agent).toContain('Lazarus has switched it to the prompt-based tool transport')
   })
 
@@ -71,9 +73,8 @@ describe('the runtime refusal is a downgrade, not a dead end', () => {
     expect(agent).not.toContain("can't run in Agent or Code mode")
   })
 
-  it('NEGATIVE CONTROL: an retired hosted service model with no transport at all stays blocked', () => {
-    // The server already translates prompts itself; its refusal is final and
-    // a client-side hermes retry would only burn paid tokens.
-    expect(agent).toContain("it can't run in Agent mode")
+  it('NEGATIVE CONTROL: the removed hosted provider cannot be constructed', () => {
+    const providers = read('../../api/providers/registry.ts')
+    expect(providers).toContain("This hosted provider was removed from Lazarus")
   })
 })

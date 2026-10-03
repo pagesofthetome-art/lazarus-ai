@@ -57,7 +57,7 @@ import { useGenerationStore } from '../../stores/generationStore'
 import { DEFAULT_SETTINGS } from '../../lib/constants'
 import { stopAllBackgroundWork } from '../../lib/background-shutdown'
 
-const MODEL = 'lu-cloud::zai-org/GLM-5.3'
+const MODEL = 'openai::gpt-test'
 
 function controllableSSE() {
   let controller!: ReadableStreamDefaultController<Uint8Array>
@@ -90,7 +90,7 @@ beforeEach(() => {
   useGenerationStore.setState({ generating: {}, aborters: {}, runs: {} })
   useModelStore.setState({ models: [], activeModel: MODEL })
   useSettingsStore.setState({ settings: { ...DEFAULT_SETTINGS, cavemanMode: 'off', chatToolsEnabled: false } })
-  useProviderStore.setState((s) => ({ providers: { ...s.providers, 'lu-cloud': { ...s.providers['lu-cloud'], enabled: true } } }))
+  useProviderStore.setState((s) => ({ providers: { ...s.providers, openai: { ...s.providers.openai, enabled: true, managed: false, isLocal: false, baseUrl: 'https://models.example.invalid/v1', apiKey: 'provider-test-key' } } }))
 })
 afterEach(() => vi.restoreAllMocks())
 

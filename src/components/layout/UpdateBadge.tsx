@@ -33,6 +33,15 @@ export function UpdateBadge() {
   useEffect(() => { initUpdateChecker() }, [])
 
   useEffect(() => {
+    if (!launchPromptVersion) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') dismissLaunchPrompt()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [launchPromptVersion, dismissLaunchPrompt])
+
+  useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }

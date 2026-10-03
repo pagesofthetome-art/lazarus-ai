@@ -23,6 +23,7 @@
 import { getToolCapability } from '../api/tool-capability'
 import { getToolCallingStrategy, isAgentCompatible, type ToolCallingStrategy } from './model-compatibility'
 import { getProviderIdFromModel } from '../api/providers'
+import { useProviderStore } from '../stores/providerStore'
 
 /**
  * How a model can call tools.
@@ -45,16 +46,13 @@ export function resolveToolSupport({ name, supportsTools }: ToolSupportInput): T
 
   const provider = getProviderIdFromModel(name)
   const proven = getToolCapability(name)
+  const isLocal = provider === 'ollama' || useProviderStore.getState().providers[provider]?.isLocal === true
 
-  // A proven rejection and a server-declared `false` both mean the same thing:
-  // do not put `tools` in the request. For a LOCAL model that is not the end of
-  // it — the XML path is pure prompting and often still works, which is how
-  // small Ollama models have driven the agent since 2.5.3. For a REMOTE model
-  // the provider may translate prompts server-side and report `supports_tools: true`, so a
-  // `false` from the provider means the model genuinely cannot be driven, and
-  // retrying it client-side would only burn the user's tokens.
+  // A proven rejection and a server-declared `false` both mean not to put
+  // `tools` in the request. Local models can still use the XML prompt path;
+  // remote providers have no safe local fallback when they refuse tools.
   if (proven === 'unsupported' || supportsTools === false) {
-    return 'hermes'
+    return isLocal ? 'hermes' : 'none'
   }
 
   // Nothing says no. Ollama still needs the family check (its catalogue is

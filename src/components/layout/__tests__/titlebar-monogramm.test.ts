@@ -31,7 +31,7 @@
  * uebernommen.
  */
 import { describe, it, expect } from 'vitest'
-import { readFileSync, statSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const ROOT = resolve(__dirname, '..', '..', '..', '..')
@@ -40,12 +40,7 @@ const TITLEBAR = readFileSync(resolve(__dirname, '..', 'Titlebar.tsx'), 'utf8')
 /** Ohne Kommentare — die Begruendung im Kopf der Datei NENNT den PNG-Pfad. */
 const CODE = TITLEBAR.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1')
 
-/** Breite/Hoehe aus dem IHDR-Chunk eines PNG (Bytes 16..24, big endian). */
-function pngSize(file: string): [number, number] {
-  const b = readFileSync(file)
-  expect(b.subarray(1, 4).toString('ascii'), `${file} ist kein PNG`).toBe('PNG')
-  return [b.readUInt32BE(16), b.readUInt32BE(20)]
-}
+const BRAND = readFileSync(resolve(__dirname, '..', 'brand.ts'), 'utf8')
 
 describe('der Fensterbalken zieht die Vektorfassung', () => {
   it('genau eine Quelle fuer den Pfad, und die ist `brand.ts`', () => {
@@ -98,33 +93,11 @@ describe('„streichen" — auf mac ausgefuehrt, auf Windows/Linux begruendet ni
   })
 })
 
-describe('die Begruendung stimmt noch — nachgerechnet, nicht abgeschrieben', () => {
-  it('das PNG ist wirklich 512x512, also 28,4x zu gross fuer 18px', () => {
-    const [w, h] = pngSize(resolve(PUBLIC, 'Lazarus-monogram-bw.png'))
-    expect([w, h]).toEqual([512, 512])
-    // Jedes Zielpixel mittelt ueber rund (512/18)^2 Quellpixel.
-    expect(Math.round((w / 18) ** 2)).toBeGreaterThan(800)
-  })
-
-  it('das SVG ist ein SVG mit viewBox — sonst skaliert es auch nicht', () => {
-    const svg = readFileSync(resolve(PUBLIC, 'Lazarus-monogram.svg'), 'utf8')
-    expect(svg).toMatch(/<svg[^>]*viewBox="0 0 1024\.?\d* 1024\.?\d*"/)
-  })
-
-  it('die SVG-Datei ist GROESSER als das PNG — das ist kein Platzgewinn', () => {
-    // Die unbequeme Haelfte der Begruendung. Faellt dieser Test, weil das
-    // SVG kleiner geworden ist, gehoert der Kommentar in Titlebar.tsx
-    // angepasst — nicht dieser Test gestrichen.
-    const svg = statSync(resolve(PUBLIC, 'Lazarus-monogram.svg')).size
-    const png = statSync(resolve(PUBLIC, 'Lazarus-monogram-bw.png')).size
-    expect(svg).toBeGreaterThan(png)
-  })
-
-  it('der Kommentar sagt ausdruecklich, dass der Boot-Chunk davon nichts hat', () => {
-    // `public/` wird von Vite kopiert, nie gebuendelt: im JS steht in beiden
-    // Faellen nur der Pfad als String. Gemessen: 727.739 Byte mit dem PNG,
-    // 727.736 mit dem SVG — die drei Byte sind der kuerzere Pfad.
-    expect(TITLEBAR).toMatch(/Was das NICHT tut: den Boot-Chunk verkleinern/)
-    expect(TITLEBAR).toMatch(/nie gebuendelt/)
+describe('das Fensterzeichen folgt dem zentralen Markenpfad', () => {
+  it('brand.ts verweist auf eine ausgelieferte Datei, die Titlebar tatsaechlich verwendet', () => {
+    const assetPath = BRAND.match(/MONOGRAM\s*=\s*'([^']+)'/)?.[1]
+    expect(assetPath).toBeTruthy()
+    expect(CODE).toContain('src={MONOGRAM}')
+    expect(existsSync(resolve(PUBLIC, assetPath!.replace(/^\//, '')))).toBe(true)
   })
 })

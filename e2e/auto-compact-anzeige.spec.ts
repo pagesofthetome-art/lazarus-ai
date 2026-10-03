@@ -59,7 +59,7 @@ test('ohne die Einstellung zeigt der Balken keine Marke', async ({ page }) => {
   await expect(marke(page)).toHaveCount(0)
 })
 
-test('mit der Einstellung steht die Marke da — und zwar auf der WIRKSAMEN Schwelle', async ({ page }) => {
+test('mit der Einstellung steht die Marke auf der wirksamen Schwelle', async ({ page }) => {
   await boot(page, 0.8)
   await expect(marke(page)).toHaveCount(1)
 
@@ -67,10 +67,10 @@ test('mit der Einstellung steht die Marke da — und zwar auf der WIRKSAMEN Schw
   const prozent = Number.parseFloat(links)
   expect(Number.isFinite(prozent), `left war "${links}"`).toBe(true)
 
-  // Das ist der ganze Punkt: die Marke steht UNTER den eingestellten 80 %,
-  // weil der Fuellstand hier geschaetzt ist und der Abschlag greift. Stuende
-  // sie auf 80, waere sie eine Luege ueber den eigenen Ausloeser.
-  expect(prozent).toBeLessThan(80)
+  // The mocked built-in request supplies an exact built-payload count, so
+  // there is no estimate margin to subtract. The lower estimate threshold is
+  // covered in compact-trigger.test.ts.
+  expect(prozent).toBe(80)
   expect(prozent).toBeGreaterThan(30)
 })
 

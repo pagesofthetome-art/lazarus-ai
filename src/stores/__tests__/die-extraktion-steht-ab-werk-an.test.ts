@@ -1,17 +1,13 @@
 /**
- * R5-27 und R2-48, Entscheid David vom 12.09.2026: die automatische
- * Erinnerungs-Extraktion steht ab Werk AN.
+ * Automatic memory extraction defaults to enabled for supported local models.
  *
  * Drei Tore standen davor, und im Desktop war das dritte still zu. Die zwei
  * Schalter in den Erinnerungseinstellungen standen auf an, das Kostentor
- * `memoryCloudOptIn` stand auf aus, und es gab keine Oberflaeche, die es
- * geoeffnet haette. Auf retired hosted service lief die Extraktion damit nie, und niemand
- * konnte das merken: eine Funktion, die nichts tut, meldet sich nicht.
+ * The retired hosted provider must remain unavailable even for profiles that
+ * still carry its old opt-in field.
  *
- * Der zweite Test ist die Grenze des Entscheids. Nur NEUE Profile bekommen die
- * Vorgabe. Die Migration wird nicht angefasst, sie bleibt rein additiv, und
- * ein Profil, in dem der alte Wert steht, behaelt ihn. Ein Einmal-Reset waere
- * genau der Fehler aus v10 und v19 (DOWNGRADE-KONTRAKT).
+ * The migration removes the retired hosted-service consent flag from both
+ * existing and new profiles; local extraction defaults remain independent.
  *
  * Run: npx vitest run src/stores/__tests__/die-extraktion-steht-ab-werk-an.test.ts
  */
@@ -22,24 +18,22 @@ import { useMemoryStore } from '../memoryStore'
 import { useSettingsStore } from '../settingsStore'
 
 describe('die automatische Erinnerungs-Extraktion', () => {
-  it('steht bei einem frischen Profil an, auch auf retired hosted service', () => {
+  it('is enabled locally and does not retain a retired hosted-service consent flag', () => {
     const settings = useMemoryStore.getState().settings
     expect(settings.autoExtractEnabled, 'der Hauptschalter').toBe(true)
     expect(settings.autoExtractInAllModes, 'ausserhalb des Agentenmodus').toBe(true)
-    expect(DEFAULT_SETTINGS.memoryCloudOptIn, 'das Kostentor auf retired hosted service').toBe(true)
-    // Das Tor ist die Stelle, an der es im Desktop still endete.
-    expect(silentCallAllowed('lu-cloud', DEFAULT_SETTINGS.memoryCloudOptIn)).toBe(true)
-    // Und die eigene Maschine war nie betroffen: dort gab es nie eine Rechnung.
+    expect('memoryCloudOptIn' in DEFAULT_SETTINGS).toBe(false)
+    expect(silentCallAllowed('lu-cloud', true)).toBe(false)
     expect(silentCallAllowed('ollama', false)).toBe(true)
   })
 
-  it('laesst ein bestehendes Profil bei seinem eigenen Wert', () => {
+  it('entfernt das alte Cloud-Zustimmungsfeld aus bestehenden Profilen', () => {
     const migrate = useSettingsStore.persist.getOptions().migrate
     expect(migrate, 'die Migration ist weg').toBeTypeOf('function')
     const alt = migrate!(
       { settings: { ...DEFAULT_SETTINGS, memoryCloudOptIn: false }, personas: [] },
       21,
-    ) as { settings: { memoryCloudOptIn: boolean } }
-    expect(alt.settings.memoryCloudOptIn, 'die Migration hat den Wert ueberschrieben').toBe(false)
+    ) as { settings: Record<string, unknown> }
+    expect(alt.settings).not.toHaveProperty('memoryCloudOptIn')
   })
 })

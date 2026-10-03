@@ -28,15 +28,18 @@ import { useStudioPrice } from '../useStudioPrice'
 import { CloudJobError } from '../../../../api/cloud/client'
 
 const hoisted = vi.hoisted(() => ({ studioQuote: vi.fn() }))
+vi.mock('../../../../lib/render/create-studio', () => ({
+  createStudioCost: () => 1,
+  pricesByInput: () => false,
+}))
 vi.mock('../../../../api/cloud/studio', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../../api/cloud/studio')>()),
   studioQuote: hoisted.studioQuote,
 }))
 
-// A real Studio registry id, price.mode 'output' (pricesByInput() is false,
-// so the network branch actually runs); createStudioCost's formula fallback
-// needs a real entry to compute from.
-const MODEL = 'preset-wan-2.2-spicy-extend'
+// Price calculation is mocked: this test covers the quote debounce behavior,
+// independently of the optional hosted-model registry (which can be empty).
+const MODEL = 'test-output-model'
 
 afterEach(() => {
   cleanup()

@@ -43,7 +43,7 @@ import { useProviderStore } from '../../stores/providerStore'
 import { useGenerationStore } from '../../stores/generationStore'
 import { DEFAULT_SETTINGS } from '../../lib/constants'
 
-const MODEL = 'lu-cloud::zai-org/GLM-5.3'
+const MODEL = 'openai::gpt-test'
 
 /**
  * A hand-driven SSE body: the test decides exactly when each chunk is
@@ -83,7 +83,17 @@ beforeEach(() => {
     settings: { ...DEFAULT_SETTINGS, cavemanMode: 'off', chatToolsEnabled: false },
   })
   useProviderStore.setState((s) => ({
-    providers: { ...s.providers, 'lu-cloud': { ...s.providers['lu-cloud'], enabled: true } },
+    providers: {
+      ...s.providers,
+      openai: {
+        ...s.providers.openai,
+        enabled: true,
+        managed: false,
+        isLocal: false,
+        baseUrl: 'https://models.example.invalid/v1',
+        apiKey: 'provider-test-key',
+      },
+    },
   }))
 })
 afterEach(() => vi.restoreAllMocks())

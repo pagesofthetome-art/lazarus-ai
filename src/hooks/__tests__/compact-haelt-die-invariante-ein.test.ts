@@ -33,7 +33,7 @@ vi.mock('../useMemory', () => ({
   extractMemoriesFromPair: async () => {},
 }))
 vi.mock('../../lib/run-lane-of-model', () => ({
-  laneOf: (model: string) => (model.startsWith('lu-cloud::') ? 'cloud' : 'local'),
+  laneOf: (model: string) => (model === 'openai::gpt-test' ? 'cloud' : 'local'),
   currentLaneFacts: () => ({ openaiSlotIsLocal: true, ollamaBaseIsLocal: true }),
 }))
 
@@ -54,7 +54,7 @@ import { useGenerationStore } from '../../stores/generationStore'
 import { __resetRunLanesForTests } from '../../lib/run-lanes'
 import { DEFAULT_SETTINGS } from '../../lib/constants'
 
-const CLOUD_MODEL = 'lu-cloud::zai-org/GLM-5.3'
+const CLOUD_MODEL = 'openai::gpt-test'
 const LOCAL_MODEL = 'openai::local-compact-model'
 
 function controllableSSE() {
@@ -92,8 +92,7 @@ beforeEach(() => {
   useProviderStore.setState((s) => ({
     providers: {
       ...s.providers,
-      openai: { ...s.providers.openai, enabled: true },
-      'lu-cloud': { ...s.providers['lu-cloud'], enabled: true },
+      openai: { ...s.providers.openai, enabled: true, managed: false, isLocal: false, baseUrl: 'https://models.example.invalid/v1', apiKey: 'provider-test-key' },
     },
   }))
 })

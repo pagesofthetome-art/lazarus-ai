@@ -18,7 +18,13 @@ export async function openNewChat(page: Page): Promise<void> {
     // parked us on the Models page.
     const back = page.getByRole('button', { name: /Back to chat/i })
     if (await back.isVisible().catch(() => false)) await back.click()
-    await page.getByRole('button', { name: /New Chat/i }).click()
+    // The current Chat landing keeps the composer in the main surface; there
+    // is no visible New Chat button when the left sidebar has been removed.
+    // Sending the first message creates the conversation, so these composer
+    // specs only need to ensure the real input is ready. Older builds that
+    // still expose a New Chat action can use it without changing this helper.
+    const newChat = page.getByRole('button', { name: /^New Chat$/i }).first()
+    if (await newChat.isVisible().catch(() => false)) await newChat.click()
     await expect(page.locator('textarea').first()).toBeVisible({ timeout: 2_000 })
   }).toPass({ timeout: 30_000 })
 }

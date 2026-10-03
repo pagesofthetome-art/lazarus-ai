@@ -26,6 +26,9 @@ on:
 jobs:
   lint-and-build:
     runs-on: ubuntu-22.04
+    env:
+      # Vitest exercises the browser updater's public release lookup.
+      VITE_GITHUB_REPO: ${{ github.repository }}
 
     steps:
       - name: Checkout repository

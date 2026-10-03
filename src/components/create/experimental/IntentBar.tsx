@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Cloud } from 'lucide-react'
 import { useCreateStore } from '../../../stores/createStore'
-import { visibleIntents } from './intents'
+import { isIntentLocked, visibleIntents } from './intents'
 import { isMlxImageHost } from '../../../api/mlx-image'
 import { cn } from '../ui/cn'
 import { ICON_SM } from '../../ui/icon-size'
@@ -60,16 +60,9 @@ export function IntentBar() {
   const intent = useCreateStore((s) => s.intent())
   const setIntent = useCreateStore((s) => s.setIntent)
   const backend = useCreateStore((s) => s.backend)
-  // Every tool is always in the bar. The 2.5.8 lanes with hasLocalLane
-  // (lipsync / music / extend / motion) are REAL local tabs, plain selectable
-  // pills with NO cloud glyph (David 2026-07-19: the top row only carries a
-  // cloud badge for the genuinely hosted-only tools). Only upscale, eraser and
-  // character training (cloudOnly, no local backend) render as locked,
-  // cloud-tagged pills in local mode; a tap opens the teaser sheet / plans gate.
-  //
-  // On an MLX Mac (no ComfyUI at all) those lanes have no local implementation
-  // either, so they lock there too. Both rules live in intents.ts so they stay
-  // pure + unit tested; this component only renders the verdict.
+  // The shared helper returns every mode relevant to this backend and host.
+  // Local-only gaps stay visible as Cloud-locked choices; isIntentAvailable
+  // uses the same rule for result actions that switch into an intent.
   const mlxHost = isMlxImageHost()
   const intents = visibleIntents(backend, mlxHost)
   const [open, setOpen] = useState(false)
@@ -113,6 +106,7 @@ export function IntentBar() {
         >
           {intents.map((meta) => {
             const selected = intent === meta.id
+            const locked = isIntentLocked(meta, backend, mlxHost)
             const Icon = meta.icon
             return (
               <button
@@ -120,18 +114,22 @@ export function IntentBar() {
                 type="button"
                 role="option"
                 aria-selected={selected}
+                aria-disabled={locked}
                 aria-label={meta.label}
-                title={meta.label}
-                onClick={() => { setIntent(meta.id); setOpen(false) }}
+                title={locked ? `${meta.label} requires the Cloud backend` : meta.label}
+                onClick={() => { if (!locked) { setIntent(meta.id); setOpen(false) } }}
                 className={cn(
                   'flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors',
-                  selected
+                  locked
+                    ? 'cursor-not-allowed border-transparent text-gray-500/70 dark:text-gray-500'
+                    : selected
                     ? 'border-purple-200/55 bg-purple-500/20 text-purple-50 shadow-[0_0_12px_rgba(168,85,247,0.24)]'
                     : 'border-transparent text-gray-400 hover:border-purple-300/25 hover:bg-purple-500/10 hover:text-purple-100',
                 )}
               >
                 <Icon size={ICON_SM} />
                 <span className="t-control">{meta.short}</span>
+                {locked && <Cloud size={ICON_SM} className="ml-auto opacity-70" aria-hidden="true" />}
               </button>
             )
           })}

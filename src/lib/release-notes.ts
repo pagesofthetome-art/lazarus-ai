@@ -23,6 +23,23 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '3.0.5',
+    headline: 'A more reliable catalog and smoother update path.',
+    lines: [
+      'Model recommendations now stay aligned with Lazarus tasks and the current hardware fit indicator.',
+      'Long multilingual speech is split into safe chunks, and startup updates remain dismissible.',
+      'Memory, tool calling, and model backups handle session and provider changes more reliably.',
+    ],
+  },
+  {
+    version: '3.0.4',
+    headline: 'A clearer model catalog and safer updates at startup.',
+    lines: [
+      'Model cards now give clearer task recommendations, capability filters, and fit guidance based on the current computer.',
+      'Lazarus checks for updates once when it opens and asks before downloading or installing one.',
+    ],
+  },
+  {
     version: '3.0.3',
     headline: 'A hotfix: chats with many images no longer run the app out of memory, Create reads a model\'s family from the file, and the five bugs reported on GitHub since 3.0.2 are fixed.',
     lines: [

@@ -132,7 +132,7 @@ describe('createStore Studio fields', () => {
 
   // ── 2. addToGallery: nur die Wolken-Spur stellt den Waehler um ─
 
-  describe('addToGallery only steers the cloud model picker on the cloud backend', () => {
+  describe('addToGallery never steers the retired cloud model picker', () => {
     it('a local render leaves cloudImageModel untouched', () => {
       useCreateStore.setState({ backend: 'local', cloudImageModel: 'stays-as-is' })
       useCreateStore.getState().addToGallery(makeGalleryItem('local-1', { model: 'flux-schnell' }))
@@ -145,16 +145,16 @@ describe('createStore Studio fields', () => {
       expect(useCreateStore.getState().cloudVideoModel).toBe('stays-as-is')
     })
 
-    it('a cloud image render DOES steer cloudImageModel to the model that made it', () => {
+    it('a legacy cloud image item leaves cloudImageModel untouched', () => {
       useCreateStore.setState({ backend: 'cloud', cloudImageModel: 'flux-dev' })
       useCreateStore.getState().addToGallery(makeGalleryItem('cloud-1', { model: 'flux-schnell' }))
-      expect(useCreateStore.getState().cloudImageModel).toBe('flux-schnell')
+      expect(useCreateStore.getState().cloudImageModel).toBe('flux-dev')
     })
 
-    it('a cloud video render steers cloudVideoModel the same way', () => {
+    it('a legacy cloud video item leaves cloudVideoModel untouched', () => {
       useCreateStore.setState({ backend: 'cloud', cloudVideoModel: 'wan-2.2-fast' })
       useCreateStore.getState().addToGallery(makeGalleryItem('cloud-2', { type: 'video', model: 'wan-2.2-720p' }))
-      expect(useCreateStore.getState().cloudVideoModel).toBe('wan-2.2-720p')
+      expect(useCreateStore.getState().cloudVideoModel).toBe('wan-2.2-fast')
     })
 
     it('the gallery item still lands regardless of backend', () => {

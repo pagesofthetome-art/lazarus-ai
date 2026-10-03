@@ -15,7 +15,6 @@
  *   Mikrofon    p-1.5 rounded-lg               Radius 9,2 · Polster 6,9
  *   Think       px-1.5 py-1.5 rounded-md       Radius 6,9 · Rand nur EIN
  *   Cloud       px-1.5 py-1.5 rounded-md       Radius 6,9 · Dauer-Rand
- *   Docs        px-2 py-1.5 rounded-md         Radius 6,9 · Rand nur EIN
  *   Tools       px-2 py-1.5 rounded-md         Radius 6,9 · nie ein Rand
  *   Plugins     px-2 py-0.5 rounded            Radius 4,6 · Dauer-Rand
  *   Modell      h-[26px] px-2 rounded-md       Radius 6,9 · Dauer-Rand
@@ -53,25 +52,20 @@
  * Formsprachen-Pruefung wie alle anderen.
  *
  * NACHGEZOGEN (Zusammenfuehrung mit der 2.6.8-Linie): der Effort-Knopf und
- * `chat/DocsButton.tsx`. Beide sind an der Grammatik vorbeigekommen, und der
- * zweite auf die gefaehrlichere Art:
+ * `chat/DocsButton.tsx`. Der Effort-Knopf bleibt in der Aktionszeile; Docs
+ * wurde auf Wunsch entfernt, weil der Paperclip bereits Dateien hinzufuegt.
+ * Der zweite alte Kontrollpunkt war dadurch gefaehrlich blind:
  *
  *   • Der Effort-Knopf ist neu (`ChatInput.tsx`, neben Think) und brachte
  *     genau die Klassenkette mit, die der Composer-Commit am Think-Knopf
  *     abgebaut hatte: `bg-blue-500/15 text-blue-400 border-blue-500/30`,
  *     dazu `transition-all` und `text-[0.6rem]`. Er faellt hier durch die
  *     bestehenden Pruefungen: der Waechter war an dieser Stelle ROT.
- *   • Docs ist in eine eigene Datei gezogen (A9, drei Zustaende) und wird
- *     seither als `<DocsButton />` eingehaengt. `controlClassNames` sucht
- *     `<button>`, hat dieses Control also gar nicht mehr GESEHEN: keine
- *     Meldung, kein Rot, ein blinder Fleck. Und weil gleichzeitig der
- *     Effort-Knopf dazukam, stand die Zaehlung weiter auf zwoelf. Zwei
- *     Fehler, die sich gegenseitig gedeckt haben. Genau dafuer ist die Zahl
- *     da, also wird sie hier nicht gerettet, sondern richtiggestellt.
+ *   • Docs ist aus composerActions entfernt. Der RAG-Bereich bleibt ueber
+ *     passende Hinweise erreichbar; Dateien kommen ueber den Paperclip.
  *
- * DocsButton wird deshalb, wie VoiceButton vorher, eine gleichberechtigte
- * Region; die Zaehlung geht von zwoelf auf DREIZEHN, und die Aufzaehlung
- * unten nennt jedes einzelne.
+ * Der Test zaehlt nur Controls, die tatsaechlich in der Zeile gerendert
+ * werden, und prueft ausdruecklich, dass kein Docs-Shortcut zurueckkehrt.
  *
  * Ausdruecklich NICHT geprueft, weil ausserhalb dieser Dateien:
  *   • `chat/CodexModeDropdown.tsx` — das einzige Control der CODE-Leiste,
@@ -102,7 +96,6 @@ function ohneKommentare(src: string): string {
 
 const INPUT = read('../ChatInput.tsx')
 const VOICE = read('../VoiceButton.tsx')
-const DOCS = read('../DocsButton.tsx')
 const VIEW = read('../ChatView.tsx')
 const PLUGINS = read('../PluginsDropdown.tsx')
 const SELECTOR = read('../../models/ModelSelector.tsx')
@@ -204,28 +197,8 @@ const FORM_LANGUAGE = [
  */
 const SLOT_FILL = /\bw-full h-full\b/
 
-/** Der Name der Docs-Region, damit Ausnahme und REGIONS nicht driften. */
-const DOCS_REGION = 'DocsButton, ein Control'
-
-/**
- * Die EINE Ausnahme, die nicht ueberall gilt, sondern an einer BENANNTEN
- * Region haengt. Muster wie SLOT_FILL: mit Namen und Grund an der Regel,
- * statt als Loch in FORM_LANGUAGE, das an jeder Call-Site aufginge.
- *
- * Der Docs-Knopf dimmt sich auf 60 %, solange keine Einbettungs-Spur da
- * ist. Das ist keine zweite Formsprache: Geometrie, Farbe, Hover und der
- * Ein-Behaelter kommen vollstaendig aus `.lazarus-control`, gedimmt wird nur die
- * fertige Haut. Und der Knopf DARF dafuer nicht `disabled` werden, dessen
- * 40 % das Rezept schon kennt. Hinter ihm liegt die einzige Stelle, an der
- * die Engine ueberhaupt installiert werden kann (Review B1, gepinnt in
- * docs-in-cloud-chat.test.ts). Fuer „daempfen, aber bedienbar" hat das
- * Rezept heute keinen Zustand, also steht die Daempfung an der Call-Site.
- * Sie ist unten ausdruecklich festgenagelt: waechst sie, wandert sie oder
- * faellt sie weg, faellt dieser Test.
- */
-const AUSNAHMEN: Record<string, RegExp> = {
-  [DOCS_REGION]: /(?<![\w-])opacity-60(?![\w-])/,
-}
+/** No control has an exception to the shared visual recipe. */
+const AUSNAHMEN: Record<string, RegExp> = {}
 
 function formLanguageIn(className: string, region = ''): string[] {
   let cleaned = className.replace(SLOT_FILL, ' ')
@@ -261,16 +234,13 @@ const SELECTOR_TRIGGER = SELECTOR.slice(
 )
 
 /**
- * Mikrofon und Docs haengen als KOMPONENTE in der Leiste (`<VoiceButton />`
- * in ChatInput, `<DocsButton />` in composerActions), nicht als `<button>`,
- * deshalb hat die Zaehlung ueber INPUT_BAR und VIEW_ACTIONS sie nicht
- * gesehen. Die ganze Datei ist jeweils die Region: sie enthaelt nichts
- * ausser diesem einen Control in seinen Zustaenden.
+ * Das Mikrofon haengt als Komponente in der Leiste (`<VoiceButton />`),
+ * deshalb zaehlt INPUT_BAR seine drei Zustaende nicht. Die ganze Datei ist
+ * die Region und enthaelt nur dieses Control in seinen Zustaenden.
  */
 const REGIONS: Array<[string, string]> = [
   ['ChatInput, Aktionszeile', INPUT_BAR],
   ['VoiceButton, drei Zustaende', VOICE],
-  [DOCS_REGION, DOCS],
   ['ChatView, composerActions', VIEW_ACTIONS],
   ['PluginsDropdown, Trigger', PLUGINS_TRIGGER],
   ['ModelSelector, Trigger', SELECTOR_TRIGGER],
@@ -290,16 +260,16 @@ describe('die Abschnitte, die dieser Test liest, existieren ueberhaupt', () => {
     }
   })
 
-  it('findet zusammen genau die dreizehn Controls der Leiste', () => {
+  it('findet zusammen genau die zwoelf Controls der Leiste', () => {
     // Paperclip · Think · Effort · Stop · Send (ChatInput) · Mikrofon nicht
     // verfuegbar · Mikrofon transkribiert · Mikrofon bereit/aufnehmend
-    // (VoiceButton) · Docs (DocsButton) · Tools (ChatView) · Plugins-Icon ·
+    // (VoiceButton) · Tools (ChatView) · Plugins-Icon ·
     // Plugins-Label (PluginsDropdown) · Modellwaehler (ModelSelector).
     // Der Dismiss-Knopf im Tools-Menue liegt ausserhalb von
     // composerActions. Aendert sich die Zahl, ist ein Control
     // dazugekommen oder verschwunden — beides gehoert angesehen.
     const all = REGIONS.flatMap(([, region]) => controlClassNames(region))
-    expect(all).toHaveLength(13)
+    expect(all).toHaveLength(12)
   })
 
   it('das Mikrofon steckt wirklich in dieser Leiste, nicht irgendwo sonst', () => {
@@ -309,17 +279,13 @@ describe('die Abschnitte, die dieser Test liest, existieren ueberhaupt', () => {
     expect(controlClassNames(VOICE)).toHaveLength(3)
   })
 
-  it('und Docs genauso, sonst haette die Region wieder einen blinden Fleck', () => {
-    // Dieselbe Wache wie fuer das Mikrofon, und aus demselben Anlass: Docs
-    // ist aus composerActions in eine eigene Datei gezogen, und solange
-    // niemand die Region nachzog, hat der Test dieses Control schlicht
-    // nicht mehr angesehen.
-    expect(VIEW_ACTIONS).toContain('<DocsButton')
-    expect(controlClassNames(DOCS)).toHaveLength(1)
+  it('der Docs-Shortcut bleibt aus dem Composer entfernt', () => {
+    expect(VIEW_ACTIONS).not.toContain('<DocsButton')
+    expect(VIEW_ACTIONS).toMatch(/<PluginsDropdown openUpward \/>/)
   })
 
   it('der Effort-Knopf ist wirklich in der Aktionszeile und wird mitgezaehlt', () => {
-    // Er ist der dreizehnte. Ohne diese Zeile koennte er aus INPUT_BAR
+    // Er ist der zwoelfte. Ohne diese Zeile koennte er aus INPUT_BAR
     // herausrutschen, und die Zahl oben faende einen anderen Grund, zu
     // stimmen.
     expect(INPUT_BAR).toContain('data-testid="effort-toggle"')
@@ -365,14 +331,8 @@ describe('keine achte Formsprache — die Mutationssonde greift hier', () => {
     expect(offenders, `${name}: eigene Formsprache am Control`).toEqual([])
   })
 
-  it('es gibt genau EINE benannte Ausnahme, und sie steht wirklich dort', () => {
-    // Ohne diese Zeile waere `AUSNAHMEN` ein bequemer Ort: wer hier einen
-    // Eintrag hinzufuegt, muss ihn erklaeren, und wer die Daempfung am
-    // Docs-Knopf ausbaut, muss die Ausnahme mit ausbauen.
-    expect(Object.keys(AUSNAHMEN)).toEqual([DOCS_REGION])
-    expect(controlClassNames(DOCS).join(' ')).toMatch(AUSNAHMEN[DOCS_REGION])
-    // Und sie deckt genau diese eine Utility, nicht „Deckung" allgemein.
-    expect(formLanguageIn('lazarus-control opacity-40', DOCS_REGION)).not.toEqual([])
+  it('es gibt keine benannten Ausnahmen vom gemeinsamen Rezept', () => {
+    expect(Object.keys(AUSNAHMEN)).toEqual([])
   })
 
   it('die Leiste kennt nur noch eine Hoehe, einen Radius, eine Schriftgroesse', () => {
@@ -554,21 +514,9 @@ describe('der Zustand kommt aus ARIA, nicht aus einer zweiten Klassenkette', () 
     expect(INPUT).not.toContain('bg-blue-500/15')
   })
 
-  it('Docs meldet seinen Ein-Zustand als aria-pressed', () => {
-    // Das Control ist in eine eigene Datei gezogen, die Aussage nicht: „Ein"
-    // heisst weiterhin Panel offen ODER RAG an fuer diese Unterhaltung.
-    // Geprueft werden deshalb beide Haelften: der Knopf, der es meldet, und
-    // die Verdrahtung, die ihm die zwei Wahrheiten reicht. Ohne die zweite
-    // koennte ChatView den falschen Zustand hineingeben, ohne dass es hier
-    // auffaellt.
-    expect(DOCS).toMatch(/aria-pressed=\{open \|\| ragEnabled\}/)
-    expect(VIEW_ACTIONS).toMatch(/open=\{ragPanelOpen\}/)
-    expect(VIEW_ACTIONS).toMatch(/ragEnabled=\{ragEnabled\}/)
-    // Und das gruene Pill ist weg, aus demselben Grund wie das blaue am
-    // Think-Knopf: es war eine eigene Formsprache fuer einen Zustand, den
-    // das Rezept schon kennt.
-    expect(DOCS).not.toContain('bg-green-500/15')
-    expect(VIEW_ACTIONS).not.toContain('bg-green-500/15')
+  it('der Hinweis oeffnet weiter den Dokumentenbereich', () => {
+    expect(VIEW).toMatch(/<ChatNotices onAttachDocs=\{\(\) => setRagPanelOpen\(true\)\}/)
+    expect(VIEW).toMatch(/<RAGPanel conversationId=\{activeConversationId\}/)
   })
 
   it('der Effort-Knopf sagt seine Stufe, statt sie zu faerben', () => {
